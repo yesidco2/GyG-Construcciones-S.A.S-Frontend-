@@ -2,11 +2,11 @@ import Hero from './Hero';
 import TrustBar from './TrustBar';
 import Services from './Services';
 import Commitment from './Commitment';
-import Portfolio from './Portfolio';
+import Portfolio from './Portafolio';
 import About from './About';
 import Contact from './Contact';
 import FloatingIA from './FloatingIA';
-import FloatingWhatsapp from './FloatingWhatsapp';
+import FloatingWhatsapp from './FloatingWhatsApp';
 
 export default function AppShell() {
   return (
@@ -17,7 +17,7 @@ export default function AppShell() {
         <Services />
         <Commitment />
         <Portfolio />
-        <About /  >
+        <About />
         <Contact />
       </main>
       <FloatingIA />

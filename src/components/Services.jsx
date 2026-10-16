@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiFetch } from '../services/api';
 
 const services = [
   {
@@ -98,6 +99,11 @@ const sstServices = [
   }
 ];
 
+const fallbackServices = [
+  ...services.map((service) => ({ ...service, bloque: 'CIVIL' })),
+  ...sstServices.map((service) => ({ ...service, bloque: 'SST' })),
+];
+
 function ServiceCard({ title, icon, variant, textClass, border, borderClass, description }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const isDark = variant === 'bg-primary';
@@ -143,6 +149,42 @@ function ServiceCard({ title, icon, variant, textClass, border, borderClass, des
 }
 
 export default function Services() {
+  const [serviceItems, setServiceItems] = useState(fallbackServices);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    apiFetch('/api/servicios')
+      .then((data) => {
+        if (!active) return;
+        if (Array.isArray(data) && data.length > 0) {
+          setServiceItems(data.map((item, index) => {
+            const styleOptions = item.bloque === 'SST' ? sstServices : services;
+            return {
+              ...styleOptions[index % styleOptions.length],
+              title: item.titulo,
+              description: item.descripcion,
+              bloque: item.bloque,
+            };
+          }));
+        }
+      })
+      .catch((error) => {
+        console.error('No se pudieron cargar los servicios:', error);
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const civilServices = serviceItems.filter((service) => service.bloque === 'CIVIL');
+  const occupationalSafetyServices = serviceItems.filter((service) => service.bloque === 'SST');
+
   return (
     <section className="py-xl px-md max-w-container-max mx-auto" id="servicios">
       <div className="flex flex-col md:flex-row justify-between items-end mb-lg gap-sm">
@@ -153,11 +195,14 @@ export default function Services() {
         <div className="hidden md:block w-32 h-1 bg-industrial-orange" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+        <p className="col-span-full text-center font-body-sm text-body-sm text-secondary" aria-live="polite">
+          {isLoading ? 'Cargando servicios' : ''}
+        </p>
         <div className="md:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-sm">
           <div className="col-span-full mb-xs">
             <h3 className="font-label-caps text-label-caps text-industrial-orange uppercase mb-xs tracking-widest">Bloque 01 — Ingeniería Civil</h3>
           </div>
-          {services.map((service) => (
+          {civilServices.map((service) => (
             <ServiceCard key={service.title} {...service} />
           ))}
         </div>
@@ -165,7 +210,7 @@ export default function Services() {
           <div className="col-span-full mb-xs">
             <h3 className="font-label-caps text-label-caps text-industrial-orange uppercase mb-xs tracking-widest">Bloque 02 — SST Especializada</h3>
           </div>
-          {sstServices.map((service) => (
+          {occupationalSafetyServices.map((service) => (
             <ServiceCard key={service.title} {...service} />
           ))}
         </div>

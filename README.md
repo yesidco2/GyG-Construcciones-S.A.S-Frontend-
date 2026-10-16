@@ -1,79 +1,50 @@
-# G&G — Sitio Corporativo (Landing)
+# G&G Construcciones — Frontend
 
-Descripción
--
-Sitio de presentación para G&G, una consultora de ingeniería y gestión en Seguridad y Salud en el Trabajo (SG-SST). Proyecto construido con React + Vite y estilos con Tailwind CSS. Está pensado como landing corporativa para mostrar servicios, proyectos y facilitar el contacto comercial.
+Frontend corporativo de G&G Construcciones, desarrollado con React 18, Vite 5 y Tailwind CSS. Las rutas principales se manejan mediante hash en `src/App.jsx`.
 
-Estructura del repositorio
--
-- `index.html` — plantilla raíz usada por Vite.
-- `src/` — código fuente en React (componentes, entradas y estilos).
-- `public/` — activos estáticos opcionales.
-- `package.json` — metadatos del proyecto y scripts útiles.
+## Requisitos
 
-Instalación y ejecución
--
-1. Instalar dependencias:
+- Node.js y npm
+- Backend REST Spring Boot disponible para las funciones que consumen datos
+
+## Instalación y ejecución
 
 ```bash
 npm install
 ```
 
-2. Iniciar servidor de desarrollo (hot-reload):
+Crea tu archivo local de variables de entorno a partir del ejemplo:
+
+```bash
+Copy-Item .env.example .env
+```
+
+En desarrollo, el backend debe estar corriendo en `http://localhost:8080`, o `VITE_API_URL` debe apuntar a la URL donde esté disponible.
 
 ```bash
 npm run dev
-```
-
-3. Compilar para producción:
-
-```bash
 npm run build
+npm run preview
 ```
 
-Despliegue rápido
--
-- El contenido de producción se genera en la carpeta `dist/` tras `npm run build` y puede servirse en Netlify, Vercel, GitHub Pages o cualquier servidor estático.
+El comando `npm run deploy` publica `dist/` en GitHub Pages mediante `gh-pages`; ejecuta `npm run build` previamente o deja que `predeploy` lo haga automáticamente.
 
-Dependencias
--
-Dependencias del proyecto (definidas en `package.json`):
+## Variables de entorno
 
-- Dependencias (runtime):
-	- `react` ^18.3.1
-	- `react-dom` ^18.3.1
+- `VITE_API_URL` (requerida): URL base de la API Spring Boot, por ejemplo `http://localhost:8080`.
+- `VITE_NEWSLETTER_ENDPOINT` (opcional): endpoint público para la suscripción al boletín.
 
-- Dependencias de desarrollo (devDependencies):
-	- `@vitejs/plugin-react` ^4.3.1
-	- `autoprefixer` ^10.4.19
-	- `postcss` ^8.4.35
-	- `tailwindcss` ^3.4.4
-	- `vite` ^5.4.1
+No incluyas secretos en variables `VITE_*`: se incorporan al bundle público del navegador.
 
-Comandos de instalación (alternativas):
+## Secciones conectadas a la API
 
-- Instalar desde `package.json` (recomendado):
+El frontend utiliza `src/services/api.js` para las solicitudes JSON. Estas vistas consultan el backend y mantienen contenido estático de respaldo si la API no está disponible:
 
-```bash
-npm install
-```
+- Servicios: `GET /api/servicios`
+- Proyectos: `GET /api/proyectos` y `GET /api/proyectos?categoria=CIVIL|SST`
+- Explorador de riesgos: `GET /api/riesgos/labores` y `GET /api/riesgos/{id}`
+- Formulario de contacto: `POST /api/contacto`
+- Asistente IA: `POST /api/chat`
+- Consulta de proyecto: `GET /api/obras/seguimiento/{codigo}`
 
-- Instalar explicitando paquetes (instala exactamente las dependencias listadas arriba):
-
-```bash
-npm install react@^18.3.1 react-dom@^18.3.1
-npm install -D @vitejs/plugin-react@^4.3.1 autoprefixer@^10.4.19 postcss@^8.4.35 tailwindcss@^3.4.4 vite@^5.4.1
-```
-
-Convenciones y personalización
--
-- Colores y tipografías se gestionan desde Tailwind; ajusta `tailwind.config.js` según la identidad de marca.
-- Las rutas y el contenido principal están en `src/App.jsx` y los componentes en `src/components/`.
-
-Contacto
--
-Para consultas o cambios en el proyecto, contacta a: `proyectos@gng.co`.
-
-Licencia
--
-Este repositorio es un ejemplo de landing; adapta la licencia según tu organización antes de distribuir.
+El backend debe estar ejecutándose para consultar los datos en vivo.

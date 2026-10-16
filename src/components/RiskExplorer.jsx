@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { apiFetch } from '../services/api';
 
 const riskCatalog = {
   'Trabajo en Alturas': {
@@ -54,6 +55,7 @@ const riskCatalog = {
 };
 
 const activities = Object.keys(riskCatalog);
+const fallbackActivities = activities.map((nombre) => ({ id: null, nombre }));
 
 const severityStyles = {
   bajo: 'bg-green-100 text-green-800 border-green-300',
@@ -62,9 +64,71 @@ const severityStyles = {
 };
 
 export default function RiskExplorer() {
+  const [activityItems, setActivityItems] = useState(fallbackActivities);
   const [selectedActivity, setSelectedActivity] = useState(activities[0]);
+  const [selectedActivityId, setSelectedActivityId] = useState(null);
+  const [apiRisk, setApiRisk] = useState(null);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+  const [isLoadingRisk, setIsLoadingRisk] = useState(false);
 
-  const currentRisk = useMemo(() => riskCatalog[selectedActivity], [selectedActivity]);
+  useEffect(() => {
+    let active = true;
+
+    apiFetch('/api/riesgos/labores')
+      .then((data) => {
+        if (!active || !Array.isArray(data) || data.length === 0) return;
+        setActivityItems(data);
+        setSelectedActivity(data[0].nombre);
+        setSelectedActivityId(data[0].id);
+      })
+      .catch((error) => {
+        console.error('No se pudieron cargar las labores de riesgo:', error);
+      })
+      .finally(() => {
+        if (active) setIsLoadingActivities(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedActivityId === null || selectedActivityId === undefined) return undefined;
+
+    let active = true;
+    setApiRisk(null);
+    setIsLoadingRisk(true);
+
+    apiFetch(`/api/riesgos/${encodeURIComponent(selectedActivityId)}`)
+      .then((data) => {
+        if (!active) return;
+        setApiRisk({
+          summary: `Riesgos asociados a ${data.nombre}.`,
+          risks: (data.riesgos || []).map((risk) => ({
+            label: risk.descripcion,
+            level: String(risk.nivelSeveridad || 'MEDIO').toLowerCase(),
+            description: risk.descripcion,
+          })),
+          epp: (data.epps || []).map((item) => item.nombre),
+        });
+      })
+      .catch((error) => {
+        console.error(`No se pudieron cargar los riesgos de ${selectedActivity}:`, error);
+      })
+      .finally(() => {
+        if (active) setIsLoadingRisk(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedActivityId, selectedActivity]);
+
+  const currentRisk = useMemo(
+    () => apiRisk || riskCatalog[selectedActivity] || riskCatalog[activities[0]],
+    [apiRisk, selectedActivity],
+  );
 
   return (
     <div id="risk-explorer" className="mx-auto max-w-6xl px-md py-xl pt-24">
@@ -82,25 +146,34 @@ export default function RiskExplorer() {
         <aside className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm">
           <h2 className="mb-md font-headline-sm text-headline-sm text-primary">Selecciona una labor</h2>
           <div className="space-y-sm">
-            {activities.map((activity) => {
-              const isActive = activity === selectedActivity;
+            {activityItems.map((activity) => {
+              const isActive = activity.nombre === selectedActivity;
 
               return (
                 <button
-                  key={activity}
+                  key={activity.id ?? activity.nombre}
                   type="button"
-                  onClick={() => setSelectedActivity(activity)}
+                  onClick={() => {
+                    setSelectedActivity(activity.nombre);
+                    setSelectedActivityId(activity.id ?? null);
+                    setApiRisk(null);
+                  }}
                   className={`w-full rounded-xl border px-md py-sm text-left transition-all ${
                     isActive
                       ? 'border-primary bg-primary text-on-primary shadow-md'
                       : 'border-surface-variant bg-surface text-on-surface hover:border-primary/60'
                   }`}
                 >
-                  <span className="font-label-caps text-label-caps uppercase">{activity}</span>
+                  <span className="font-label-caps text-label-caps uppercase">{activity.nombre}</span>
                 </button>
               );
             })}
           </div>
+          {isLoadingActivities && (
+            <p className="mt-sm font-body-sm text-body-sm text-secondary" aria-live="polite">
+              Cargando labores...
+            </p>
+          )}
         </aside>
 
         <div className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm">
@@ -114,7 +187,9 @@ export default function RiskExplorer() {
             </span>
           </div>
 
-          <p className="mb-md font-body-md text-body-md text-secondary">{currentRisk.summary}</p>
+          <p className="mb-md font-body-md text-body-md text-secondary">
+            {isLoadingRisk ? 'Cargando información de riesgos...' : currentRisk.summary}
+          </p>
 
           <div className="grid gap-md md:grid-cols-3">
             {currentRisk.risks.map((risk) => (

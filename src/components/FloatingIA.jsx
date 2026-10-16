@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiFetch } from '../services/api';
 
 const fallbackResponses = [
   'Para resolver dudas de SST, revisa primero el tipo de actividad, los riesgos asociados y los EPP mínimos recomendados. Si quieres, puedo orientarte sobre trabajo en alturas, riesgo eléctrico o excavaciones.',
@@ -71,28 +72,11 @@ export default function FloatingIA() {
     setIsLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      if (apiUrl) {
-        const response = await fetch(`${apiUrl}/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pregunta: faq.question }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const aiText = data?.respuesta || faq.answer;
-          const botMessage = { type: 'bot', text: aiText };
-          const updated = [...nextMessages, botMessage];
-          setMessages(updated);
-          saveHistory(updated);
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      // Fallback si no hay API o falla
-      const botMessage = { type: 'bot', text: faq.answer };
+      const data = await apiFetch('/api/chat', {
+        method: 'POST',
+        body: JSON.stringify({ pregunta: faq.question }),
+      });
+      const botMessage = { type: 'bot', text: data?.respuesta || faq.answer };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
@@ -120,22 +104,11 @@ export default function FloatingIA() {
     setIsLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      if (!apiUrl) {
-        throw new Error('VITE_API_URL no está configurada en .env');
-      }
-
-      const response = await fetch(`${apiUrl}/api/chat`, {
+      const data = await apiFetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pregunta: trimmed }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}`);
-      }
-
-      const data = await response.json();
       const aiText = data?.respuesta || getFallbackAnswer();
       const botMessage = { type: 'bot', text: aiText };
       const updated = [...nextMessages, botMessage];

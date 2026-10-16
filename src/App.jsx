@@ -7,16 +7,17 @@ import GestionSSTPage from './pages/GestionSSTPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ConsultProjectPage from './pages/ConsultProjectPage';
 import RiskExplorer from './components/RiskExplorer';
-import AdminFaqPage from './pages/AdminFaqPage';
 
 const routes = {
   '': AppShell,
+  hero: AppShell,
+  contacto: AppShell,
   'servicios': ServicesPage,
   'gestion-sst': GestionSSTPage,
   'risk-explorer': RiskExplorer,
+  portfolio: ProjectsPage,
   'proyectos': ProjectsPage,
   'consultar-proyecto': ConsultProjectPage,
-  'admin-faq': AdminFaqPage,
 };
 
 function Layout({ children, showFooter = true }) {
@@ -37,6 +38,23 @@ export default function App() {
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  useEffect(() => {
+    if (!routeKey) {
+      return undefined;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const targetId = routeKey === 'proyectos' ? 'portfolio' : routeKey;
+      const target = document.getElementById(targetId);
+      if (target) {
+        const top = window.scrollY + target.getBoundingClientRect().top - 104;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [routeKey]);
 
   const PageComponent = routes[routeKey] || AppShell;
   const showFooter = routeKey !== 'consultar-proyecto';

@@ -1,61 +1,68 @@
 import { useMemo, useState } from 'react';
-
-const defaultCode = 'GG-2026-00125';
+import { apiFetch } from '../services/api';
 
 export default function ConsultProjectPage() {
-  const [projectCode, setProjectCode] = useState(defaultCode);
+  const [projectCode, setProjectCode] = useState('');
   const [trackingResult, setTrackingResult] = useState(null);
   const [searched, setSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const statusMessage = useMemo(() => {
+    if (isLoading) {
+      return 'Buscando información del proyecto...';
+    }
+
     if (!searched) {
       return 'Consulta tu proyecto con el código asignado.';
     }
 
-    if (error || !trackingResult) {
+    if (error === 'not-found') {
       return 'No encontramos un proyecto con ese código. Verifica la información o contacta a tu gestor.';
     }
 
+    if (error === 'empty') {
+      return 'Ingresa el código asignado a tu proyecto para realizar la consulta.';
+    }
+
+    if (error) {
+      return 'No pudimos consultar el proyecto por un error de red o del servidor. Intenta nuevamente más tarde.';
+    }
+
+    if (!trackingResult) {
+      return 'Consulta tu proyecto con el código asignado.';
+    }
+
     return 'Proyecto encontrado con éxito.';
-  }, [searched, trackingResult, error]);
+  }, [searched, trackingResult, error, isLoading]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const code = projectCode.trim();
+    if (!code) {
+      setSearched(true);
+      setError('empty');
+      setTrackingResult(null);
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     setTrackingResult(null);
+    setSearched(false);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      if (!apiUrl) {
-        throw new Error('VITE_API_URL no está configurada en .env');
-      }
-
-      const response = await fetch(`${apiUrl}/api/obras/seguimiento/${projectCode}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('Código de proyecto no encontrado');
-        } else {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        setSearched(true);
-        return;
-      }
-
-      const data = await response.json();
+      const data = await apiFetch(`/api/obras/seguimiento/${encodeURIComponent(code)}`);
       setTrackingResult({
         name: data.nombre,
         progress: data.porcentajeAvance,
-        photos: (data.fotos || []).map(foto => foto.url),
-        code: projectCode,
+        photos: (data.fotos || []),
+        code,
       });
       setSearched(true);
     } catch (err) {
       console.error('API error:', err);
-      setError(err.message);
+      setError(err.status === 404 ? 'not-found' : 'request-failed');
       setSearched(true);
     } finally {
       setIsLoading(false);
@@ -82,7 +89,7 @@ export default function ConsultProjectPage() {
                 type="text"
                 value={projectCode}
                 onChange={(event) => setProjectCode(event.target.value)}
-                placeholder="GG-2026-00125"
+                placeholder="Ej: GG-2026-00125"
                 className="w-full rounded-full border border-surface-variant bg-white px-6 py-4 text-body-md text-on-background shadow-sm focus:border-primary-container focus:outline-none disabled:opacity-50"
                 aria-label="Código del proyecto"
                 disabled={isLoading}
@@ -132,7 +139,17 @@ export default function ConsultProjectPage() {
               </div>
             ) : (
               <div className="flex min-h-[280px] items-center justify-center rounded-xl border border-dashed border-surface-variant bg-white p-6 text-center text-secondary">
-                <p>Sin resultados para este código.</p>
+                <p>
+                  {isLoading
+                    ? 'Consultando el proyecto...'
+                    : error === 'not-found'
+                      ? 'No se encontró un proyecto con ese código.'
+                      : error === 'request-failed'
+                        ? 'No se pudo cargar el proyecto. Intenta nuevamente más tarde.'
+                        : error === 'empty'
+                          ? 'Ingresa un código para iniciar la consulta.'
+                          : 'Sin resultados para este código.'}
+                </p>
               </div>
             )}
           </div>
@@ -145,16 +162,19 @@ export default function ConsultProjectPage() {
             </div>
 
             <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
-              {trackingResult.photos.map((photoUrl, index) => (
+              {trackingResult.photos.map((photo, index) => (
                 <div
-                  key={`${trackingResult.code}-${index}`}
-                  className="overflow-hidden rounded-xl shadow-sm"
+                  key={`${trackingResult.code}-${photo.url}-${index}`}
+                  className="overflow-hidden rounded-xl bg-white shadow-sm"
                 >
                   <img
-                    src={photoUrl}
+                    src={photo.url}
                     alt={`${trackingResult.name} foto ${index + 1}`}
                     className="h-36 w-full object-cover hover:scale-105 transition-transform"
                   />
+                  <p className="p-xs font-body-sm text-body-sm text-secondary">
+                    {photo.fecha}
+                  </p>
                 </div>
               ))}
             </div>

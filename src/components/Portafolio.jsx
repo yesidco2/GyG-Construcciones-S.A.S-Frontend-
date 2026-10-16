@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { apiFetch } from '../services/api';
 
 const projects = [
   {
@@ -28,6 +29,11 @@ const projects = [
 ];
 
 const filters = ['Todos', 'Ingeniería Civil', 'SST'];
+
+const fallbackProjects = projects.map((project) => ({
+  ...project,
+  apiCategory: project.category === 'SST' ? 'SST' : 'CIVIL',
+}));
 
 function ProjectCard({ title, description, image, category, metric, metricLabel }) {
   return (
@@ -60,6 +66,8 @@ function ProjectCard({ title, description, image, category, metric, metricLabel 
 export default function Portfolio() {
   const [index, setIndex] = useState(0);
   const [filter, setFilter] = useState('Todos');
+  const [projectItems, setProjectItems] = useState(fallbackProjects);
+  const [isLoading, setIsLoading] = useState(true);
   const [slidesPerView, setSlidesPerView] = useState(typeof window !== 'undefined' && window.innerWidth >= 768 ? 3 : 1);
   const trackRef = useRef(null);
 
@@ -72,21 +80,63 @@ export default function Portfolio() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const filteredProjects =
-    filter === 'Todos' ? projects : projects.filter((project) => project.category === filter);
+  useEffect(() => {
+    let active = true;
+    const apiCategory = filter === 'Ingeniería Civil' ? 'CIVIL' : filter === 'SST' ? 'SST' : '';
+    const endpoint = apiCategory
+      ? `/api/proyectos?categoria=${encodeURIComponent(apiCategory)}`
+      : '/api/proyectos';
+    const fallback = apiCategory
+      ? fallbackProjects.filter((project) => project.apiCategory === apiCategory)
+      : fallbackProjects;
+
+    setProjectItems(fallback);
+    setIsLoading(true);
+
+    apiFetch(endpoint)
+      .then((data) => {
+        if (!active) return;
+        if (Array.isArray(data)) {
+          setProjectItems(data.map((project) => {
+            const fallbackProject = fallbackProjects.find((item) => item.apiCategory === project.categoria);
+            return {
+              title: project.nombre,
+              description: project.descripcion,
+              image: project.imagenUrl || fallbackProject?.image || '',
+              category: project.categoria === 'CIVIL' ? 'Ingeniería Civil' : 'SST',
+              apiCategory: project.categoria,
+              metric: project.metricaDestacada || 'Proyecto destacado',
+              metricLabel: 'Métrica destacada',
+            };
+          }));
+        }
+      })
+      .catch((error) => {
+        console.error('No se pudieron cargar los proyectos:', error);
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [filter]);
+
+  const filteredProjects = projectItems;
 
   useEffect(() => {
     setIndex(0);
   }, [filter]);
 
-  const groups = Math.max(1, Math.ceil(filteredProjects.length / slidesPerView));
+  const groups = Math.ceil(filteredProjects.length / slidesPerView);
 
   function prev() {
-    setIndex((i) => Math.max(0, i - 1));
+    setIndex((i) => Math.max(0, Math.min(groups - 1, i - 1)));
   }
 
   function next() {
-    setIndex((i) => Math.min(groups - 1, i + 1));
+    setIndex((i) => Math.max(0, Math.min(groups - 1, i + 1)));
   }
 
   return (
@@ -116,10 +166,15 @@ export default function Portfolio() {
           ))}
         </div>
 
+        <p className="mb-sm text-center font-body-sm text-body-sm text-secondary" aria-live="polite">
+          {isLoading ? 'Cargando proyectos...' : ''}
+        </p>
+
         <div className="relative">
           <button
             aria-label="Anterior"
             onClick={prev}
+            disabled={groups <= 1}
             className="absolute left-0 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md hover:bg-white"
           >
             ‹
@@ -132,16 +187,22 @@ export default function Portfolio() {
               style={{ transform: `translateX(-${index * 100}%)` }}
             >
               {filteredProjects.map((project) => (
-                <div key={project.title} className="w-full flex-shrink-0 px-2 md:w-1/3">
+                <div key={`${project.apiCategory}-${project.title}`} className="w-full flex-shrink-0 px-2 md:w-1/3">
                   <ProjectCard {...project} />
                 </div>
               ))}
+              {filteredProjects.length === 0 && !isLoading && (
+                <p className="w-full py-lg text-center font-body-md text-body-md text-secondary">
+                  No hay proyectos disponibles para esta categoría.
+                </p>
+              )}
             </div>
           </div>
 
           <button
             aria-label="Siguiente"
             onClick={next}
+            disabled={groups <= 1}
             className="absolute right-0 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md hover:bg-white"
           >
             ›

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiFetch } from '../services/api';
 
 const initialForm = {
   name: '',
@@ -23,14 +24,19 @@ export default function Contact() {
   const handleStep1Submit = (event) => {
     event.preventDefault();
 
-    const { name } = formData;
-    const hasEmail = formData.email.trim();
-    const hasPhone = formData.phone.trim();
-
-    if (!name.trim() || (!hasEmail && !hasPhone)) {
+    if (!formData.name.trim()) {
       setStatus({
         type: 'error',
-        message: 'Por favor, completa tu nombre y al menos un dato de contacto (correo o teléfono).',
+        message: 'Por favor, completa tu nombre.',
+      });
+      return;
+    }
+
+    const email = formData.email.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus({
+        type: 'error',
+        message: 'Ingresa un correo electrónico válido.',
       });
       return;
     }
@@ -52,40 +58,21 @@ export default function Contact() {
       return;
     }
 
-    if (!email.trim() && !formData.phone.trim()) {
-      setStatus({
-        type: 'error',
-        message: 'Necesitamos al menos un dato de contacto (correo o teléfono).',
-      });
-      return;
-    }
-
     setIsSubmitting(true);
     setStatus({ type: '', message: '' });
 
-    // NOTA: Llamada real a la API del backend
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      if (!apiUrl) {
-        throw new Error('VITE_API_URL no está configurada en .env');
-      }
-
-      const response = await fetch(`${apiUrl}/api/contacto`, {
+      await apiFetch('/api/contacto', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre: name,
+          nombre: name.trim(),
           empresa: formData.company || '',
-          correo: email || '',
+          correo: email.trim(),
           telefono: formData.phone || '',
           tipoServicio: service,
-          mensaje: message,
+          mensaje: message.trim(),
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
 
       setStatus({
         type: 'success',
@@ -95,9 +82,12 @@ export default function Contact() {
       setStep(1);
     } catch (error) {
       console.error('API error:', error);
+      const isClientError = error.status >= 400 && error.status < 500;
       setStatus({
         type: 'error',
-        message: 'No pudimos enviar el mensaje. Intenta de nuevo o escríbenos directamente a proyectos@gng.co.',
+        message: isClientError && error.message
+          ? error.message
+          : 'No pudimos enviar el mensaje. Intenta de nuevo o escríbenos directamente a proyectos@gng.co.',
       });
     } finally {
       setIsSubmitting(false);
@@ -194,8 +184,9 @@ export default function Contact() {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full rounded-lg border-2 border-outline-variant p-sm transition-colors focus:border-primary-container focus:ring-0"
-                    placeholder="email@empresa.com (opcional)"
+                    placeholder="email@empresa.com"
                     type="email"
+                    required
                   />
                 </div>
                 <div>
