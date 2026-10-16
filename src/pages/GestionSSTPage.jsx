@@ -60,7 +60,7 @@ export default function GestionSSTPage() {
 
   return (
     <div className="min-h-screen bg-background text-on-background pt-16">
-      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section id="gestion-sst" className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
             alt="Sitio de construcción con seguridad industrial"
