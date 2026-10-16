@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AppShell from './components/AppShell';
@@ -11,9 +11,12 @@ import AdminFaqPage from './pages/AdminFaqPage';
 
 const routes = {
   '': AppShell,
+  hero: AppShell,
+  contacto: AppShell,
   'servicios': ServicesPage,
   'gestion-sst': GestionSSTPage,
   'risk-explorer': RiskExplorer,
+  portfolio: ProjectsPage,
   'proyectos': ProjectsPage,
   'consultar-proyecto': ConsultProjectPage,
   'admin-faq': AdminFaqPage,
@@ -38,8 +41,25 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  useEffect(() => {
+    if (!routeKey) {
+      return undefined;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const targetId = routeKey === 'proyectos' ? 'portfolio' : routeKey;
+      const target = document.getElementById(targetId);
+      if (target) {
+        const top = window.scrollY + target.getBoundingClientRect().top - 104;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [routeKey]);
+
   const PageComponent = routes[routeKey] || AppShell;
-  const showFooter = routeKey !== 'consultar-proyecto';
+  const showFooter = routeKey !== 'consultar-proyecto' && routeKey !== 'login';
 
   return (
     <Layout showFooter={showFooter}>
