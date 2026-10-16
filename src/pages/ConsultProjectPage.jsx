@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { apiFetch } from '../services/api';
+import { getProjectByCode } from '../services/projectService';
 
 export default function ConsultProjectPage() {
   const [projectCode, setProjectCode] = useState('');
@@ -61,9 +62,21 @@ export default function ConsultProjectPage() {
       });
       setSearched(true);
     } catch (err) {
-      console.error('API error:', err);
-      setError(err.status === 404 ? 'not-found' : 'request-failed');
-      setSearched(true);
+      // Fallback a base de datos local de proyectos (creados/modificados en el Dashboard)
+      const localProject = getProjectByCode(code);
+      if (localProject) {
+        setTrackingResult({
+          name: localProject.name,
+          progress: localProject.progress,
+          photos: localProject.photos || [],
+          code: localProject.code,
+        });
+        setSearched(true);
+      } else {
+        console.error('API / Local error:', err);
+        setError('not-found');
+        setSearched(true);
+      }
     } finally {
       setIsLoading(false);
     }

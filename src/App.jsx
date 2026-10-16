@@ -8,6 +8,7 @@ import ProjectsPage from './pages/ProjectsPage';
 import ConsultProjectPage from './pages/ConsultProjectPage';
 import RiskExplorer from './components/RiskExplorer';
 import AdminFaqPage from './pages/AdminFaqPage';
+import LoginPage from './pages/LoginPage';
 
 const routes = {
   '': AppShell,
@@ -20,6 +21,7 @@ const routes = {
   'proyectos': ProjectsPage,
   'consultar-proyecto': ConsultProjectPage,
   'admin-faq': AdminFaqPage,
+  'login': LoginPage,
 };
 
 function Layout({ children, showFooter = true }) {

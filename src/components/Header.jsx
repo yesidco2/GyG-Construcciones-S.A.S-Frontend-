@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react';
 const pageRoutes = {
   'servicios': { label: 'Servicios', parent: 'Inicio' },
   'gestion-sst': { label: 'Gestión SST', parent: 'Inicio' },
-  'portfolio': { label: 'Proyectos', parent: 'Inicio' },
   'proyectos': { label: 'Proyectos', parent: 'Inicio' },
   'portfolio': { label: 'Proyectos', parent: 'Inicio' },
   'consultar-proyecto': { label: 'Consultar Proyecto', parent: 'Inicio' },

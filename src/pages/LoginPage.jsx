@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ReCaptcha from '../components/auth/ReCaptcha';
 import AlternativeLogin from '../components/auth/AlternativeLogin';
 import ForgotPasswordModal from '../components/auth/ForgotPasswordModal';
+import EngineerDashboard from '../components/dashboard/EngineerDashboard';
 import {
   generateJWT,
   setAuthCookie,
@@ -323,198 +324,111 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Tarjeta Ejecutiva Principal (Split Card) */}
-        <div className="bg-white rounded-3xl shadow-xl border border-surface-variant/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
-          
-          {/* PANEL IZQUIERDO: Branding Corporativo Industrial y Seguridad SST */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-[#00142e] text-white p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden">
-            {/* Patrón geométrico de fondo */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" strokeWidth="1" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-              </svg>
-            </div>
-
-            {/* Acento de luz naranja industrial */}
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-industrial-orange/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-industrial-orange/15 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Cabecera de marca */}
-            <div className="relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-industrial-orange flex items-center justify-center shadow-lg shadow-industrial-orange/30">
-                  <span className="material-symbols-outlined text-white text-3xl">foundation</span>
-                </div>
-                <div>
-                  <h2 className="font-headline-sm text-2xl font-bold tracking-tight text-white leading-none">
-                    G&G
-                  </h2>
-                  <p className="text-[11px] font-semibold text-industrial-orange uppercase tracking-widest mt-1">
-                    Construcciones S.A.S
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-8 space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-orange-200">
-                  <span className="material-symbols-outlined text-sm text-industrial-orange">
-                    verified_user
-                  </span>
-                  <span>Portal Oficial SG-SST & Obras</span>
-                </div>
-
-                <h1 className="font-headline-xl text-3xl sm:text-4xl font-bold text-white leading-tight">
-                  Gestión Segura de Ingeniería y Salud Laboral
-                </h1>
-
-                <p className="text-sm text-white/75 leading-relaxed font-body-sm">
-                  Plataforma integral para control de acceso en obra, reporte inmediato de actos y condiciones inseguras, inspección de EPP y cumplimiento normativo ISO 45001.
-                </p>
-              </div>
-            </div>
-
-            {/* Métricas y Garantías de Seguridad */}
-            <div className="relative z-10 my-8 space-y-4">
-              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 space-y-2">
-                <div className="flex items-center justify-between text-xs text-white/80">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <span className="material-symbols-outlined text-industrial-orange text-base">
-                      shield
-                    </span>
-                    Protección de Cuenta Activa
-                  </span>
-                  <span className="font-mono text-[11px] text-green-400">Protegido por CAPTCHA</span>
-                </div>
-                <p className="text-xs text-white/60">
-                  Sistema anti fuerza bruta con bloqueo dinámico y auditoría de sesiones para personal técnico y contratistas.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-left">
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                  <span className="font-headline-sm text-xl font-bold text-industrial-orange block">
-                    428+
-                  </span>
-                  <span className="text-[11px] text-white/70 leading-tight block mt-0.5">
-                    Días continuos sin incidentes LTI
-                  </span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                  <span className="font-headline-sm text-xl font-bold text-white block">
-                    100%
-                  </span>
-                  <span className="text-[11px] text-white/70 leading-tight block mt-0.5">
-                    Trazabilidad de seguridad en obra
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Pie del panel izquierdo */}
-            <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-white/60">
-              <span>Resolución 0312 de 2019</span>
-              <span className="font-mono text-[11px]">v3.4.0 Secure</span>
-            </div>
-          </div>
-
-          {/* PANEL DERECHO: Formulario y Métodos de Autenticación */}
-          <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between bg-white">
+        {/* VISTA CONDICIONAL: DASHBOARD DE INGENIERO SI ESTÁ AUTENTICADO O LOGIN CORPORATIVO */}
+        {currentUser ? (
+          <EngineerDashboard currentUser={currentUser} onLogout={handleLogout} />
+        ) : (
+          /* Tarjeta Ejecutiva Principal (Split Card) */
+          <div className="bg-white rounded-3xl shadow-xl border border-surface-variant/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
             
-            {/* Si ya hay sesión iniciada, mostrar vista ejecutiva de usuario */}
-            {currentUser ? (
-              <div className="my-auto py-8 text-center max-w-md mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200">
-                <div className="relative inline-block">
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="w-24 h-24 rounded-full border-4 border-industrial-orange object-cover shadow-lg mx-auto"
-                  />
-                  <div className="absolute bottom-0 right-0 w-7 h-7 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs">
-                    ✓
+            {/* PANEL IZQUIERDO: Branding Corporativo Industrial y Seguridad SST */}
+            <div className="lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-[#00142e] text-white p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden">
+              {/* Patrón geométrico de fondo */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none">
+                <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" strokeWidth="1" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+                </svg>
+              </div>
+
+              {/* Acento de luz naranja industrial */}
+              <div className="absolute -top-24 -left-24 w-64 h-64 bg-industrial-orange/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-industrial-orange/15 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Cabecera de marca */}
+              <div className="relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-industrial-orange flex items-center justify-center shadow-lg shadow-industrial-orange/30">
+                    <span className="material-symbols-outlined text-white text-3xl">foundation</span>
+                  </div>
+                  <div>
+                    <h2 className="font-headline-sm text-2xl font-bold tracking-tight text-white leading-none">
+                      G&G
+                    </h2>
+                    <p className="text-[11px] font-semibold text-industrial-orange uppercase tracking-widest mt-1">
+                      Construcciones S.A.S
+                    </p>
                   </div>
                 </div>
 
-                <div>
-                  <span className="inline-block px-3 py-1 rounded-full bg-industrial-orange/10 text-industrial-orange font-semibold text-xs mb-2">
-                    {currentUser.role}
-                  </span>
-                  <h3 className="font-headline-sm text-2xl font-bold text-primary">
-                    ¡Bienvenido, {currentUser.name}!
-                  </h3>
-                  <p className="text-sm text-secondary mt-1">{currentUser.email}</p>
-                  <p className="text-xs text-secondary/70 mt-1 font-mono">
-                    Acceso mediante: <strong>{currentUser.method}</strong> • {currentUser.loginTime}
-                  </p>
-                </div>
-
-                {/* Panel de Seguridad de Sesión: JWT & Cookies */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-left space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-green-600 text-sm">cookie</span>
-                      Sesión Activa con JWT y Cookies
+                <div className="mt-8 space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-orange-200">
+                    <span className="material-symbols-outlined text-sm text-industrial-orange">
+                      verified_user
                     </span>
-                    <span className="font-mono text-[10px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
-                      Cookie: SameSite=Strict
-                    </span>
+                    <span>Portal Oficial SG-SST & Obras</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    Token criptográfico firmado (HS256) y persistido en la cookie segura{' '}
-                    <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800 font-mono">gg_jwt_token</code>.
-                  </p>
-                  {currentUser.token && (
-                    <div className="p-2.5 rounded bg-white border border-slate-200 font-mono text-[10px] text-slate-700 break-all select-all">
-                      <span className="text-slate-400 font-sans block text-[9px] uppercase font-bold mb-1">
-                        Token JWT emitido:
-                      </span>
-                      {currentUser.token.substring(0, 48)}...{currentUser.token.substring(currentUser.token.length - 16)}
-                    </div>
-                  )}
-                </div>
 
-                <div className="p-4 rounded-xl bg-surface border border-surface-variant text-left space-y-2">
-                  <p className="text-xs font-semibold text-primary uppercase tracking-wider">
-                    Módulos Habilitados para tu Perfil:
-                  </p>
-                  <ul className="text-xs text-secondary space-y-1.5">
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                      <span>Inspecciones de Seguridad y Salud en Obra</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                      <span>Registro de Inducción de Contratistas</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                      <span>Consulta de Avance y Planos de Proyectos</span>
-                    </li>
-                  </ul>
-                </div>
+                  <h1 className="font-headline-xl text-3xl sm:text-4xl font-bold text-white leading-tight">
+                    Gestión Segura de Ingeniería y Salud Laboral
+                  </h1>
 
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <a
-                    href="#gestion-sst"
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-container text-white text-sm font-semibold transition-all text-center shadow-sm"
-                  >
-                    Ir al Sistema SG-SST
-                  </a>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="flex-1 py-2.5 px-4 rounded-xl border border-outline-variant hover:bg-surface text-secondary text-sm font-semibold transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-base">logout</span>
-                    <span>Cerrar Sesión</span>
-                  </button>
+                  <p className="text-sm text-white/75 leading-relaxed font-body-sm">
+                    Plataforma integral para control de acceso en obra, reporte inmediato de actos y condiciones inseguras, inspección de EPP y cumplimiento normativo ISO 45001.
+                  </p>
                 </div>
               </div>
-            ) : (
+
+              {/* Métricas y Garantías de Seguridad */}
+              <div className="relative z-10 my-8 space-y-4">
+                <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-white/80">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <span className="material-symbols-outlined text-industrial-orange text-base">
+                        shield
+                      </span>
+                      Protección de Cuenta Activa
+                    </span>
+                    <span className="font-mono text-[11px] text-green-400">Protegido por CAPTCHA</span>
+                  </div>
+                  <p className="text-xs text-white/60">
+                    Sistema anti fuerza bruta con bloqueo dinámico y auditoría de sesiones para personal técnico y contratistas.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-left">
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span className="font-headline-sm text-xl font-bold text-industrial-orange block">
+                      428+
+                    </span>
+                    <span className="text-[11px] text-white/70 leading-tight block mt-0.5">
+                      Días continuos sin incidentes LTI
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span className="font-headline-sm text-xl font-bold text-white block">
+                      100%
+                    </span>
+                    <span className="text-[11px] text-white/70 leading-tight block mt-0.5">
+                      Trazabilidad de seguridad en obra
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pie del panel izquierdo */}
+              <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-white/60">
+                <span>Resolución 0312 de 2019</span>
+                <span className="font-mono text-[11px]">v3.4.0 Secure</span>
+              </div>
+            </div>
+
+            {/* PANEL DERECHO: Formulario de Autenticación */}
+            <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between bg-white">
               <div>
                 {/* Cabecera del formulario */}
                 <div className="mb-6">
@@ -1007,17 +921,17 @@ export default function LoginPage() {
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Aviso de confidencialidad en el pie */}
-            <div className="mt-6 pt-4 border-t border-surface-variant text-center text-[11px] text-secondary">
-              <p>
-                Este portal es de uso exclusivo y confidencial para personal autorizado de{' '}
-                <strong>G&G Construcciones S.A.S</strong> y contratistas con inducción SG-SST vigente.
-              </p>
+              {/* Aviso de confidencialidad en el pie */}
+              <div className="mt-6 pt-4 border-t border-surface-variant text-center text-[11px] text-secondary">
+                <p>
+                  Este portal es de uso exclusivo y confidencial para personal autorizado de{' '}
+                  <strong>G&G Construcciones S.A.S</strong> y contratistas con inducción SG-SST vigente.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Modal para Recuperar Contraseña */}
