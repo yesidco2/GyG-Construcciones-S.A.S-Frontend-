@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AppShell from './components/AppShell';
@@ -8,6 +8,7 @@ import ProjectsPage from './pages/ProjectsPage';
 import ConsultProjectPage from './pages/ConsultProjectPage';
 import RiskExplorer from './components/RiskExplorer';
 import AdminFaqPage from './pages/AdminFaqPage';
+import LoginPage from './pages/LoginPage';
 
 const routes = {
   '': AppShell,
@@ -17,6 +18,7 @@ const routes = {
   'proyectos': ProjectsPage,
   'consultar-proyecto': ConsultProjectPage,
   'admin-faq': AdminFaqPage,
+  'login': LoginPage,
 };
 
 function Layout({ children, showFooter = true }) {
@@ -39,7 +41,7 @@ export default function App() {
   }, []);
 
   const PageComponent = routes[routeKey] || AppShell;
-  const showFooter = routeKey !== 'consultar-proyecto';
+  const showFooter = routeKey !== 'consultar-proyecto' && routeKey !== 'login';
 
   return (
     <Layout showFooter={showFooter}>

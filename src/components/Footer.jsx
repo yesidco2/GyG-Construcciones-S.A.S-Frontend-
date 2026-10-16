@@ -107,6 +107,12 @@ export default function Footer() {
               </a>
             </li>
             <li>
+              <a className="hover:text-on-primary hover:underline transition-all flex items-center gap-1 text-industrial-orange font-medium" href="#login">
+                <span className="material-symbols-outlined text-[14px]">lock</span>
+                <span>Portal SST (Acceso Seguro)</span>
+              </a>
+            </li>
+            <li>
               <a className="hover:text-on-primary hover:underline transition-all" href="#">
                 Política de Privacidad
               </a>

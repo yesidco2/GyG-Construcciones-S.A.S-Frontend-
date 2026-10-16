@@ -2,7 +2,7 @@ import Hero from './Hero';
 import TrustBar from './TrustBar';
 import Services from './Services';
 import Commitment from './Commitment';
-import Portfolio from './Portfolio';
+import Portfolio from './Portafolio';
 import About from './About';
 import Contact from './Contact';
 import FloatingIA from './FloatingIA';
