@@ -166,7 +166,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                 </span>
                 <span className="inline-flex items-center gap-1 text-[11px] text-green-400 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  Sesión JWT Activa
+                  Sesión autenticada
                 </span>
               </div>
 
@@ -281,7 +281,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">shield</span>
-            <span>Auditoría & JWT</span>
+            <span>Auditoría y sesión</span>
           </button>
         </div>
       </div>
@@ -624,26 +624,26 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         </div>
       )}
 
-      {/* VISTA 3: AUDITORÍA Y SESIÓN JWT */}
+      {/* VISTA 3: AUDITORÍA Y SESIÓN */}
       {activeTab === 'session' && (
         <div className="bg-white rounded-3xl border border-surface-variant p-6 sm:p-8 shadow-sm space-y-6 max-w-3xl mx-auto">
           <div>
             <span className="font-label-caps text-label-caps text-industrial-orange uppercase tracking-wider">
-              Seguridad Criptográfica
+              Seguridad de la sesión
             </span>
             <h3 className="font-headline-sm text-xl font-bold text-primary mt-1">
-              Sesión Activa con JWT y Cookies Seguras
+              Sesión autenticada con Firebase
             </h3>
             <p className="text-xs text-secondary mt-1">
-              Tu sesión se encuentra validada mediante tokens JWT firmados (HS256) persistidos en la cookie segura <code className="bg-surface px-1.5 py-0.5 rounded text-primary font-mono font-bold">gg_jwt_token</code>.
+              Tu identidad se valida con Firebase y tus permisos se consultan en el servidor corporativo.
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-surface border border-surface-variant space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-primary">Estado de la Cookie:</span>
+              <span className="font-bold text-primary">Estado:</span>
               <span className="font-mono text-green-700 bg-green-100 px-2 py-0.5 rounded-full font-bold">
-                SameSite=Strict • Path=/
+                Sesión autenticada
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
@@ -651,19 +651,9 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               <span className="font-semibold text-industrial-orange">{currentUser?.role}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-primary">Método de Validación:</span>
-              <span>{currentUser?.method}</span>
+              <span className="font-bold text-primary">Cuenta:</span>
+              <span>{currentUser?.email}</span>
             </div>
-            {currentUser?.token && (
-              <div className="pt-2 border-t border-surface-variant">
-                <span className="text-[10px] font-bold uppercase text-secondary block mb-1">
-                  Token JWT Criptográfico:
-                </span>
-                <p className="font-mono text-[10px] text-slate-600 bg-white p-2.5 rounded-lg border border-surface-variant break-all select-all">
-                  {currentUser.token}
-                </p>
-              </div>
-            )}
           </div>
         </div>
       )}
