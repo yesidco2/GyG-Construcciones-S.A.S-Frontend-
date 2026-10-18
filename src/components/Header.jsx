@@ -1,14 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 
 const pageRoutes = {
-  'servicios': { label: 'Servicios', parent: 'Inicio' },
   'gestion-sst': { label: 'Gestión SST', parent: 'Inicio' },
-  'portfolio': { label: 'Proyectos', parent: 'Inicio' },
   'proyectos': { label: 'Proyectos', parent: 'Inicio' },
   'portfolio': { label: 'Proyectos', parent: 'Inicio' },
   'consultar-proyecto': { label: 'Consultar Proyecto', parent: 'Inicio' },
   'risk-explorer': { label: 'Explorador de Riesgos', parent: 'Gestión SST' },
   'login': { label: 'Portal SST / Iniciar Sesión', parent: 'Inicio' },
+  'registro': { label: 'Crear cuenta', parent: 'Inicio' },
 };
 
 export default function Header() {
@@ -206,7 +205,7 @@ export default function Header() {
                   </div>
 
                   {/* PANEL LATERAL DESTACADO (Estilo MongoDB) */}
-                  <div className="col-span-5 bg-surface-container-low rounded-xl p-4 border border-surface-variant flex flex-col justify-between">
+                  <div className="col-span-5 bg-surface-container-low rounded-xl p-4 border border-surface-variant">
                     <div>
                       <span className="inline-block px-2.5 py-1 rounded-md bg-industrial-orange/10 text-industrial-orange text-[10px] font-bold uppercase tracking-wider mb-2">
                         G&G Construcciones
@@ -219,22 +218,6 @@ export default function Header() {
                       </p>
                     </div>
 
-                    <div className="pt-4 border-t border-surface-variant/80 space-y-2">
-                      <a
-                        href="#risk-explorer"
-                        onClick={() => setInicioMenuOpen(false)}
-                        className="w-full text-center block py-1.5 px-3 rounded-lg border border-outline-variant hover:border-outline text-xs font-semibold text-primary bg-white hover:bg-surface transition-colors shadow-2xs"
-                      >
-                        Explorador de Riesgos
-                      </a>
-                      <a
-                        href="#login"
-                        onClick={() => setInicioMenuOpen(false)}
-                        className="w-full text-center block py-1.5 px-3 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-semibold transition-colors shadow-2xs"
-                      >
-                        Ingresar al Portal SST
-                      </a>
-                    </div>
                   </div>
                 </div>
 
@@ -281,6 +264,12 @@ export default function Header() {
           >
             <span className="material-symbols-outlined text-[18px] text-industrial-orange">lock</span>
             <span>Portal SST</span>
+          </a>
+          <a
+            className="border border-white/20 hover:border-white text-on-primary hover:text-white px-3 py-1.5 rounded-lg transition-all font-body-sm text-body-sm"
+            href="#registro"
+          >
+            Registrarse
           </a>
         </div>
 
@@ -397,6 +386,14 @@ export default function Header() {
             >
               <span className="material-symbols-outlined text-[18px] text-industrial-orange">lock</span>
               <span>Portal SST / Iniciar Sesión</span>
+            </a>
+
+            <a
+              href="#registro"
+              onClick={closeMenu}
+              className="flex items-center justify-center border border-white/20 text-white px-md py-xs rounded-lg font-body-sm text-body-sm text-center"
+            >
+              Registrarse
             </a>
 
             {/* 5. SOLICITAR COTIZACIÓN */}

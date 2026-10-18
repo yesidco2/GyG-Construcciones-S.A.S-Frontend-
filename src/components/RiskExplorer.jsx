@@ -131,7 +131,7 @@ export default function RiskExplorer() {
   );
 
   return (
-    <div id="risk-explorer" className="mx-auto max-w-6xl px-md py-xl pt-24">
+    <div id="risk-explorer" className="mx-auto max-w-6xl px-md py-xl">
       <div className="mb-lg text-center">
         <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
           Gestión de riesgos

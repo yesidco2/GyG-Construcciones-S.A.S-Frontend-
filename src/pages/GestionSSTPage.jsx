@@ -1,3 +1,5 @@
+import RiskExplorer from '../components/RiskExplorer';
+
 export default function GestionSSTPage() {
   const overviewCards = [
     {
@@ -93,14 +95,14 @@ export default function GestionSSTPage() {
         </div>
       </section>
 
-      <section id="risk-explorer" className="bg-surface py-xl">
+      <section id="vision-prevencion" className="bg-surface py-xl">
         <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
           <div className="mb-lg flex flex-col gap-sm text-center md:flex-row md:items-end md:justify-between md:text-left">
             <div>
               <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">Gestión de riesgos</p>
               <h2 className="mt-xs font-headline-lg text-headline-lg text-primary">Nuestra Visión de la Prevención</h2>
             </div>
-            <a className="inline-flex items-center justify-center rounded-full border border-primary bg-primary px-md py-xs font-label-caps text-label-caps text-on-primary hover:bg-primary/90" href="#risk-explorer-link">
+            <a className="inline-flex items-center justify-center rounded-full border border-primary bg-primary px-md py-xs font-label-caps text-label-caps text-on-primary hover:bg-primary/90" href="#risk-explorer">
               Explorar riesgos
             </a>
           </div>
@@ -121,6 +123,8 @@ export default function GestionSSTPage() {
           </div>
         </div>
       </section>
+
+      <RiskExplorer />
 
       <section id="servicios-sst" className="bg-surface-container-low py-xl">
         <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
