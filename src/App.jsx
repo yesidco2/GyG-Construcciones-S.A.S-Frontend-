@@ -1,27 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AppShell from './components/AppShell';
-import ServicesPage from './pages/ServicesPage';
 import GestionSSTPage from './pages/GestionSSTPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ConsultProjectPage from './pages/ConsultProjectPage';
-import RiskExplorer from './components/RiskExplorer';
 import AdminFaqPage from './pages/AdminFaqPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import { completeEmailLinkSignIn } from './services/authService';
 
 const routes = {
   '': AppShell,
   hero: AppShell,
   contacto: AppShell,
-  'servicios': ServicesPage,
   'gestion-sst': GestionSSTPage,
-  'risk-explorer': RiskExplorer,
+  'risk-explorer': GestionSSTPage,
   portfolio: ProjectsPage,
   'proyectos': ProjectsPage,
   'consultar-proyecto': ConsultProjectPage,
   'admin-faq': AdminFaqPage,
   'login': LoginPage,
+  'registro': RegisterPage,
 };
 
 function Layout({ children, showFooter = true }) {
@@ -36,8 +36,16 @@ function Layout({ children, showFooter = true }) {
 
 export default function App() {
   const [routeKey, setRouteKey] = useState(window.location.hash.replace('#', ''));
+  const emailLinkHandled = useRef(false);
 
   useEffect(() => {
+    if (!emailLinkHandled.current) {
+      emailLinkHandled.current = true;
+      completeEmailLinkSignIn().catch((error) => {
+        console.error('No se pudo completar el acceso por enlace de correo:', error);
+      });
+    }
+
     const onHashChange = () => setRouteKey(window.location.hash.replace('#', ''));
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -61,7 +69,7 @@ export default function App() {
   }, [routeKey]);
 
   const PageComponent = routes[routeKey] || AppShell;
-  const showFooter = routeKey !== 'consultar-proyecto' && routeKey !== 'login';
+  const showFooter = !['consultar-proyecto', 'login', 'registro'].includes(routeKey);
 
   return (
     <Layout showFooter={showFooter}>

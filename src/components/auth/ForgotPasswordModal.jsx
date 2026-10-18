@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { friendlyAuthError, resetPassword } from '../../services/authService';
 
 export default function ForgotPasswordModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
@@ -7,7 +8,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !email.includes('@')) {
       setStatus({ type: 'error', message: 'Por favor ingresa un correo corporativo válido.' });
@@ -17,13 +18,23 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     setIsSubmitting(true);
     setStatus({ type: '', message: '' });
 
-    setTimeout(() => {
+    try {
+      await resetPassword(email);
       setIsSubmitting(false);
       setStatus({
         type: 'success',
-        message: `Se ha enviado un enlace de restablecimiento seguro a ${email}. Revisa tu bandeja de entrada o spam.`,
+        message: 'Si existe una cuenta asociada a ese correo, recibirás instrucciones para restablecer la contraseña.',
       });
-    }, 1000);
+    } catch (error) {
+      setIsSubmitting(false);
+      setStatus({
+        type: error?.code === 'auth/user-not-found' ? 'success' : 'error',
+        message:
+          error?.code === 'auth/user-not-found'
+            ? 'Si existe una cuenta asociada a ese correo, recibirás instrucciones para restablecer la contraseña.'
+            : friendlyAuthError(error),
+      });
+    }
   };
 
   return (
