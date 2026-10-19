@@ -7,7 +7,6 @@ const pageRoutes = {
   'consultar-proyecto': { label: 'Consultar Proyecto', parent: 'Inicio' },
   'risk-explorer': { label: 'Explorador de Riesgos', parent: 'Gestión SST' },
   'login': { label: 'Portal SST / Iniciar Sesión', parent: 'Inicio' },
-  'registro': { label: 'Crear cuenta', parent: 'Inicio' },
 };
 
 export default function Header() {
@@ -265,12 +264,6 @@ export default function Header() {
             <span className="material-symbols-outlined text-[18px] text-industrial-orange">lock</span>
             <span>Portal SST</span>
           </a>
-          <a
-            className="border border-white/20 hover:border-white text-on-primary hover:text-white px-3 py-1.5 rounded-lg transition-all font-body-sm text-body-sm"
-            href="#registro"
-          >
-            Registrarse
-          </a>
         </div>
 
         {/* COLUMNA DERECHA: BOTÓN DE ACCIÓN (Equilibra perfectamente el ancho del Logo) */}
@@ -386,14 +379,6 @@ export default function Header() {
             >
               <span className="material-symbols-outlined text-[18px] text-industrial-orange">lock</span>
               <span>Portal SST / Iniciar Sesión</span>
-            </a>
-
-            <a
-              href="#registro"
-              onClick={closeMenu}
-              className="flex items-center justify-center border border-white/20 text-white px-md py-xs rounded-lg font-body-sm text-body-sm text-center"
-            >
-              Registrarse
             </a>
 
             {/* 5. SOLICITAR COTIZACIÓN */}

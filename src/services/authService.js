@@ -1,7 +1,6 @@
 import {
   GoogleAuthProvider,
   OAuthProvider,
-  createUserWithEmailAndPassword,
   getRedirectResult,
   isSignInWithEmailLink,
   onAuthStateChanged,
@@ -12,7 +11,6 @@ import {
   signInWithEmailAndPassword,
   signInWithEmailLink,
   signInWithRedirect,
-  updateProfile,
   browserLocalPersistence,
   browserSessionPersistence,
   signOut,
@@ -61,23 +59,15 @@ export function completeProviderRedirectSignIn() {
   return auth ? getRedirectResult(auth) : Promise.resolve(null);
 }
 
-export async function registerWithEmail(nombre, email, password) {
-  const credential = await createUserWithEmailAndPassword(
-    requireAuth(),
-    email.trim(),
-    password,
-  );
-
-  try {
-    await updateProfile(credential.user, { displayName: nombre.trim() });
-    await sendEmailVerification(credential.user);
-  } finally {
-    await signOut(credential.user.auth);
-  }
-}
-
 export function resetPassword(email) {
   return sendPasswordResetEmail(requireAuth(), email.trim());
+}
+
+export function sendVerificationEmail(user = auth?.currentUser) {
+  if (!user) {
+    throw new Error('No hay una sesión autenticada para reenviar la verificación.');
+  }
+  return sendEmailVerification(user);
 }
 
 export async function sendMagicLink(email) {

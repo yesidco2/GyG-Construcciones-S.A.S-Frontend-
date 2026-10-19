@@ -8,6 +8,7 @@ import {
   loginWithMicrosoft,
   logout,
   sendMagicLink,
+  sendVerificationEmail,
 } from '../services/authService';
 import { isFirebaseConfigured } from '../services/firebase';
 import useAuth from '../utils/useAuth';
@@ -47,8 +48,74 @@ function AccessMessage({ icon, title, message, onLogout, error = false }) {
   );
 }
 
+function VerificationMessage({
+  email,
+  message,
+  error,
+  isSending,
+  isChecking,
+  onResend,
+  onCheck,
+  onLogout,
+}) {
+  return (
+    <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-surface-variant bg-white p-8 shadow-xl">
+      <div className="max-w-lg text-center">
+        <span className="material-symbols-outlined text-5xl text-industrial-orange">mark_email_unread</span>
+        <h2 className="mt-4 font-headline-sm text-2xl font-bold text-primary">Verifica tu correo</h2>
+        <p className="mt-2 text-sm leading-relaxed text-secondary">
+          Enviamos un enlace de verificación a <strong className="text-primary">{email}</strong>. Verifica tu dirección para que podamos comprobar tu acceso.
+        </p>
+        {message && (
+          <p role="status" className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            {message}
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="mt-4 rounded-lg border border-error/20 bg-error-container p-3 text-sm text-error">
+            {error}
+          </p>
+        )}
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={onResend}
+            disabled={isSending || isChecking}
+            className="rounded-xl border border-outline-variant px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:border-industrial-orange hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSending ? 'Enviando...' : 'Reenviar correo de verificación'}
+          </button>
+          <button
+            type="button"
+            onClick={onCheck}
+            disabled={isSending || isChecking}
+            className="rounded-xl bg-industrial-orange px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-industrial-orange/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isChecking ? 'Comprobando...' : 'Ya verifiqué, volver a comprobar'}
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="mt-4 text-sm font-semibold text-secondary underline-offset-2 hover:text-primary hover:underline"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
-  const { loading, firebaseUser, profile, role, canAccessPanel, error: profileError } = useAuth();
+  const {
+    loading,
+    firebaseUser,
+    profile,
+    role,
+    canAccessPanel,
+    error: profileError,
+    refreshProfile,
+  } = useAuth();
   const [activeTab, setActiveTab] = useState('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,6 +124,9 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState('');
+  const [verificationError, setVerificationError] = useState('');
+  const [verificationAction, setVerificationAction] = useState('');
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   const runAuth = async (operation) => {
@@ -94,9 +164,54 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setVerificationMessage('');
+    setVerificationError('');
+    setVerificationAction('resend');
+    try {
+      await sendVerificationEmail(firebaseUser);
+      setVerificationMessage('Correo de verificación enviado. Revisa también la carpeta de correo no deseado.');
+    } catch (verificationSendError) {
+      setVerificationError(friendlyAuthError(verificationSendError));
+    } finally {
+      setVerificationAction('');
+    }
+  };
+
+  const handleCheckVerification = async () => {
+    setVerificationMessage('');
+    setVerificationError('');
+    setVerificationAction('check');
+    try {
+      await firebaseUser.reload();
+      await firebaseUser.getIdToken(true);
+      await refreshProfile(firebaseUser);
+    } catch (verificationCheckError) {
+      setVerificationError(
+        verificationCheckError?.message ||
+          'No se pudo volver a comprobar la verificación. Inténtalo de nuevo.',
+      );
+    } finally {
+      setVerificationAction('');
+    }
+  };
+
   let authenticatedContent;
   if (loading) {
     authenticatedContent = <LoadingSpinner label="Verificando tu sesión y consultando el perfil..." />;
+  } else if (firebaseUser && firebaseUser.emailVerified === false) {
+    authenticatedContent = (
+      <VerificationMessage
+        email={firebaseUser.email || 'tu cuenta'}
+        message={verificationMessage}
+        error={verificationError}
+        isSending={verificationAction === 'resend'}
+        isChecking={verificationAction === 'check'}
+        onResend={handleResendVerification}
+        onCheck={handleCheckVerification}
+        onLogout={handleLogout}
+      />
+    );
   } else if (firebaseUser && profileError) {
     authenticatedContent = (
       <AccessMessage
@@ -111,8 +226,8 @@ export default function LoginPage() {
     authenticatedContent = (
       <AccessMessage
         icon="admin_panel_settings"
-        title="No tienes acceso al panel"
-        message="Tu cuenta no tiene un rol autorizado. Pide a un administrador que te asigne acceso."
+        title="Tu correo no está autorizado"
+        message="Pide a un administrador que lo agregue a la lista de acceso."
         onLogout={handleLogout}
       />
     );
@@ -214,7 +329,7 @@ export default function LoginPage() {
             <section className="flex flex-col justify-center bg-white p-6 sm:p-10 lg:col-span-7">
               <div className="mb-6">
                 <span className="font-label-caps text-label-caps uppercase tracking-wider text-industrial-orange">Acceso Corporativo</span>
-                <h2 className="mt-1 font-headline-sm text-2xl font-bold text-primary">Iniciar Sesión en el Portal</h2>
+                <h2 className="mt-1 font-headline-sm text-2xl font-bold text-primary">Acceso para administradores</h2>
                 <p className="mt-1 text-sm text-secondary">Ingresa con tu cuenta corporativa o solicita un enlace seguro por correo.</p>
               </div>
 
@@ -367,13 +482,9 @@ export default function LoginPage() {
                 </button>
               </div>
               <div className="mt-6 border-t border-surface-variant pt-5 text-center">
-                <p className="text-sm text-secondary">¿No tienes cuenta?</p>
-                <a
-                  href="#registro"
-                  className="mt-2 inline-flex items-center justify-center rounded-lg border border-outline-variant px-5 py-2 text-sm font-semibold text-primary transition-colors hover:border-industrial-orange hover:bg-surface"
-                >
-                  Registrarse
-                </a>
+                <p className="mx-auto max-w-xl text-sm leading-relaxed text-secondary">
+                  ¿Te autorizaron como administrador y aún no tienes cuenta? Entra con Google o con enlace por correo: tu cuenta se crea automáticamente la primera vez.
+                </p>
               </div>
             </section>
           </div>

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchProfile, subscribeAuth } from '../services/authService';
 import { isFirebaseConfigured } from '../services/firebase';
 
 export default function useAuth() {
+  const requestIdRef = useRef(0);
   const [state, setState] = useState({
     loading: true,
     firebaseUser: null,
@@ -10,12 +11,43 @@ export default function useAuth() {
     error: '',
   });
 
+  const refreshProfile = useCallback(async (firebaseUser) => {
+    if (!firebaseUser) {
+      throw new Error('No hay una sesión autenticada para consultar el perfil.');
+    }
+
+    const requestId = ++requestIdRef.current;
+    setState((previous) => ({
+      ...previous,
+      loading: true,
+      firebaseUser,
+      error: '',
+    }));
+
+    try {
+      const profile = await fetchProfile(firebaseUser);
+      if (requestIdRef.current === requestId) {
+        setState({ loading: false, firebaseUser, profile, error: '' });
+      }
+      return profile;
+    } catch (error) {
+      if (requestIdRef.current === requestId) {
+        setState({
+          loading: false,
+          firebaseUser,
+          profile: null,
+          error: error?.message || 'No se pudo consultar el perfil en el servidor.',
+        });
+      }
+      throw error;
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
-    let requestId = 0;
 
     const unsubscribe = subscribeAuth(async (firebaseUser) => {
-      const currentRequestId = ++requestId;
+      const currentRequestId = ++requestIdRef.current;
       if (!firebaseUser) {
         if (active) {
           setState({
@@ -34,11 +66,11 @@ export default function useAuth() {
 
       try {
         const profile = await fetchProfile(firebaseUser);
-        if (active && requestId === currentRequestId) {
+        if (active && requestIdRef.current === currentRequestId) {
           setState({ loading: false, firebaseUser, profile, error: '' });
         }
       } catch (error) {
-        if (active && requestId === currentRequestId) {
+        if (active && requestIdRef.current === currentRequestId) {
           setState({
             loading: false,
             firebaseUser,
@@ -60,5 +92,6 @@ export default function useAuth() {
     ...state,
     role,
     canAccessPanel: role === 'ADMIN' || role === 'INGENIERO',
+    refreshProfile,
   };
 }
