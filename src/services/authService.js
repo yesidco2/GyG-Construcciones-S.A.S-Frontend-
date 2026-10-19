@@ -2,6 +2,7 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   createUserWithEmailAndPassword,
+  getRedirectResult,
   isSignInWithEmailLink,
   onAuthStateChanged,
   sendEmailVerification,
@@ -10,7 +11,7 @@ import {
   setPersistence,
   signInWithEmailAndPassword,
   signInWithEmailLink,
-  signInWithPopup,
+  signInWithRedirect,
   updateProfile,
   browserLocalPersistence,
   browserSessionPersistence,
@@ -49,11 +50,15 @@ export async function loginWithEmail(email, password, remember = false) {
 }
 
 export function loginWithGoogle() {
-  return signInWithPopup(requireAuth(), new GoogleAuthProvider());
+  return signInWithRedirect(requireAuth(), new GoogleAuthProvider());
 }
 
 export function loginWithMicrosoft() {
-  return signInWithPopup(requireAuth(), new OAuthProvider('microsoft.com'));
+  return signInWithRedirect(requireAuth(), new OAuthProvider('microsoft.com'));
+}
+
+export function completeProviderRedirectSignIn() {
+  return auth ? getRedirectResult(auth) : Promise.resolve(null);
 }
 
 export async function registerWithEmail(nombre, email, password) {
