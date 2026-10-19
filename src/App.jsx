@@ -12,11 +12,6 @@ import {
   completeProviderRedirectSignIn,
 } from './services/authService';
 
-function getRouteKey() {
-  const routeKey = window.location.hash.replace('#', '');
-  return routeKey === 'registro' ? 'login' : routeKey;
-}
-
 const routes = {
   '': AppShell,
   hero: AppShell,
@@ -30,6 +25,15 @@ const routes = {
   'login': LoginPage,
 };
 
+function readRouteKey() {
+  const routeKey = window.location.hash.replace('#', '');
+  if (routeKey === 'registro') {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#login`);
+    return 'login';
+  }
+  return routeKey;
+}
+
 function Layout({ children, showFooter = true }) {
   return (
     <div className="bg-background text-on-background selection:bg-industrial-orange selection:text-white">
@@ -41,14 +45,10 @@ function Layout({ children, showFooter = true }) {
 }
 
 export default function App() {
-  const [routeKey, setRouteKey] = useState(getRouteKey);
+  const [routeKey, setRouteKey] = useState(readRouteKey);
   const emailLinkHandled = useRef(false);
 
   useEffect(() => {
-    if (window.location.hash === '#registro') {
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#login`);
-    }
-
     if (!emailLinkHandled.current) {
       emailLinkHandled.current = true;
       completeEmailLinkSignIn().catch((error) => {
@@ -59,12 +59,7 @@ export default function App() {
       });
     }
 
-    const onHashChange = () => {
-      if (window.location.hash === '#registro') {
-        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#login`);
-      }
-      setRouteKey(getRouteKey());
-    };
+    const onHashChange = () => setRouteKey(readRouteKey());
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
