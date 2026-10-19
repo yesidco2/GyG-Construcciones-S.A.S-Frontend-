@@ -260,7 +260,7 @@ export default function LoginPage() {
 
         {authenticatedContent || (
           <div className="grid min-h-[640px] grid-cols-1 overflow-hidden rounded-3xl border border-surface-variant/80 bg-white shadow-xl lg:grid-cols-12">
-            <section className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary-container to-[#00142e] p-8 text-white lg:col-span-5 lg:p-10">
+            <section className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary-container to-primary p-8 text-white lg:col-span-5 lg:p-10">
               <div className="pointer-events-none absolute inset-0 opacity-10">
                 <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
                   <defs>

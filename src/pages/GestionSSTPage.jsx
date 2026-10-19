@@ -69,7 +69,7 @@ export default function GestionSSTPage() {
             className="w-full h-full object-cover"
             src="https://lh3.googleusercontent.com/aida/AP1WRLtPDNDlIaKq4Z2KB6W0IR5g0rstwQDKHHD3OLJbtS1TiIH8OrQ0wCB771LPuRL4zcguvwywJ02ONjey5pNXOCZqjlHQoNH6-Lr9gM8euM4M7R12DkDc-hGJeCdNsVhBkQzATsMfTCFlpWwpMO86A2VknVDZb2fu_4q3pDWofJdpkSVjZmCK9eyOLbFaTJCPDj1slJVpxwR-AL4gXFz5noMzRDVbOEL41ZTCb4qKK2s3LtGR8fOzrJpTGV4"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#000a1e]/40 via-[#000a1e]/70 to-[#000a1e]/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/25 via-primary/45 to-primary/60" />
         </div>
 
         <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-md w-full text-center md:text-left mt-xl">
@@ -113,8 +113,8 @@ export default function GestionSSTPage() {
                 key={card.title}
                 className="flex flex-col items-center border border-surface-variant bg-surface-container-lowest p-md text-center shadow-ambient transition-standard card-hover rounded-lg"
               >
-                <div className="mb-sm flex h-16 w-16 items-center justify-center rounded-full bg-primary-container/10">
-                  <span className="material-symbols-outlined text-3xl text-primary">{card.icon}</span>
+                <div className="mb-sm flex h-16 w-16 items-center justify-center rounded-full bg-safety-green/10">
+                  <span className="material-symbols-outlined text-3xl text-safety-green">{card.icon}</span>
                 </div>
                 <h3 className="mb-xs font-headline-sm text-headline-sm text-primary">{card.title}</h3>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">{card.description}</p>
