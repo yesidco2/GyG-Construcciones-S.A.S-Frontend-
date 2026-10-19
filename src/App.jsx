@@ -8,7 +8,10 @@ import ConsultProjectPage from './pages/ConsultProjectPage';
 import AdminFaqPage from './pages/AdminFaqPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import { completeEmailLinkSignIn } from './services/authService';
+import {
+  completeEmailLinkSignIn,
+  completeProviderRedirectSignIn,
+} from './services/authService';
 
 const routes = {
   '': AppShell,
@@ -43,6 +46,9 @@ export default function App() {
       emailLinkHandled.current = true;
       completeEmailLinkSignIn().catch((error) => {
         console.error('No se pudo completar el acceso por enlace de correo:', error);
+      });
+      completeProviderRedirectSignIn().catch((error) => {
+        console.error('No se pudo completar el acceso con el proveedor:', error);
       });
     }
 
