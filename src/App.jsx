@@ -7,11 +7,15 @@ import ProjectsPage from './pages/ProjectsPage';
 import ConsultProjectPage from './pages/ConsultProjectPage';
 import AdminFaqPage from './pages/AdminFaqPage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import {
   completeEmailLinkSignIn,
   completeProviderRedirectSignIn,
 } from './services/authService';
+
+function getRouteKey() {
+  const routeKey = window.location.hash.replace('#', '');
+  return routeKey === 'registro' ? 'login' : routeKey;
+}
 
 const routes = {
   '': AppShell,
@@ -24,7 +28,6 @@ const routes = {
   'consultar-proyecto': ConsultProjectPage,
   'admin-faq': AdminFaqPage,
   'login': LoginPage,
-  'registro': RegisterPage,
 };
 
 function Layout({ children, showFooter = true }) {
@@ -38,10 +41,14 @@ function Layout({ children, showFooter = true }) {
 }
 
 export default function App() {
-  const [routeKey, setRouteKey] = useState(window.location.hash.replace('#', ''));
+  const [routeKey, setRouteKey] = useState(getRouteKey);
   const emailLinkHandled = useRef(false);
 
   useEffect(() => {
+    if (window.location.hash === '#registro') {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#login`);
+    }
+
     if (!emailLinkHandled.current) {
       emailLinkHandled.current = true;
       completeEmailLinkSignIn().catch((error) => {
@@ -52,7 +59,12 @@ export default function App() {
       });
     }
 
-    const onHashChange = () => setRouteKey(window.location.hash.replace('#', ''));
+    const onHashChange = () => {
+      if (window.location.hash === '#registro') {
+        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#login`);
+      }
+      setRouteKey(getRouteKey());
+    };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
@@ -75,7 +87,7 @@ export default function App() {
   }, [routeKey]);
 
   const PageComponent = routes[routeKey] || AppShell;
-  const showFooter = !['consultar-proyecto', 'login', 'registro'].includes(routeKey);
+  const showFooter = !['consultar-proyecto', 'login'].includes(routeKey);
 
   return (
     <Layout showFooter={showFooter}>
