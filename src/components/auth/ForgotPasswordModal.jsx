@@ -56,7 +56,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
         </div>
 
         <p className="mt-3 text-sm text-secondary font-body-sm">
-          Ingresa el correo corporativo vinculado a tu cuenta del SG-SST de G&G Construcciones para recibir instrucciones de recuperación segura.
+          La recuperación solo está disponible para correos autorizados por un administrador. Ingresa el correo vinculado a tu cuenta para recibir instrucciones seguras.
         </p>
 
         {status.message && (
