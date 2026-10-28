@@ -1,15 +1,51 @@
 import { useState, useEffect } from 'react';
 import {
   getStoredProjects,
+  generateProjectCode,
+  DEFAULT_PROJECT_PHOTO,
   updateProjectProgress,
   addProjectPhoto,
   createProject,
   deleteProject,
 } from '../../services/projectService';
 
+function compressProjectPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen seleccionada.'));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error('El archivo seleccionado no es una imagen válida.'));
+      image.onload = () => {
+        const maxDimension = 1280;
+        const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error('No se pudo procesar la imagen.'));
+          return;
+        }
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        try {
+          resolve(canvas.toDataURL('image/jpeg', 0.78));
+        } catch {
+          reject(new Error('No se pudo procesar la imagen seleccionada.'));
+        }
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // Fotos sugeridas para agilizar pruebas
 const PRESET_PHOTOS = [
-  { label: 'Estructura', url: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?w=600&auto=format&fit=crop&q=80' },
+  { label: 'Estructura', url: DEFAULT_PROJECT_PHOTO },
   { label: 'Seguridad SST', url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&auto=format&fit=crop&q=80' },
   { label: 'Maquinaria', url: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&auto=format&fit=crop&q=80' },
   { label: 'Topografía', url: 'https://images.unsplash.com/photo-1590496793929-36417d3117de?w=600&auto=format&fit=crop&q=80' },
@@ -31,9 +67,11 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const [newCategory, setNewCategory] = useState('Ingeniería Civil');
   const [newClient, setNewClient] = useState('');
   const [newProgress, setNewProgress] = useState(15);
-  const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [newPhotoUrl, setNewPhotoUrl] = useState(DEFAULT_PROJECT_PHOTO);
   const [newDescription, setNewDescription] = useState('');
   const [createError, setCreateError] = useState('');
+  const [photoError, setPhotoError] = useState('');
+  const [expandedPhoto, setExpandedPhoto] = useState(null);
 
   // Cargar proyectos al montar
   useEffect(() => {
@@ -41,19 +79,53 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
     suggestNextCode();
   }, []);
 
+  useEffect(() => {
+    if (!expandedPhoto) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setExpandedPhoto(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expandedPhoto]);
+
   const loadProjects = () => {
     setProjects(getStoredProjects());
   };
 
   const suggestNextCode = () => {
-    const list = getStoredProjects();
-    const nextNum = 125 + list.length;
-    setNewCode(`GG-2026-00${nextNum}`);
+    try {
+      setNewCode(generateProjectCode());
+      setCreateError('');
+    } catch (error) {
+      console.error('No se pudo generar un código de proyecto:', error);
+      setCreateError(error.message || 'No se pudo generar un código de proyecto.');
+    }
   };
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleProjectPhotoChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setPhotoError('Selecciona una imagen JPG, PNG o WebP.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setPhotoError('La imagen debe pesar menos de 10 MB.');
+      return;
+    }
+
+    setPhotoError('');
+    try {
+      setNewPhotoUrl(await compressProjectPhoto(file));
+    } catch (error) {
+      setPhotoError(error.message || 'No se pudo cargar la imagen.');
+    }
   };
 
   // Manejar cambio de avance
@@ -103,7 +175,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         client: newClient.trim() || 'Cliente Corporativo',
         supervisor: currentUser?.name || 'Ing. Residente SST',
         progress: newProgress,
-        photoUrl: newPhotoUrl.trim() || PRESET_PHOTOS[0].url,
+        photoUrl: newPhotoUrl,
         description: newDescription.trim(),
       });
 
@@ -114,8 +186,9 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       setNewName('');
       setNewClient('');
       setNewProgress(15);
-      setNewPhotoUrl('');
+      setNewPhotoUrl(DEFAULT_PROJECT_PHOTO);
       setNewDescription('');
+      setPhotoError('');
       suggestNextCode();
       setActiveTab('list');
     } catch (err) {
@@ -149,11 +222,24 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img
-                src={currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'}
-                alt={currentUser?.name}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-industrial-orange object-cover shadow-md"
-              />
+              {currentUser?.avatar ? (
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name || 'Foto de perfil'}
+                  className="h-16 w-16 rounded-2xl border-2 border-industrial-orange object-cover shadow-md sm:h-20 sm:w-20"
+                />
+              ) : (
+                <div
+                  role="img"
+                  aria-label="Foto de perfil predeterminada"
+                  className="flex h-16 w-16 items-end justify-center overflow-hidden rounded-2xl border-2 border-industrial-orange bg-[#e4e6eb] shadow-md sm:h-20 sm:w-20"
+                >
+                  <svg viewBox="0 0 64 64" aria-hidden="true" className="h-[90%] w-[90%] text-[#65676b]">
+                    <circle cx="32" cy="21" r="13" fill="currentColor" />
+                    <path d="M8 64c1-16 10-25 24-25s23 9 24 25H8Z" fill="currentColor" />
+                  </svg>
+                </div>
+              )}
               <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-primary rounded-full flex items-center justify-center text-[10px] text-white">
                 ✓
               </span>
@@ -414,7 +500,14 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                     </span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {project.photos.slice(0, 4).map((p, idx) => (
-                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-surface-variant h-20 bg-slate-100">
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setExpandedPhoto(p.url)}
+                          aria-label={`Ampliar foto: ${p.description}`}
+                          aria-haspopup="dialog"
+                          className="relative group block h-20 overflow-hidden rounded-lg border border-surface-variant bg-slate-100 text-left"
+                        >
                           <img
                             src={p.url}
                             alt={p.description}
@@ -423,7 +516,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1 text-[9px] text-white">
                             <span className="line-clamp-1">{p.fecha}</span>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -561,32 +654,40 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               />
             </div>
 
-            {/* URL Imagen Principal */}
+            {/* Fotografía Inicial */}
             <div>
               <label htmlFor="new-photo" className="block text-xs font-semibold uppercase text-secondary mb-1">
                 Fotografía Inicial de la Obra
               </label>
               <input
                 id="new-photo"
-                type="url"
-                value={newPhotoUrl}
-                onChange={(e) => setNewPhotoUrl(e.target.value)}
-                placeholder="https://ejemplo.com/foto-obra.jpg"
-                className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-industrial-orange/40"
+                type="file"
+                accept="image/*"
+                onChange={handleProjectPhotoChange}
+                aria-describedby={photoError ? 'new-photo-error' : 'new-photo-help'}
+                className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
               />
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-[10px] text-secondary">Sugerencias rápidas:</span>
-                {PRESET_PHOTOS.map((p) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => setNewPhotoUrl(p.url)}
-                    className="text-[10px] bg-surface hover:bg-surface-variant px-2 py-0.5 rounded border border-surface-variant font-medium text-primary"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+              <p id="new-photo-help" className="mt-1 text-[10px] text-secondary">
+                Elige una foto de tu galería o dispositivo (JPG, PNG o WebP; máximo 10 MB). Se optimizará y guardará junto al proyecto en este dispositivo.
+              </p>
+              {photoError && (
+                <p id="new-photo-error" role="alert" className="mt-1 text-xs text-error">
+                  {photoError}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setExpandedPhoto(newPhotoUrl)}
+                aria-label="Ampliar vista previa de la fotografía"
+                aria-haspopup="dialog"
+                className="mt-3 block h-96 w-full overflow-hidden rounded-lg border border-surface-variant bg-surface text-left sm:h-[30rem] lg:h-[34rem]"
+              >
+                <img
+                  src={newPhotoUrl}
+                  alt="Vista previa de la fotografía inicial del proyecto. Toca para ampliar."
+                  className="h-full w-full object-cover"
+                />
+              </button>
             </div>
 
             {/* Descripción */}
@@ -756,11 +857,19 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {photoModalProject.photos.map((photo, index) => (
                     <div key={index} className="rounded-xl overflow-hidden border border-surface-variant bg-white shadow-xs">
-                      <img
-                        src={photo.url}
-                        alt={photo.description}
-                        className="w-full h-32 object-cover"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setExpandedPhoto(photo.url)}
+                        aria-label={`Ampliar foto: ${photo.description}`}
+                        aria-haspopup="dialog"
+                        className="block h-48 w-full overflow-hidden bg-slate-100 sm:h-64"
+                      >
+                        <img
+                          src={photo.url}
+                          alt={photo.description}
+                          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      </button>
                       <div className="p-2.5">
                         <span className="text-[10px] text-industrial-orange font-bold block">{photo.fecha}</span>
                         <p className="text-xs text-primary font-medium mt-0.5 line-clamp-2">{photo.description}</p>
@@ -775,6 +884,32 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {expandedPhoto && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fotografía ampliada"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 sm:p-6"
+          onClick={() => setExpandedPhoto(null)}
+        >
+          <button
+            type="button"
+            autoFocus
+            onClick={() => setExpandedPhoto(null)}
+            aria-label="Cerrar fotografía ampliada"
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-3xl leading-none text-white hover:bg-white/25"
+          >
+            ×
+          </button>
+          <img
+            src={expandedPhoto}
+            alt="Fotografía del proyecto ampliada"
+            className="max-h-[92vh] max-w-full object-contain"
+            onClick={(event) => event.stopPropagation()}
+          />
         </div>
       )}
     </div>
