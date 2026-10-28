@@ -22,7 +22,7 @@ body {
 }
 
 .gradient-overlay {
-  background: linear-gradient(180deg, rgba(0, 10, 30, 0.7) 0%, rgba(0, 10, 30, 0.9) 100%);
+  background: linear-gradient(180deg, rgba(18, 59, 93, 0.12) 0%, rgba(18, 59, 93, 0.38) 100%);
 }
 
 .bento-card {
@@ -35,7 +35,7 @@ body {
 }
 
 .industrial-border {
-  border-left: 4px solid #e16300;
+  border-left: 4px solid #2e7d52;
 }
 
 @keyframes shake {

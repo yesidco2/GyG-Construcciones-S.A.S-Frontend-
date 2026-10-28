@@ -223,6 +223,16 @@ export default function LoginPage() {
         {authenticatedContent || (
           <div className="grid min-h-[640px] grid-cols-1 overflow-hidden rounded-3xl border border-surface-variant/80 bg-white shadow-xl lg:grid-cols-12">
             <section className="relative hidden flex-col justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-container to-[#00142e] p-8 text-white lg:col-span-5 lg:flex lg:p-10">
+              <div className="pointer-events-none absolute inset-0 opacity-10">
+                <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" strokeWidth="1" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+                </svg>
+              </div>
               <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-industrial-orange/20 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-industrial-orange/15 blur-3xl" />
               <div className="relative z-10">

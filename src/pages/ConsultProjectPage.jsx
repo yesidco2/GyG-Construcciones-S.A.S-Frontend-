@@ -104,7 +104,7 @@ export default function ConsultProjectPage() {
   };
 
   return (
-    <section className="min-h-screen bg-[#eef2ff] px-md py-xl pt-24">
+    <section className="min-h-screen bg-background px-md py-xl pt-24">
       <div className="mx-auto max-w-5xl rounded-[2rem] bg-white shadow-xl border border-surface-variant p-6 md:p-14">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-start">
           <div className="space-y-6">

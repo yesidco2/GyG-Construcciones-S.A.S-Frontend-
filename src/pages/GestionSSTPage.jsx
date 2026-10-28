@@ -71,7 +71,7 @@ export default function GestionSSTPage() {
             src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&auto=format&fit=crop&q=85"
             fetchPriority="high"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#000a1e]/40 via-[#000a1e]/70 to-[#000a1e]/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/25 via-primary/45 to-primary/60" />
         </div>
 
         <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-md w-full text-center md:text-left mt-xl">
@@ -115,8 +115,8 @@ export default function GestionSSTPage() {
                 key={card.title}
                 className="flex flex-col items-center border border-surface-variant bg-surface-container-lowest p-md text-center shadow-ambient transition-standard card-hover rounded-lg"
               >
-                <div className="mb-sm flex h-16 w-16 items-center justify-center rounded-full bg-primary-container/10">
-                  <span className="material-symbols-outlined text-3xl text-primary">{card.icon}</span>
+                <div className="mb-sm flex h-16 w-16 items-center justify-center rounded-full bg-safety-green/10">
+                  <span className="material-symbols-outlined text-3xl text-safety-green">{card.icon}</span>
                 </div>
                 <h3 className="mb-xs font-headline-sm text-headline-sm text-primary">{card.title}</h3>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">{card.description}</p>

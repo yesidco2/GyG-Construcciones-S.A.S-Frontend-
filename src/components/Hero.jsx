@@ -11,22 +11,22 @@ export default function Hero() {
       </div>
       <div className="relative z-10 max-w-container-max mx-auto px-md py-xl">
         {/* Bloque de segmentación: Cliente vs Prospecto */}
-        <div className="mb-xl bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-md max-w-2xl">
-          <p className="text-white/70 font-body-sm text-body-sm mb-sm">Selecciona tu perfil para una mejor experiencia:</p>
+        <div className="mb-xl bg-primary/75 backdrop-blur-md border border-white/20 rounded-lg p-md max-w-2xl shadow-lg">
+          <p className="text-white font-body-sm text-body-sm mb-sm">Selecciona tu perfil para una mejor experiencia:</p>
           <div className="flex flex-col sm:flex-row gap-sm">
-            <a className="flex-1 bg-on-tertiary-container text-primary px-md py-sm rounded-lg font-headline-sm text-headline-sm text-center hover:bg-on-tertiary-container/90 transition-all font-semibold" href="#servicios">
+            <a className="flex-1 bg-on-tertiary-container text-white px-md py-sm rounded-lg font-headline-sm text-headline-sm text-center hover:bg-tertiary-container transition-all font-semibold" href="#servicios">
               ¿Eres nuevo? Conoce nuestros servicios
             </a>
-            <a className="flex-1 border-2 border-white/30 text-white px-md py-sm rounded-lg font-headline-sm text-headline-sm text-center hover:bg-white/10 transition-all" href="#consultar-proyecto">
+            <a className="flex-1 bg-primary/35 border-2 border-white/40 text-white px-md py-sm rounded-lg font-headline-sm text-headline-sm text-center hover:bg-primary/55 transition-all" href="#consultar-proyecto">
               ¿Ya eres cliente? Consulta tu obra
             </a>
           </div>
         </div>
 
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-xs bg-industrial-orange/10 border border-industrial-orange/30 px-sm py-xs rounded-full mb-md">
+          <div className="inline-flex items-center gap-xs bg-primary/75 border border-white/25 px-sm py-xs rounded-full mb-md shadow-sm">
             <span className="w-2 h-2 rounded-full bg-industrial-orange animate-pulse" />
-            <span className="text-industrial-orange font-label-caps text-label-caps uppercase tracking-widest">
+            <span className="text-white font-label-caps text-label-caps uppercase tracking-widest">
               Líderes en Seguridad &amp; Construcción
             </span>
           </div>
