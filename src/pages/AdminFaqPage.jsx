@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import useAuth from '../utils/useAuth';
 
 function getFaqs() {
   try {
@@ -9,11 +10,40 @@ function getFaqs() {
 }
 
 export default function AdminFaqPage() {
+  const { loading, canAccessPanel } = useAuth();
   const [faqs, setFaqs] = useState([]);
 
   useEffect(() => {
-    setFaqs(getFaqs());
-  }, []);
+    if (!loading && canAccessPanel) {
+      setFaqs(getFaqs());
+    }
+  }, [loading, canAccessPanel]);
+
+  if (loading) {
+    return (
+      <section className="min-h-screen bg-surface px-md py-xl pt-24">
+        <p className="mx-auto max-w-5xl text-center font-body-md text-body-md text-secondary">
+          Verificando permisos...
+        </p>
+      </section>
+    );
+  }
+
+  if (!canAccessPanel) {
+    return (
+      <section className="min-h-screen bg-surface px-md py-xl pt-24">
+        <div className="mx-auto max-w-5xl rounded-2xl border border-surface-variant bg-white p-lg text-center shadow-sm">
+          <h1 className="font-headline-lg text-headline-lg text-primary">Acceso restringido</h1>
+          <p className="mt-sm font-body-md text-body-md text-secondary">
+            Necesitas una sesión con rol ADMIN o INGENIERO para consultar esta página.
+          </p>
+          <a className="mt-md inline-block font-label-caps text-label-caps text-industrial-orange hover:underline" href="#login">
+            Iniciar sesión
+          </a>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="min-h-screen bg-surface px-md py-xl pt-24">

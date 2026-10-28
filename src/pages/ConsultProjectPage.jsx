@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { apiFetch } from '../services/api';
 import { getProjectByCode } from '../services/projectService';
 
+const projectCodePattern = /^[A-Za-z0-9-]{6,40}$/;
+
 export default function ConsultProjectPage() {
   const [projectCode, setProjectCode] = useState('');
   const [trackingResult, setTrackingResult] = useState(null);
@@ -26,6 +28,14 @@ export default function ConsultProjectPage() {
       return 'Ingresa el código asignado a tu proyecto para realizar la consulta.';
     }
 
+    if (error === 'invalid-code') {
+      return 'El código debe tener entre 6 y 40 caracteres y solo puede incluir letras, números y guiones.';
+    }
+
+    if (error === 'rate-limited') {
+      return 'Demasiadas consultas seguidas. Espera un minuto e inténtalo de nuevo.';
+    }
+
     if (error) {
       return 'No pudimos consultar el proyecto por un error de red o del servidor. Intenta nuevamente más tarde.';
     }
@@ -46,6 +56,12 @@ export default function ConsultProjectPage() {
       setTrackingResult(null);
       return;
     }
+    if (!projectCodePattern.test(code)) {
+      setSearched(true);
+      setError('invalid-code');
+      setTrackingResult(null);
+      return;
+    }
 
     setIsLoading(true);
     setError('');
@@ -62,7 +78,12 @@ export default function ConsultProjectPage() {
       });
       setSearched(true);
     } catch (err) {
-      // Fallback a base de datos local de proyectos (creados/modificados en el Dashboard)
+      if (err.status === 429) {
+        setError('rate-limited');
+        setSearched(true);
+        return;
+      }
+
       const localProject = getProjectByCode(code);
       if (localProject) {
         setTrackingResult({
@@ -95,13 +116,15 @@ export default function ConsultProjectPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <label htmlFor="project-code" className="sr-only">Código del proyecto</label>
               <input
                 id="project-code"
                 type="text"
                 value={projectCode}
                 onChange={(event) => setProjectCode(event.target.value)}
+                minLength={6}
+                maxLength={40}
                 placeholder="Ej: GG-2026-00125"
                 className="w-full rounded-full border border-surface-variant bg-white px-6 py-4 text-body-md text-on-background shadow-sm focus:border-primary-container focus:outline-none disabled:opacity-50"
                 aria-label="Código del proyecto"
@@ -157,8 +180,12 @@ export default function ConsultProjectPage() {
                     ? 'Consultando el proyecto...'
                     : error === 'not-found'
                       ? 'No se encontró un proyecto con ese código.'
-                      : error === 'request-failed'
-                        ? 'No se pudo cargar el proyecto. Intenta nuevamente más tarde.'
+                      : error === 'rate-limited'
+                        ? 'Demasiadas consultas seguidas. Espera un minuto e inténtalo de nuevo.'
+                        : error === 'invalid-code'
+                          ? 'El código debe tener entre 6 y 40 caracteres y solo puede incluir letras, números y guiones.'
+                          : error === 'request-failed'
+                            ? 'No se pudo cargar el proyecto. Intenta nuevamente más tarde.'
                         : error === 'empty'
                           ? 'Ingresa un código para iniciar la consulta.'
                           : 'Sin resultados para este código.'}

@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from 'firebase/auth';
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,4 +19,12 @@ export const isFirebaseConfigured = Object.values(config).every(
 
 const app = isFirebaseConfigured ? initializeApp(config) : null;
 
-export const auth = app ? getAuth(app) : null;
+export const auth = app
+  ? initializeAuth(app, {
+      persistence: [
+        indexedDBLocalPersistence,
+        browserLocalPersistence,
+        browserSessionPersistence,
+      ],
+    })
+  : null;

@@ -104,13 +104,40 @@ const fallbackServices = [
   ...sstServices.map((service) => ({ ...service, bloque: 'SST' })),
 ];
 
+function mergeServiceBlock(apiServices, defaultServices, block) {
+  const blockServices = apiServices.filter(
+    (service) => String(service.bloque || '').trim().toUpperCase() === block,
+  );
+  const mergedServices = defaultServices.map((fallback, index) => {
+    const apiService = blockServices[index];
+    return apiService
+      ? {
+          ...fallback,
+          title: apiService.titulo || fallback.title,
+          description: apiService.descripcion || fallback.description,
+          bloque: block,
+        }
+      : { ...fallback, bloque: block };
+  });
+
+  return [
+    ...mergedServices,
+    ...blockServices.slice(defaultServices.length).map((apiService, index) => ({
+      ...defaultServices[index % defaultServices.length],
+      title: apiService.titulo,
+      description: apiService.descripcion,
+      bloque: block,
+    })),
+  ];
+}
+
 function ServiceCard({ title, icon, variant, textClass, border, borderClass, description }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const isDark = variant === 'bg-primary';
 
   return (
-    <div 
-      className="h-48 cursor-pointer [perspective:1000px] select-none"
+    <div
+      className="bento-card h-48 cursor-pointer [perspective:1000px] select-none"
       onClick={() => setIsFlipped((prev) => !prev)}
     >
       <div 
@@ -120,7 +147,7 @@ function ServiceCard({ title, icon, variant, textClass, border, borderClass, des
       >
         {/* Cara Frontal */}
         <div 
-          className={`absolute inset-0 w-full h-full bento-card ${variant} p-md rounded-xl shadow-sm ${border || ''} ${borderClass || ''} flex flex-col justify-between [backface-visibility:hidden] [-webkit-backface-visibility:hidden] group`}
+          className={`absolute inset-0 w-full h-full ${variant} p-md rounded-xl shadow-sm ${border || ''} ${borderClass || ''} flex flex-col justify-between [backface-visibility:hidden] [-webkit-backface-visibility:hidden] group`}
         >
           <span className={`material-symbols-outlined ${textClass} group-hover:scale-110 transition-transform`} style={{ fontSize: 40 }}>
             {icon}
@@ -132,7 +159,7 @@ function ServiceCard({ title, icon, variant, textClass, border, borderClass, des
 
         {/* Cara Trasera */}
         <div 
-          className={`absolute inset-0 w-full h-full bento-card ${
+          className={`absolute inset-0 w-full h-full ${
             isDark ? 'bg-primary text-white' : 'bg-white text-primary'
           } p-md rounded-xl shadow-sm ${border || ''} ${borderClass || ''} flex flex-col justify-between [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(180deg)]`}
         >
@@ -159,15 +186,13 @@ export default function Services() {
       .then((data) => {
         if (!active) return;
         if (Array.isArray(data) && data.length > 0) {
-          setServiceItems(data.map((item, index) => {
-            const styleOptions = item.bloque === 'SST' ? sstServices : services;
-            return {
-              ...styleOptions[index % styleOptions.length],
-              title: item.titulo,
-              description: item.descripcion,
-              bloque: item.bloque,
-            };
-          }));
+          const apiServices = data.filter(
+            (item) => ['CIVIL', 'SST'].includes(String(item.bloque || '').trim().toUpperCase()),
+          );
+          setServiceItems([
+            ...mergeServiceBlock(apiServices, services, 'CIVIL'),
+            ...mergeServiceBlock(apiServices, sstServices, 'SST'),
+          ]);
         }
       })
       .catch((error) => {
