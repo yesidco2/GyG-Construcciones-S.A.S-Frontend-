@@ -36,7 +36,7 @@ function CommitmentItem({ icon, title, description }) {
 
 export default function Commitment() {
   return (
-    <section id="gestion-sst" className="bg-primary-fixed text-on-primary-fixed py-xl">
+    <section id="compromiso" className="bg-primary-container text-white py-xl">
       <div className="max-w-container-max mx-auto px-md">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
           <div>

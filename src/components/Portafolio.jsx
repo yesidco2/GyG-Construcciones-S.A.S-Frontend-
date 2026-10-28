@@ -26,6 +26,70 @@ const projects = [
     metric: '18.200+',
     metricLabel: 'Horas/Hombre sin incidentes',
   },
+  {
+    title: 'Puente de Conexión Regional',
+    description: 'Intervención de infraestructura vial con coordinación de obra, control de riesgos y trabajo seguro en alturas.',
+    image: 'https://images.unsplash.com/photo-1541976590-713941681591?auto=format&fit=crop&w=1200&q=80',
+    category: 'Ingeniería Civil',
+    metric: 'Infraestructura',
+    metricLabel: 'Intervención civil',
+  },
+  {
+    title: 'Complejo Empresarial Central',
+    description: 'Acompañamiento técnico y gestión preventiva durante la adecuación de espacios empresariales.',
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+    category: 'SST',
+    metric: 'Prevención',
+    metricLabel: 'Gestión SST',
+  },
+  {
+    title: 'Parque Industrial de Occidente',
+    description: 'Planeación de actividades y supervisión de seguridad para instalaciones de operación industrial.',
+    image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80',
+    category: 'SST',
+    metric: 'Seguridad',
+    metricLabel: 'Acompañamiento en obra',
+  },
+  {
+    title: 'Edificio Corporativo del Norte',
+    description: 'Gestión de actividades constructivas y medidas de prevención para una edificación de uso corporativo.',
+    image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80',
+    category: 'Ingeniería Civil',
+    metric: 'Edificación',
+    metricLabel: 'Proyecto civil',
+  },
+  {
+    title: 'Centro de Distribución Metropolitano',
+    description: 'Asesoría en identificación de peligros y control de riesgos para labores logísticas e industriales.',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+    category: 'SST',
+    metric: 'Control de riesgos',
+    metricLabel: 'Gestión preventiva',
+  },
+  {
+    title: 'Renovación de Espacio Público',
+    description: 'Adecuación de zonas peatonales con seguimiento técnico y medidas de seguridad para los equipos de trabajo.',
+    image: 'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80',
+    category: 'Ingeniería Civil',
+    metric: 'Espacio público',
+    metricLabel: 'Obra civil',
+  },
+  {
+    title: 'Planta de Producción Sostenible',
+    description: 'Acompañamiento en seguridad y salud durante la adecuación de áreas para procesos productivos.',
+    image: 'https://images.unsplash.com/photo-1567789884554-0b844b597180?auto=format&fit=crop&w=1200&q=80',
+    category: 'SST',
+    metric: 'Seguridad industrial',
+    metricLabel: 'Acompañamiento SST',
+  },
+  {
+    title: 'Infraestructura Educativa Regional',
+    description: 'Coordinación de trabajos de adecuación y verificación de condiciones seguras en obra.',
+    image: 'https://images.unsplash.com/photo-1590725175232-2b9f4b5c3c4a?auto=format&fit=crop&w=1200&q=80',
+    category: 'Ingeniería Civil',
+    metric: 'Infraestructura',
+    metricLabel: 'Proyecto civil',
+  },
 ];
 
 const filters = ['Todos', 'Ingeniería Civil', 'SST'];
@@ -34,6 +98,17 @@ const fallbackProjects = projects.map((project) => ({
   ...project,
   apiCategory: project.category === 'SST' ? 'SST' : 'CIVIL',
 }));
+
+function mergeProjects(fallback, apiProjects) {
+  const merged = new Map(fallback.map((project) => [project.title.trim().toLocaleLowerCase(), project]));
+
+  apiProjects.forEach((project) => {
+    const key = project.title.trim().toLocaleLowerCase();
+    merged.set(key, { ...merged.get(key), ...project });
+  });
+
+  return Array.from(merged.values());
+}
 
 function ProjectCard({ title, description, image, category, metric, metricLabel }) {
   return (
@@ -97,7 +172,7 @@ export default function Portfolio() {
       .then((data) => {
         if (!active) return;
         if (Array.isArray(data)) {
-          setProjectItems(data.map((project) => {
+          const apiProjects = data.map((project) => {
             const fallbackProject = fallbackProjects.find((item) => item.apiCategory === project.categoria);
             return {
               title: project.nombre,
@@ -108,7 +183,8 @@ export default function Portfolio() {
               metric: project.metricaDestacada || 'Proyecto destacado',
               metricLabel: 'Métrica destacada',
             };
-          }));
+          });
+          setProjectItems(mergeProjects(fallback, apiProjects));
         }
       })
       .catch((error) => {

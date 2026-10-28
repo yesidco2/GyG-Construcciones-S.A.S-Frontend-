@@ -5,6 +5,8 @@
  */
 
 const STORAGE_KEY = 'gg_projects_db';
+export const DEFAULT_PROJECT_PHOTO =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 640 400%22%3E%3Crect width=%22640%22 height=%22400%22 fill=%22%23e4e6eb%22/%3E%3Cpath d=%22M0 320 180 150l110 110 90-90 260 230H0Z%22 fill=%22%23c8cdd4%22/%3E%3Ccircle cx=%22470%22 cy=%22110%22 r=%2240%22 fill=%22%23c8cdd4%22/%3E%3C/svg%3E';
 
 const INITIAL_PROJECTS = [
   {
@@ -121,6 +123,32 @@ export function getProjectByCode(code) {
   return projects.find((p) => p.code.toUpperCase() === cleanCode) || null;
 }
 
+export function generateProjectCode() {
+  const projects = getStoredProjects();
+  const year = new Date().getFullYear();
+  const range = 100000;
+  const maxRandomValue = 0x100000000;
+  const unbiasedLimit = Math.floor(maxRandomValue / range) * range;
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const randomValues = new Uint32Array(1);
+    window.crypto.getRandomValues(randomValues);
+    const randomValue = randomValues[0];
+    if (randomValue >= unbiasedLimit) {
+      attempt -= 1;
+      continue;
+    }
+
+    const suffix = String(randomValue % range).padStart(5, '0');
+    const code = `GG-${year}-${suffix}`;
+    if (!projects.some((project) => project.code.toUpperCase() === code)) {
+      return code;
+    }
+  }
+
+  throw new Error('No se pudo generar un código único. Inténtalo nuevamente.');
+}
+
 /**
  * Actualiza el porcentaje de avance de un proyecto
  */
@@ -177,6 +205,7 @@ export function addProjectPhoto(code, photoData) {
 export function createProject(projectData) {
   const projects = getStoredProjects();
   const cleanCode = projectData.code.trim().toUpperCase();
+  const projectPhoto = projectData.photoUrl?.trim() || DEFAULT_PROJECT_PHOTO;
 
   // Validar si ya existe el código
   if (projects.some((p) => p.code.toUpperCase() === cleanCode)) {
@@ -194,17 +223,19 @@ export function createProject(projectData) {
     startDate: projectData.startDate || new Date().toISOString().split('T')[0],
     estimatedEnd: projectData.estimatedEnd || '2027-12-31',
     description: projectData.description || 'Proyecto de ingeniería y gestión de seguridad en el trabajo.',
-    photos: projectData.photoUrl ? [
+    photos: [
       {
-        url: projectData.photoUrl,
+        url: projectPhoto,
         fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' }),
         description: 'Foto de inicio de proyecto',
-      }
-    ] : [],
+      },
+    ],
   };
 
   projects.unshift(newProject);
-  saveProjects(projects);
+  if (!saveProjects(projects)) {
+    throw new Error('No se pudo guardar el proyecto en este dispositivo. Libera espacio e inténtalo de nuevo.');
+  }
   return newProject;
 }
 

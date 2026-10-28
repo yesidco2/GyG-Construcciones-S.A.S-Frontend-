@@ -23,7 +23,7 @@ export default function TrustBar() {
   ];
 
   return (
-    <section className="bg-primary-container py-lg md:py-xl border-y border-surface-variant">
+    <section id="indicadores" className="bg-primary-container py-lg md:py-xl border-y border-surface-variant">
       <div className="max-w-container-max mx-auto px-md">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-md">
           {metrics.map((metric, index) => (

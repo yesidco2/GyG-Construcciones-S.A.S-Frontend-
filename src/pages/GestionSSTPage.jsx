@@ -1,4 +1,5 @@
 import RiskExplorer from '../components/RiskExplorer';
+import Contact from '../components/Contact';
 
 export default function GestionSSTPage() {
   const overviewCards = [
@@ -67,7 +68,8 @@ export default function GestionSSTPage() {
           <img
             alt="Sitio de construcción con seguridad industrial"
             className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida/AP1WRLtPDNDlIaKq4Z2KB6W0IR5g0rstwQDKHHD3OLJbtS1TiIH8OrQ0wCB771LPuRL4zcguvwywJ02ONjey5pNXOCZqjlHQoNH6-Lr9gM8euM4M7R12DkDc-hGJeCdNsVhBkQzATsMfTCFlpWwpMO86A2VknVDZb2fu_4q3pDWofJdpkSVjZmCK9eyOLbFaTJCPDj1slJVpxwR-AL4gXFz5noMzRDVbOEL41ZTCb4qKK2s3LtGR8fOzrJpTGV4"
+            src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&auto=format&fit=crop&q=85"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-primary/25 via-primary/45 to-primary/60" />
         </div>
@@ -167,7 +169,7 @@ export default function GestionSSTPage() {
         </div>
       </section>
 
-      <section className="bg-surface py-xl">
+      <section id="jerarquia-controles" className="bg-surface py-xl">
         <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
           <div className="mb-lg text-center">
             <h2 className="font-headline-lg text-headline-lg text-primary">Jerarquía de Controles</h2>
@@ -204,72 +206,7 @@ export default function GestionSSTPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-primary-container py-xl text-on-primary-container">
-        <div className="absolute inset-0 opacity-10" aria-hidden="true" />
-        <div className="relative z-10 mx-auto max-w-3xl px-margin-mobile text-center md:px-md">
-          <div className="mx-auto mb-md flex h-20 w-20 items-center justify-center rounded-full bg-on-tertiary-container shadow-ambient">
-            <span className="material-symbols-outlined text-4xl text-on-primary">smart_toy</span>
-          </div>
-          <h2 className="mb-sm font-headline-md text-headline-md text-on-primary">Asistente Virtual SST</h2>
-          <p className="mb-lg font-body-md text-body-md text-on-primary/80">
-            ¿Tienes dudas sobre normativa o seguridad? Pregunta a nuestro asistente virtual.
-          </p>
-          <div className="mx-auto flex max-w-xl flex-col justify-center gap-xs sm:flex-row">
-            <input
-              aria-label="Pregunta al asistente SST"
-              className="flex-1 rounded border-2 border-transparent bg-surface-container-lowest px-md py-sm font-body-sm text-body-sm text-on-surface shadow-inner focus:border-primary"
-              placeholder="Ej. ¿Norma para trabajo en alturas?"
-              type="text"
-            />
-            <button className="whitespace-nowrap rounded bg-on-tertiary-container px-lg py-sm font-label-caps text-label-caps text-on-primary transition-colors hover:bg-tertiary-container">
-              Preguntar
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section id="contacto" className="bg-surface-container-lowest py-xl">
-        <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
-          <div className="grid grid-cols-1 items-center gap-lg md:grid-cols-2">
-            <div>
-              <h2 className="mb-sm font-headline-lg text-headline-lg text-primary">Solicitar Diagnóstico Inicial</h2>
-              <p className="mb-lg font-body-md text-body-md text-on-surface-variant">
-                Contáctenos para evaluar el estado actual de Seguridad y Salud en su obra. Un experto de G&G Construcción y SST S.A.S. se comunicará en breve.
-              </p>
-              <div className="space-y-sm">
-                <div className="flex items-center gap-sm">
-                  <span className="material-symbols-outlined text-on-tertiary-container">location_on</span>
-                  <span className="font-body-sm text-body-sm text-on-surface">Bogotá, Colombia</span>
-                </div>
-                <div className="flex items-center gap-sm">
-                  <span className="material-symbols-outlined text-on-tertiary-container">mail</span>
-                  <span className="font-body-sm text-body-sm text-on-surface">contacto@gygsst.com</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-surface-variant bg-surface p-md shadow-sm">
-              <form className="space-y-sm">
-                <div>
-                  <label className="mb-xs block font-label-caps text-label-caps text-primary">Empresa</label>
-                  <input className="w-full rounded border-2 border-outline-variant bg-surface-container-lowest px-sm py-xs font-body-sm text-body-sm text-on-surface focus:border-primary" type="text" />
-                </div>
-                <div>
-                  <label className="mb-xs block font-label-caps text-label-caps text-primary">Correo Electrónico</label>
-                  <input className="w-full rounded border-2 border-outline-variant bg-surface-container-lowest px-sm py-xs font-body-sm text-body-sm text-on-surface focus:border-primary" type="email" />
-                </div>
-                <div>
-                  <label className="mb-xs block font-label-caps text-label-caps text-primary">Mensaje</label>
-                  <textarea className="w-full rounded border-2 border-outline-variant bg-surface-container-lowest px-sm py-xs font-body-sm text-body-sm text-on-surface focus:border-primary" rows="4" />
-                </div>
-                <button className="mt-sm w-full rounded bg-primary px-lg py-sm font-label-caps text-label-caps text-on-primary transition-colors hover:bg-primary/90" type="submit">
-                  Enviar Solicitud
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Contact sectionId="contacto-sst" />
     </div>
   );
 }

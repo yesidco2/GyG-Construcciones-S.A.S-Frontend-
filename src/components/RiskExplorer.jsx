@@ -63,6 +63,11 @@ const severityStyles = {
   alto: 'bg-red-100 text-red-800 border-red-300',
 };
 
+function normalizeRiskLevel(level) {
+  const normalized = String(level || '').trim().toLowerCase();
+  return ['bajo', 'medio', 'alto'].includes(normalized) ? normalized : 'medio';
+}
+
 export default function RiskExplorer() {
   const [activityItems, setActivityItems] = useState(fallbackActivities);
   const [selectedActivity, setSelectedActivity] = useState(activities[0]);
@@ -106,8 +111,8 @@ export default function RiskExplorer() {
         setApiRisk({
           summary: `Riesgos asociados a ${data.nombre}.`,
           risks: (data.riesgos || []).map((risk) => ({
-            label: risk.descripcion,
-            level: String(risk.nivelSeveridad || 'MEDIO').toLowerCase(),
+            label: risk.titulo || risk.title || '',
+            level: normalizeRiskLevel(risk.nivelSeveridad),
             description: risk.descripcion,
           })),
           epp: (data.epps || []).map((item) => item.nombre),
@@ -129,6 +134,27 @@ export default function RiskExplorer() {
     () => apiRisk || riskCatalog[selectedActivity] || riskCatalog[activities[0]],
     [apiRisk, selectedActivity],
   );
+  const normalizedRisks = currentRisk.risks.map((risk) => ({
+    ...risk,
+    level: normalizeRiskLevel(risk.level),
+  }));
+  const highestRiskLevel = normalizedRisks.length
+    ? normalizedRisks.reduce(
+        (highest, risk) => (
+          ['bajo', 'medio', 'alto'].indexOf(risk.level) >
+          ['bajo', 'medio', 'alto'].indexOf(highest)
+            ? risk.level
+            : highest
+        ),
+        normalizedRisks[0].level,
+      )
+    : 'medio';
+  const riskGridColumns =
+    normalizedRisks.length === 1
+      ? 'grid-cols-1'
+      : normalizedRisks.length === 2 || normalizedRisks.length === 4
+        ? 'grid-cols-1 sm:grid-cols-2'
+        : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3';
 
   return (
     <div id="risk-explorer" className="mx-auto max-w-6xl px-md py-xl">
@@ -136,14 +162,14 @@ export default function RiskExplorer() {
         <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
           Gestión de riesgos
         </p>
-        <h1 className="mt-sm font-headline-xl text-headline-xl text-primary">Explorador interactivo de peligros en obra</h1>
+        <h2 className="mt-sm font-headline-xl text-headline-xl text-primary">Explorador interactivo de peligros en obra</h2>
         <p className="mx-auto mt-sm max-w-3xl font-body-md text-body-md text-secondary">
           Consulte los riesgos asociados a cada actividad y los EPP mínimos recomendados para prevenir incidentes.
         </p>
       </div>
 
-      <div className="grid gap-lg lg:grid-cols-[0.9fr_1.6fr]">
-        <aside className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm">
+      <div className="grid items-start gap-lg lg:grid-cols-12">
+        <aside className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:sticky lg:top-24 lg:col-span-4">
           <h2 className="mb-md font-headline-sm text-headline-sm text-primary">Selecciona una labor</h2>
           <div className="space-y-sm">
             {activityItems.map((activity) => {
@@ -153,12 +179,13 @@ export default function RiskExplorer() {
                 <button
                   key={activity.id ?? activity.nombre}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => {
                     setSelectedActivity(activity.nombre);
                     setSelectedActivityId(activity.id ?? null);
                     setApiRisk(null);
                   }}
-                  className={`w-full rounded-xl border px-md py-sm text-left transition-all ${
+                  className={`flex min-h-[56px] w-full items-center rounded-xl border px-md py-sm text-left transition-all ${
                     isActive
                       ? 'border-primary bg-primary text-on-primary shadow-md'
                       : 'border-surface-variant bg-surface text-on-surface hover:border-primary/60'
@@ -176,14 +203,14 @@ export default function RiskExplorer() {
           )}
         </aside>
 
-        <div className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm">
+        <div className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:col-span-8">
           <div className="mb-md flex items-start justify-between gap-md border-b border-surface-variant pb-md">
             <div>
               <p className="font-label-caps text-label-caps uppercase text-secondary">Labor activa</p>
               <h2 className="font-headline-lg text-headline-lg text-primary">{selectedActivity}</h2>
             </div>
-            <span className="rounded-full bg-industrial-orange/10 px-sm py-xs font-label-caps text-label-caps text-industrial-orange">
-              Riesgo crítico
+            <span className={`shrink-0 rounded-full border px-sm py-xs font-label-caps text-label-caps ${severityStyles[highestRiskLevel]}`}>
+              Riesgo {highestRiskLevel}
             </span>
           </div>
 
@@ -191,15 +218,17 @@ export default function RiskExplorer() {
             {isLoadingRisk ? 'Cargando información de riesgos...' : currentRisk.summary}
           </p>
 
-          <div className="grid gap-md md:grid-cols-3">
-            {currentRisk.risks.map((risk) => (
-              <div key={risk.label} className="rounded-xl border border-surface-variant bg-surface p-sm">
-                <div className="mb-sm flex items-center justify-between gap-xs">
-                  <h3 className="font-headline-sm text-headline-sm text-primary">{risk.label}</h3>
+          <div className={`grid auto-rows-fr gap-md ${riskGridColumns}`}>
+            {normalizedRisks.map((risk) => (
+              <div key={risk.label || risk.description} className="flex h-full flex-col rounded-xl border border-surface-variant bg-surface p-sm">
+                <div className="mb-sm flex items-start justify-between gap-xs">
                   <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-bold uppercase ${severityStyles[risk.level]}`}>
                     {risk.level}
                   </span>
                 </div>
+                {risk.label && risk.label !== risk.description && (
+                  <h3 className="mb-xs font-headline-sm text-headline-sm text-primary">{risk.label}</h3>
+                )}
                 <p className="font-body-sm text-body-sm text-secondary">{risk.description}</p>
               </div>
             ))}
@@ -207,9 +236,9 @@ export default function RiskExplorer() {
 
           <div className="mt-lg rounded-xl bg-primary-container p-md text-on-primary">
             <h3 className="mb-sm font-headline-sm text-headline-sm">EPP mínimos sugeridos</h3>
-            <ul className="grid gap-xs md:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-xs sm:grid-cols-2">
               {currentRisk.epp.map((item) => (
-                <li key={item} className="flex items-center gap-xs font-body-sm text-body-sm">
+                <li key={item} className="flex min-h-[56px] items-center gap-xs rounded-lg bg-white/10 px-sm py-xs font-body-sm text-body-sm">
                   <span className="material-symbols-outlined text-industrial-orange">check_circle</span>
                   {item}
                 </li>
