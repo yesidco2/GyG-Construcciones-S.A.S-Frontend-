@@ -1,37 +1,37 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AppShell from './components/AppShell';
 import GestionSSTPage from './pages/GestionSSTPage';
-import ProjectsPage from './pages/ProjectsPage';
 import ConsultProjectPage from './pages/ConsultProjectPage';
 import AdminFaqPage from './pages/AdminFaqPage';
 import LoginPage from './pages/LoginPage';
-import {
-  completeEmailLinkSignIn,
-  completeProviderRedirectSignIn,
-} from './services/authService';
 
 const routes = {
   '': AppShell,
   hero: AppShell,
+  indicadores: AppShell,
   contacto: AppShell,
+  compromiso: AppShell,
+  nosotros: AppShell,
   'gestion-sst': GestionSSTPage,
   'risk-explorer': GestionSSTPage,
-  portfolio: ProjectsPage,
-  'proyectos': ProjectsPage,
+  'vision-prevencion': GestionSSTPage,
+  'servicios-sst': GestionSSTPage,
+  'jerarquia-controles': GestionSSTPage,
+  'contacto-sst': GestionSSTPage,
+  portfolio: AppShell,
+  'proyectos': AppShell,
   'consultar-proyecto': ConsultProjectPage,
   'admin-faq': AdminFaqPage,
   'login': LoginPage,
 };
 
-function readRouteKey() {
-  const routeKey = window.location.hash.replace('#', '');
-  if (routeKey === 'registro') {
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#login`);
-    return 'login';
+function initializeRoute() {
+  if (window.location.hash) {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
   }
-  return routeKey;
+  return '';
 }
 
 function Layout({ children, showFooter = true }) {
@@ -45,21 +45,11 @@ function Layout({ children, showFooter = true }) {
 }
 
 export default function App() {
-  const [routeKey, setRouteKey] = useState(readRouteKey);
-  const emailLinkHandled = useRef(false);
+  const [routeKey, setRouteKey] = useState(initializeRoute);
 
   useEffect(() => {
-    if (!emailLinkHandled.current) {
-      emailLinkHandled.current = true;
-      completeEmailLinkSignIn().catch((error) => {
-        console.error('No se pudo completar el acceso por enlace de correo:', error);
-      });
-      completeProviderRedirectSignIn().catch((error) => {
-        console.error('No se pudo completar el acceso con el proveedor:', error);
-      });
-    }
-
-    const onHashChange = () => setRouteKey(readRouteKey());
+    window.scrollTo(0, 0);
+    const onHashChange = () => setRouteKey(window.location.hash.replace('#', ''));
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
@@ -73,7 +63,7 @@ export default function App() {
       const targetId = routeKey === 'proyectos' ? 'portfolio' : routeKey;
       const target = document.getElementById(targetId);
       if (target) {
-        const top = window.scrollY + target.getBoundingClientRect().top - 104;
+        const top = window.scrollY + target.getBoundingClientRect().top - 72;
         window.scrollTo({ top, behavior: 'smooth' });
       }
     });
