@@ -16,8 +16,6 @@ const commitments = [
   },
 ];
 
-import LeadMagnet from './LeadMagnet';
-
 function CommitmentItem({ icon, title, description }) {
   return (
     <div className="flex items-start gap-md">
@@ -51,25 +49,14 @@ export default function Commitment() {
                 ))}
               </div>
               <div className="mt-lg">
-                <button
-                  type="button"
+                <a
+                  href="#gestion-sst"
                   className="bg-white/10 backdrop-blur-md border-2 border-white/20 text-white px-lg py-sm rounded-lg font-headline-sm text-headline-sm text-center hover:bg-white/20 transition-all"
-                  onClick={() => {
-                    const target = document.getElementById('contacto');
-                    if (target) {
-                      target.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
                 >
                   Ver más
-                </button>
+                </a>
               </div>
 
-              {/* Lead Magnet - Descargable EPP */}
-              <div className="mt-xl pt-xl border-t border-white/20">
-                <h3 className="font-headline-sm text-headline-sm text-on-primary-container mb-md">Recurso Gratuito</h3>
-                <LeadMagnet />
-              </div>
             </div>
           </div>
           <div className="relative">
