@@ -79,6 +79,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isUpdatingProgress, setIsUpdatingProgress] = useState({});
+  const [progressDrafts, setProgressDrafts] = useState({});
   const [deletingProject, setDeletingProject] = useState('');
   const [editingProject, setEditingProject] = useState(null);
   const [projectEdits, setProjectEdits] = useState(null);
@@ -177,15 +178,33 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
   // Manejar cambio de avance
   const handleProgressChange = async (project, value) => {
+    const progress = Number(value);
+    if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+      showNotification('El avance debe ser un número entero entre 0 y 100.', 'error');
+      return;
+    }
+
     setIsUpdatingProgress((current) => ({ ...current, [project.code]: true }));
     try {
-      const updated = await updateProjectProgress(project, value);
+      const updated = await updateProjectProgress(project, progress);
       setProjects((current) => current.map((item) => item.code === project.code ? updated : item));
+      setProgressDrafts((current) => {
+        const next = { ...current };
+        delete next[project.code];
+        return next;
+      });
       showNotification(`Avance de ${updated.name} actualizado al ${updated.progress}%.`);
     } catch {
       showNotification('No se pudo actualizar el avance en el servidor.', 'error');
     } finally {
       setIsUpdatingProgress((current) => ({ ...current, [project.code]: false }));
+    }
+  };
+
+  const handleProgressDraft = (projectCode, value) => {
+    const progress = Number(value);
+    if (Number.isInteger(progress) && progress >= 0 && progress <= 100) {
+      setProgressDrafts((current) => ({ ...current, [projectCode]: progress }));
     }
   };
 
@@ -590,8 +609,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                       type="range"
                       min="0"
                       max="100"
-                      value={project.progress}
-                      onChange={(e) => handleProgressChange(project, e.target.value)}
+                      value={progressDrafts[project.code] ?? project.progress}
+                      onChange={(e) => handleProgressDraft(project.code, e.target.value)}
                       disabled={Boolean(isUpdatingProgress[project.code])}
                       className="w-full h-2 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-industrial-orange"
                     />
@@ -604,10 +623,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                         <button
                           key={val}
                           type="button"
-                          onClick={() => handleProgressChange(project, val)}
+                          onClick={() => handleProgressDraft(project.code, val)}
                           disabled={Boolean(isUpdatingProgress[project.code])}
                           className={`px-2 py-0.5 rounded border text-[10px] font-semibold transition-colors ${
-                            project.progress === val
+                            (progressDrafts[project.code] ?? project.progress) === val
                               ? 'bg-industrial-orange text-white border-industrial-orange'
                               : 'bg-white hover:bg-surface border-outline-variant text-secondary'
                           }`}
@@ -616,6 +635,18 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                         </button>
                       ))}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => handleProgressChange(project, progressDrafts[project.code])}
+                      disabled={
+                        Boolean(isUpdatingProgress[project.code]) ||
+                        progressDrafts[project.code] === undefined ||
+                        progressDrafts[project.code] === project.progress
+                      }
+                      className="rounded border border-primary px-2 py-1 text-[10px] font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isUpdatingProgress[project.code] ? 'Guardando...' : 'Guardar avance'}
+                    </button>
                   </div>
                 </div>
 

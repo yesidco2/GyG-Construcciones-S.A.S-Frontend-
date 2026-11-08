@@ -117,7 +117,9 @@ export async function addProjectPhoto(project, file, description) {
     body: formData,
   });
   const refreshedProjects = await getProjects();
-  const updatedProject = refreshedProjects.find((item) => item.id === project.id || item.code === project.code);
+  const updatedProject = refreshedProjects.find((item) =>
+    (project.id && item.id === project.id) || item.code === project.code,
+  );
   if (!updatedProject) {
     throw new Error('La fotografía se subió, pero no se pudo actualizar la obra.');
   }
