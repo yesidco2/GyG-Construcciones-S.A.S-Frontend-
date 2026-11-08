@@ -20,6 +20,7 @@ Copy-Item .env.example .env
 ```
 
 En desarrollo, el backend debe estar corriendo en `http://localhost:8080`, o `VITE_API_URL` debe apuntar a la URL donde esté disponible.
+Para producción, configura un archivo local `.env.production` a partir de `.env.production.example` y reemplaza la URL de ejemplo por el dominio HTTPS real de la API. El build de producción rechaza HTTP fuera de localhost.
 
 ```bash
 npm run dev
@@ -32,7 +33,7 @@ El comando `npm run deploy` publica `dist/` en GitHub Pages mediante `gh-pages`;
 ## Variables de entorno
 
 - `VITE_API_URL` (requerida): URL base de la API Spring Boot, por ejemplo `http://localhost:8080`.
-- `VITE_NEWSLETTER_ENDPOINT` (opcional): endpoint público para la suscripción al boletín.
+- `VITE_CAPTCHA_SITE_KEY` (requerida para formularios protegidos): clave pública del widget CAPTCHA configurado en el backend.
 
 No incluyas secretos en variables `VITE_*`: se incorporan al bundle público del navegador.
 

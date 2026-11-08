@@ -54,8 +54,25 @@ function securityMetadataPlugin(apiUrl) {
   };
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  if (command === 'build' && mode === 'production') {
+    if (!env.VITE_API_URL) {
+      throw new Error('VITE_API_URL debe configurarse para generar el build de producción.');
+    }
+
+    let apiUrl;
+    try {
+      apiUrl = new URL(env.VITE_API_URL);
+    } catch {
+      throw new Error('VITE_API_URL debe ser una URL válida en el build de producción.');
+    }
+
+    const localHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
+    if (apiUrl.protocol !== 'https:' && !localHosts.has(apiUrl.hostname)) {
+      throw new Error('VITE_API_URL debe usar HTTPS en producción; HTTP solo se permite para localhost.');
+    }
+  }
 
   return {
     base: '/GG-WEB/',
