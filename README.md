@@ -54,3 +54,9 @@ El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 - Consultas administrativas del chat: `GET /api/admin/consultas-chat`
 
 El panel y la consulta de seguimiento no utilizan datos locales de respaldo; el backend debe estar ejecutándose para usarlos.
+
+## Seguridad del navegador
+
+`public/_headers` define CSP y encabezados para plataformas que admiten archivos `_headers`, como Netlify y Cloudflare Pages. El build sustituye `__API_ORIGIN__` por el origen de `VITE_API_URL`. La etiqueta meta CSP generada en `dist/index.html` sirve como respaldo, pero no sustituye los encabezados HTTP.
+
+GitHub Pages no permite configurar encabezados HTTP personalizados; en ese alojamiento solo se aplica la política meta. Las imágenes entregadas por el backend se muestran únicamente si son del mismo origen o usan HTTPS; las vistas previas locales usan URLs `blob:` del propio navegador.

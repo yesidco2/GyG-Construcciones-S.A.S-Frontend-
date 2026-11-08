@@ -8,6 +8,7 @@ import {
   createProject,
   deleteProject,
 } from '../../services/projectService';
+import safeImageUrl from '../../utils/safeImageUrl';
 
 function compressProjectPhoto(file) {
   return new Promise((resolve, reject) => {
@@ -339,7 +340,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             <div className="relative">
               {currentUser?.avatar ? (
                 <img
-                  src={currentUser.avatar}
+                  src={safeImageUrl(currentUser.avatar)}
                   alt={currentUser.name || 'Foto de perfil'}
                   className="h-16 w-16 rounded-2xl border-2 border-industrial-orange object-cover shadow-md sm:h-20 sm:w-20"
                 />
@@ -667,7 +668,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                           className="relative group block h-20 overflow-hidden rounded-lg border border-surface-variant bg-slate-100 text-left"
                         >
                           <img
-                            src={p.url}
+                            src={safeImageUrl(p.url)}
                             alt={p.description}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
@@ -842,7 +843,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   className="mt-3 block h-96 w-full overflow-hidden rounded-lg border border-surface-variant bg-surface text-left sm:h-[30rem] lg:h-[34rem]"
                 >
                   <img
-                    src={newPhotoUrl}
+                    src={safeImageUrl(newPhotoUrl)}
                     alt="Vista previa de la fotografía inicial del proyecto. Toca para ampliar."
                     className="h-full w-full object-cover"
                   />
@@ -1011,7 +1012,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                 />
               </div>
               {photoPreviewUrl && (
-                <img src={photoPreviewUrl} alt="Vista previa de la fotografía" className="max-h-48 rounded-lg object-contain" />
+                <img src={safeImageUrl(photoPreviewUrl)} alt="Vista previa de la fotografía" className="max-h-48 rounded-lg object-contain" />
               )}
               {photoError && <p role="alert" className="text-xs text-error">{photoError}</p>}
 
@@ -1057,7 +1058,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                         className="block h-48 w-full overflow-hidden bg-slate-100 sm:h-64"
                       >
                         <img
-                          src={photo.url}
+                          src={safeImageUrl(photo.url)}
                           alt={photo.description}
                           className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                         />
@@ -1097,7 +1098,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             ×
           </button>
           <img
-            src={expandedPhoto}
+            src={safeImageUrl(expandedPhoto)}
             alt="Fotografía del proyecto ampliada"
             className="max-h-[92vh] max-w-full object-contain"
             onClick={(event) => event.stopPropagation()}

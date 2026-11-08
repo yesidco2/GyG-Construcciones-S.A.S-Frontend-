@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { apiFetch } from '../services/api';
+import safeImageUrl from '../utils/safeImageUrl';
 
 const projectCodePattern = /^[A-Za-z0-9-]{6,40}$/;
 
@@ -198,7 +199,7 @@ export default function ConsultProjectPage() {
                   className="overflow-hidden rounded-xl bg-white shadow-sm"
                 >
                   <img
-                    src={photo.url}
+                    src={safeImageUrl(photo.url)}
                     alt={`${trackingResult.name} foto ${index + 1}`}
                     className="h-36 w-full object-cover hover:scale-105 transition-transform"
                   />

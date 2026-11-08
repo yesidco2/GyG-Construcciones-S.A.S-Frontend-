@@ -1,3 +1,5 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -18,7 +20,7 @@ function securityMetadataPlugin(apiUrl) {
     "script-src 'self' https://challenges.cloudflare.com https://www.google.com https://www.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    `img-src 'self' data: blob: https:`,
+    `img-src 'self' blob: https:`,
     `connect-src ${connectSources.join(' ')}`,
     "frame-src 'self' https://challenges.cloudflare.com https://www.google.com https://www.recaptcha.net",
     "object-src 'none'",
@@ -50,6 +52,14 @@ function securityMetadataPlugin(apiUrl) {
           },
         ],
       };
+    },
+    writeBundle(outputOptions) {
+      const outputDirectory = outputOptions.dir || resolve(process.cwd(), 'dist');
+      const headersTemplate = readFileSync(resolve(process.cwd(), 'public', '_headers'), 'utf8');
+      writeFileSync(
+        resolve(outputDirectory, '_headers'),
+        headersTemplate.replace('__API_ORIGIN__', apiOrigin),
+      );
     },
   };
 }
