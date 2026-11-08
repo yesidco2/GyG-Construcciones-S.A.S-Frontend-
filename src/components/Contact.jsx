@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
 import CaptchaWidget from './auth/CaptchaWidget';
-import { PRIVACY_POLICY_URL, PRIVACY_POLICY_VERSION } from '../services/privacyPolicy';
+import PrivacyConsent from './PrivacyConsent';
+import { CONTACT_EMAIL, POLICY_VERSION } from '../config/privacy';
 
 const services = [
   'Obra Civil',
@@ -101,7 +102,7 @@ export default function Contact({ sectionId = 'contacto' }) {
     setStatus({ type: '', message: '' });
     if (Object.keys(validationErrors).length > 0) return;
     if (!acceptsPolicy) {
-      setPolicyError('Autoriza el tratamiento de datos para enviar la solicitud.');
+      setPolicyError('Debes autorizar el tratamiento de tus datos para enviar la solicitud.');
       return;
     }
     if (!captchaToken) {
@@ -125,7 +126,7 @@ export default function Contact({ sectionId = 'contacto' }) {
           mensaje: formData.message.trim(),
           sitioWeb: formData.website.trim(),
           aceptaPolitica: true,
-          politicaVersion: PRIVACY_POLICY_VERSION,
+          politicaVersion: POLICY_VERSION,
         }),
       });
 
@@ -142,7 +143,7 @@ export default function Contact({ sectionId = 'contacto' }) {
         message:
           (error.status === 400 || error.status === 429) && error.message
             ? error.message
-            : 'No pudimos enviar el mensaje. Intenta de nuevo o escríbenos directamente a proyectos@gng.co.',
+            : `No pudimos enviar el mensaje. Intenta de nuevo o escríbenos directamente a ${CONTACT_EMAIL}.`,
       });
     } finally {
       submissionLock.current = false;
@@ -168,7 +169,7 @@ export default function Contact({ sectionId = 'contacto' }) {
               </div>
               <div className="flex items-center gap-sm">
                 <span className="material-symbols-outlined text-industrial-orange">mail</span>
-                <span className="font-body-sm text-body-sm">proyectos@gng.co</span>
+                <a className="font-body-sm text-body-sm" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
               </div>
               <div className="flex items-center gap-sm">
                 <span className="material-symbols-outlined text-industrial-orange">location_on</span>
@@ -361,33 +362,21 @@ export default function Contact({ sectionId = 'contacto' }) {
               />
               {captchaError && <p role="status" className="text-sm text-error" aria-live="polite">{captchaError}</p>}
 
-              <div>
-                <label htmlFor="contact-privacy" className="flex items-start gap-2 text-sm text-secondary">
-                  <input
-                    id="contact-privacy"
-                    type="checkbox"
-                    checked={acceptsPolicy}
-                    onChange={(event) => {
-                      setAcceptsPolicy(event.target.checked);
-                      setPolicyError('');
-                    }}
-                    aria-invalid={Boolean(policyError)}
-                    aria-describedby={policyError ? 'contact-privacy-error' : undefined}
-                    className="mt-1 h-4 w-4 rounded border-outline-variant text-industrial-orange focus:ring-industrial-orange/30"
-                  />
-                  <span>
-                    Autorizo el tratamiento de mis datos personales conforme a la{' '}
-                    <a href={PRIVACY_POLICY_URL} className="font-semibold text-industrial-orange underline">
-                      Política de tratamiento de datos personales
-                    </a>.
-                  </span>
-                </label>
-                {policyError && <p id="contact-privacy-error" role="alert" className="mt-1 text-sm text-error">{policyError}</p>}
-              </div>
+              <PrivacyConsent
+                id="contact-privacy"
+                required
+                checked={acceptsPolicy}
+                onChange={(event) => {
+                  setAcceptsPolicy(event.target.checked);
+                  setPolicyError('');
+                }}
+                error={policyError}
+                label={`Autorizo de manera previa, expresa e informada a G&G CONSTRUCCIONESST S.A.S. para tratar mis datos personales con el fin de responder mi solicitud y contactarme, de acuerdo con la Política de Tratamiento de Datos Personales. Conozco mis derechos a conocer, actualizar, rectificar y suprimir mis datos y a revocar esta autorización escribiendo a ${CONTACT_EMAIL}.`}
+              />
 
               <button
                 type="submit"
-                disabled={isSubmitting || !captchaToken || !acceptsPolicy}
+                disabled={isSubmitting || !captchaToken}
                 className="w-full rounded-lg bg-industrial-orange py-sm font-headline-sm text-headline-sm text-white transition-colors hover:bg-industrial-orange/90 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
