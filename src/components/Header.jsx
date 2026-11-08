@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { POLICY_URL } from '../config/privacy';
 
 const homeSections = [
   { id: 'hero', label: 'Inicio', icon: 'home', description: 'Conoce G&G Construcciones y nuestra experiencia.' },
@@ -364,6 +365,14 @@ export default function Header() {
               }`}
             >
               Consultar Proyecto
+            </a>
+
+            <a
+              href={POLICY_URL}
+              onClick={closeMenu}
+              className="block py-1 font-body-sm text-body-sm text-on-primary opacity-90 hover:opacity-100"
+            >
+              Política de tratamiento de datos
             </a>
 
             {/* 4. LOGIN QUE REALIZASTE */}
