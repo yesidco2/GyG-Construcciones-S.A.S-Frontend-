@@ -4,7 +4,7 @@ Este inventario refleja integraciones encontradas en el código del frontend. La
 
 | Nombre | Proveedor | Finalidad | Duración | Categoría | Dónde se usa en el código |
 |---|---|---|---|---|---|
-| `gg_cookie_consent` | G&G Construcciones | Recordar la versión y decisión de consentimiento de analítica del sitio. | 365 días | necesaria | `src/utils/cookieConsent.js` |
+| `gg_cookie_consent` | G&G Construcciones | Recordar la versión y decisión de consentimiento de analítica del sitio. | 365 días | necesaria | `src/utils/consentState.js` |
 | Firebase Auth (almacenamiento de sesión; nombre exacto de claves [VERIFICAR]) | Google Firebase | Mantener la sesión y autenticar usuarios administradores e ingenieros. | [VERIFICAR] | necesaria | `src/services/firebase.js`, `src/services/authService.js` |
 | Historial de chat `gg-chat-history` (sessionStorage; no es cookie) | G&G Construcciones | Mantener el historial del chat durante la sesión de la pestaña. | Hasta cerrar la pestaña | necesaria | `src/components/FloatingIA.jsx` |
 | [VERIFICAR: cookies y almacenamiento del widget] | Cloudflare Turnstile | Mostrar y validar el desafío anti-bot para login, contacto y newsletter. | [VERIFICAR] | necesaria | `src/components/auth/CaptchaWidget.jsx` |

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { readCookieConsent, saveCookieConsent } from '../utils/cookieConsent';
+import { readCookieConsent, saveCookieConsent } from '../utils/consentState';
 
 export default function useCookieConsent() {
   const [consent, setConsent] = useState(readCookieConsent);

@@ -13,7 +13,7 @@ import {
   loadIfConsented,
   readCookieConsent,
   saveCookieConsent,
-} from '../utils/cookieConsent';
+} from '../utils/consentState';
 
 vi.mock('../services/api', () => ({ apiFetch: vi.fn() }));
 vi.mock('../components/auth/CaptchaWidget', () => ({
