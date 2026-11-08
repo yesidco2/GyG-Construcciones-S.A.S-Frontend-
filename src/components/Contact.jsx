@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
 import CaptchaWidget from './auth/CaptchaWidget';
+import { PRIVACY_POLICY_URL, PRIVACY_POLICY_VERSION } from '../services/privacyPolicy';
 
 const services = [
   'Obra Civil',
@@ -73,6 +74,8 @@ export default function Contact({ sectionId = 'contacto' }) {
   const [captchaToken, setCaptchaToken] = useState('');
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [captchaError, setCaptchaError] = useState('');
+  const [acceptsPolicy, setAcceptsPolicy] = useState(false);
+  const [policyError, setPolicyError] = useState('');
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -97,6 +100,10 @@ export default function Contact({ sectionId = 'contacto' }) {
     setErrors(validationErrors);
     setStatus({ type: '', message: '' });
     if (Object.keys(validationErrors).length > 0) return;
+    if (!acceptsPolicy) {
+      setPolicyError('Autoriza el tratamiento de datos para enviar la solicitud.');
+      return;
+    }
     if (!captchaToken) {
       setCaptchaError('Completa la verificación CAPTCHA antes de enviar.');
       return;
@@ -117,6 +124,8 @@ export default function Contact({ sectionId = 'contacto' }) {
           tipoServicio: formData.service,
           mensaje: formData.message.trim(),
           sitioWeb: formData.website.trim(),
+          aceptaPolitica: true,
+          politicaVersion: PRIVACY_POLICY_VERSION,
         }),
       });
 
@@ -126,6 +135,7 @@ export default function Contact({ sectionId = 'contacto' }) {
       });
       setFormData(initialForm);
       setErrors({});
+      setAcceptsPolicy(false);
     } catch (error) {
       setStatus({
         type: 'error',
@@ -351,9 +361,33 @@ export default function Contact({ sectionId = 'contacto' }) {
               />
               {captchaError && <p role="status" className="text-sm text-error" aria-live="polite">{captchaError}</p>}
 
+              <div>
+                <label htmlFor="contact-privacy" className="flex items-start gap-2 text-sm text-secondary">
+                  <input
+                    id="contact-privacy"
+                    type="checkbox"
+                    checked={acceptsPolicy}
+                    onChange={(event) => {
+                      setAcceptsPolicy(event.target.checked);
+                      setPolicyError('');
+                    }}
+                    aria-invalid={Boolean(policyError)}
+                    aria-describedby={policyError ? 'contact-privacy-error' : undefined}
+                    className="mt-1 h-4 w-4 rounded border-outline-variant text-industrial-orange focus:ring-industrial-orange/30"
+                  />
+                  <span>
+                    Autorizo el tratamiento de mis datos personales conforme a la{' '}
+                    <a href={PRIVACY_POLICY_URL} className="font-semibold text-industrial-orange underline">
+                      Política de tratamiento de datos personales
+                    </a>.
+                  </span>
+                </label>
+                {policyError && <p id="contact-privacy-error" role="alert" className="mt-1 text-sm text-error">{policyError}</p>}
+              </div>
+
               <button
                 type="submit"
-                disabled={isSubmitting || !captchaToken}
+                disabled={isSubmitting || !captchaToken || !acceptsPolicy}
                 className="w-full rounded-lg bg-industrial-orange py-sm font-headline-sm text-headline-sm text-white transition-colors hover:bg-industrial-orange/90 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../services/api';
+import { PRIVACY_POLICY_URL, PRIVACY_POLICY_VERSION } from '../services/privacyPolicy';
 
 const fallbackResponses = [
   'Para resolver dudas de SST, revisa primero el tipo de actividad, los riesgos asociados y los EPP mínimos recomendados. Si quieres, puedo orientarte sobre trabajo en alturas, riesgo eléctrico o excavaciones.',
@@ -44,6 +45,9 @@ export default function FloatingIA() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFAQ, setShowFAQ] = useState(true);
+  const [acceptsPolicy, setAcceptsPolicy] = useState(false);
+  const [consentError, setConsentError] = useState('');
+  const [storageError, setStorageError] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -59,8 +63,9 @@ export default function FloatingIA() {
   const saveHistory = (nextMessages) => {
     try {
       sessionStorage.setItem('gg-chat-history', JSON.stringify(nextMessages.slice(-20)));
-    } catch (error) {
-      console.warn('No se pudo guardar el historial local del chat:', error);
+      setStorageError('');
+    } catch {
+      setStorageError('No se pudo guardar el historial de esta conversación en la sesión.');
     }
   };
 
@@ -74,6 +79,11 @@ export default function FloatingIA() {
   };
 
   const handleSelectFAQ = async (faq) => {
+    if (!acceptsPolicy) {
+      setConsentError('Autoriza el tratamiento de datos para iniciar la conversación.');
+      return;
+    }
+    setConsentError('');
     const userMessage = { type: 'user', text: faq.question };
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
@@ -83,14 +93,17 @@ export default function FloatingIA() {
     try {
       const data = await apiFetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ pregunta: faq.question }),
+        body: JSON.stringify({
+          pregunta: faq.question,
+          aceptaPolitica: true,
+          politicaVersion: PRIVACY_POLICY_VERSION,
+        }),
       });
       const botMessage = { type: 'bot', text: data?.respuesta || faq.answer };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
-    } catch (error) {
-      console.error('FAQ API error:', error);
+    } catch {
       const botMessage = { type: 'bot', text: faq.answer };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
@@ -105,6 +118,11 @@ export default function FloatingIA() {
 
     const trimmed = input.trim();
     if (!trimmed) return;
+    if (!acceptsPolicy) {
+      setConsentError('Autoriza el tratamiento de datos para enviar tu consulta.');
+      return;
+    }
+    setConsentError('');
 
     const userMessage = { type: 'user', text: trimmed };
     const nextMessages = [...messages, userMessage];
@@ -115,7 +133,11 @@ export default function FloatingIA() {
     try {
       const data = await apiFetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ pregunta: trimmed }),
+        body: JSON.stringify({
+          pregunta: trimmed,
+          aceptaPolitica: true,
+          politicaVersion: PRIVACY_POLICY_VERSION,
+        }),
       });
 
       const aiText = data?.respuesta || getFallbackAnswer();
@@ -123,8 +145,7 @@ export default function FloatingIA() {
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
-    } catch (error) {
-      console.error('Chat API error:', error);
+    } catch {
       const botMessage = { type: 'bot', text: getFallbackAnswer() };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
@@ -203,6 +224,28 @@ export default function FloatingIA() {
             <p className="mb-2 text-[10px] leading-relaxed text-secondary" aria-live="polite">
               Las conversaciones se guardan solo en esta pestaña durante la sesión. Evita compartir datos sensibles.
             </p>
+            <label htmlFor="chat-privacy" className="mb-2 flex items-start gap-2 text-[10px] leading-relaxed text-secondary">
+              <input
+                id="chat-privacy"
+                type="checkbox"
+                checked={acceptsPolicy}
+                onChange={(event) => {
+                  setAcceptsPolicy(event.target.checked);
+                  setConsentError('');
+                }}
+                aria-invalid={Boolean(consentError)}
+                aria-describedby={consentError ? 'chat-privacy-error' : undefined}
+                className="mt-0.5 h-3.5 w-3.5 rounded border-outline-variant text-industrial-orange focus:ring-industrial-orange/30"
+              />
+              <span>
+                Autorizo el tratamiento de datos según la{' '}
+                <a href={PRIVACY_POLICY_URL} className="font-semibold text-industrial-orange underline">
+                  Política de tratamiento de datos
+                </a>.
+              </span>
+            </label>
+            {consentError && <p id="chat-privacy-error" role="alert" className="mb-2 text-[10px] text-error">{consentError}</p>}
+            {storageError && <p role="status" className="mb-2 text-[10px] text-error" aria-live="polite">{storageError}</p>}
             <label htmlFor="chat-input" className="sr-only">
               Mensaje para el asistente
             </label>
@@ -215,7 +258,7 @@ export default function FloatingIA() {
             />
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || !acceptsPolicy}
               className="mt-2 w-full bg-industrial-orange text-white py-2 rounded-md text-xs font-semibold hover:opacity-95 transition-opacity disabled:opacity-60"
             >
               {isLoading ? 'Enviando...' : 'Enviar'}

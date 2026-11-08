@@ -34,8 +34,11 @@ El comando `npm run deploy` publica `dist/` en GitHub Pages mediante `gh-pages`;
 
 - `VITE_API_URL` (requerida): URL base de la API Spring Boot, por ejemplo `http://localhost:8080`.
 - `VITE_CAPTCHA_SITE_KEY` (requerida para formularios protegidos): clave pública del widget CAPTCHA configurado en el backend.
+- `VITE_PRIVACY_POLICY_URL` (opcional; predeterminada `#politica-datos`): enlace interno a la política.
+- `VITE_PRIVACY_POLICY_VERSION` (opcional; predeterminada `1.0-borrador`): versión enviada en el consentimiento.
 
 No incluyas secretos en variables `VITE_*`: se incorporan al bundle público del navegador.
+La página de tratamiento de datos está marcada como borrador y debe ser revisada y aprobada por G&G antes de su uso legal.
 
 ## Secciones conectadas a la API
 

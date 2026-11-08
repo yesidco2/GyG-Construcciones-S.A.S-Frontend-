@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { apiFetch } from '../services/api';
 import CaptchaWidget from './auth/CaptchaWidget';
+import { PRIVACY_POLICY_URL, PRIVACY_POLICY_VERSION } from '../services/privacyPolicy';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -9,6 +10,8 @@ export default function Footer() {
   const [captchaToken, setCaptchaToken] = useState('');
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [captchaError, setCaptchaError] = useState('');
+  const [acceptsPolicy, setAcceptsPolicy] = useState(false);
+  const [policyError, setPolicyError] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -21,6 +24,10 @@ export default function Footer() {
       setCaptchaError('Completa la verificación CAPTCHA antes de suscribirte.');
       return;
     }
+    if (!acceptsPolicy) {
+      setPolicyError('Autoriza el tratamiento de datos para suscribirte.');
+      return;
+    }
 
     setIsSubmitting(true);
     setStatus({ type: '', message: '' });
@@ -29,13 +36,19 @@ export default function Footer() {
       await apiFetch('/api/newsletter', {
         method: 'POST',
         headers: { 'X-Captcha-Token': captchaToken },
-        body: JSON.stringify({ correo: email.trim(), source: 'GG WEB newsletter' }),
+        body: JSON.stringify({
+          correo: email.trim(),
+          source: 'GG WEB newsletter',
+          aceptaPolitica: true,
+          politicaVersion: PRIVACY_POLICY_VERSION,
+        }),
       });
       setStatus({
         type: 'success',
         message: 'Te has suscrito correctamente a nuestro boletín.',
       });
       setEmail('');
+      setAcceptsPolicy(false);
     } catch (error) {
       setStatus({
         type: 'error',
@@ -114,7 +127,7 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a className="hover:text-on-primary hover:underline transition-all" href="#">
+              <a className="hover:text-on-primary hover:underline transition-all" href={PRIVACY_POLICY_URL}>
                 Política de Privacidad
               </a>
             </li>
@@ -142,7 +155,7 @@ export default function Footer() {
                 onChange={(event) => setEmail(event.target.value)}
                 aria-label="Correo electrónico para newsletter"
               />
-              <button className="bg-industrial-orange p-sm rounded-r-lg disabled:opacity-70" type="submit" disabled={isSubmitting || !captchaToken} aria-label="Suscribirme al boletín">
+              <button className="bg-industrial-orange p-sm rounded-r-lg disabled:opacity-70" type="submit" disabled={isSubmitting || !captchaToken || !acceptsPolicy} aria-label="Suscribirme al boletín">
                 <span className="material-symbols-outlined text-white">chevron_right</span>
               </button>
             </div>
@@ -156,6 +169,25 @@ export default function Footer() {
               onError={setCaptchaError}
             />
             {captchaError && <p role="status" className="text-xs text-red-200" aria-live="polite">{captchaError}</p>}
+            <label htmlFor="newsletter-privacy" className="flex items-start gap-2 text-xs text-on-primary/80">
+              <input
+                id="newsletter-privacy"
+                type="checkbox"
+                checked={acceptsPolicy}
+                onChange={(event) => {
+                  setAcceptsPolicy(event.target.checked);
+                  setPolicyError('');
+                }}
+                aria-invalid={Boolean(policyError)}
+                aria-describedby={policyError ? 'newsletter-privacy-error' : undefined}
+                className="mt-0.5 h-4 w-4 rounded border-outline-variant text-industrial-orange focus:ring-industrial-orange/30"
+              />
+              <span>
+                Autorizo el tratamiento de mis datos según la{' '}
+                <a href={PRIVACY_POLICY_URL} className="font-semibold underline">Política de tratamiento de datos</a>.
+              </span>
+            </label>
+            {policyError && <p id="newsletter-privacy-error" role="alert" className="text-xs text-red-200">{policyError}</p>}
             {status.message && (
               <p
                 className={`text-xs ${status.type === 'error' ? 'text-red-200' : 'text-green-200'}`}
