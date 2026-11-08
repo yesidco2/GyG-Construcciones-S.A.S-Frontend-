@@ -20,8 +20,8 @@ Este inventario refleja integraciones encontradas en el código del frontend. La
 - `sessionStorage`: el chat usa `gg-chat-history`; Firebase Auth puede usar persistencia de navegador como alternativa configurada.
 - IndexedDB: Firebase Auth configura persistencia local en IndexedDB, con persistencias de navegador como alternativas.
 - `document.cookie`: no se encontró uso previo directo; el sitio añadirá únicamente `gg_cookie_consent`.
-- Scripts de terceros: Turnstile se carga desde el widget CAPTCHA; el código también contiene soporte alternativo para reCAPTCHA.
-- Google Fonts: los enlaces remotos del `index.html` se sustituirán por fuentes autoalojadas.
+- Scripts de terceros: Turnstile se carga desde el widget CAPTCHA solo cuando su vista entra en pantalla; el código también contiene soporte alternativo para reCAPTCHA.
+- Google Fonts: Inter, Montserrat y Material Symbols se sirven desde archivos autoalojados con Fontsource; no se solicitan desde Google Fonts.
 - Iframes: no hay iframes escritos directamente en la aplicación; el proveedor CAPTCHA puede crear su propio contenido/iframe.
 - Imágenes externas: las imágenes de Googleusercontent y Unsplash anteriores permanecen como recursos remotos; el nombre y la duración de posibles cookies requieren verificación.
 - Analítica y marketing: no se encontraron scripts de analítica ni de marketing. No se debe incorporar ni cargar contenido de esas categorías antes de obtener consentimiento.
