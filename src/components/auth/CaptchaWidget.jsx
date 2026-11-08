@@ -50,32 +50,47 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
   useEffect(() => {
     if (!siteKey) return undefined;
     let active = true;
+    let observer;
 
-    loadCaptchaScript(CAPTCHA_PROVIDER)
-      .then(() => {
-        if (!active || !containerRef.current) return;
-        const api = CAPTCHA_PROVIDER === 'recaptcha' ? window.grecaptcha : window.turnstile;
-        if (!api) throw new Error('El servicio CAPTCHA no está disponible.');
+    const initializeWidget = () => {
+      loadCaptchaScript(CAPTCHA_PROVIDER)
+        .then(() => {
+          if (!active || !containerRef.current) return;
+          const api = CAPTCHA_PROVIDER === 'recaptcha' ? window.grecaptcha : window.turnstile;
+          if (!api) throw new Error('El servicio CAPTCHA no está disponible.');
 
-        widgetIdRef.current = api.render(containerRef.current, {
-          sitekey: siteKey,
-          callback: (token) => callbacksRef.current.onToken(token),
-          'expired-callback': () => callbacksRef.current.onToken(''),
-          'error-callback': () => {
-            callbacksRef.current.onToken('');
-            callbacksRef.current.onError('No se pudo validar el CAPTCHA. Inténtalo de nuevo.');
-          },
-          ...(CAPTCHA_PROVIDER === 'recaptcha' ? { theme: 'light', size: 'normal' } : {}),
+          widgetIdRef.current = api.render(containerRef.current, {
+            sitekey: siteKey,
+            callback: (token) => callbacksRef.current.onToken(token),
+            'expired-callback': () => callbacksRef.current.onToken(''),
+            'error-callback': () => {
+              callbacksRef.current.onToken('');
+              callbacksRef.current.onError('No se pudo validar el CAPTCHA. Inténtalo de nuevo.');
+            },
+            ...(CAPTCHA_PROVIDER === 'recaptcha' ? { theme: 'light', size: 'normal' } : {}),
+          });
+        })
+        .catch(() => {
+          if (!active) return;
+          setLoadError('No se pudo cargar el CAPTCHA. Verifica tu conexión e inténtalo de nuevo.');
+          callbacksRef.current.onError('No se pudo cargar el CAPTCHA.');
         });
-      })
-      .catch(() => {
-        if (!active) return;
-        setLoadError('No se pudo cargar el CAPTCHA. Verifica tu conexión e inténtalo de nuevo.');
-        callbacksRef.current.onError('No se pudo cargar el CAPTCHA.');
-      });
+    };
+
+    if (typeof IntersectionObserver === 'undefined') {
+      initializeWidget();
+    } else {
+      observer = new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        initializeWidget();
+      }, { rootMargin: '200px' });
+      if (containerRef.current) observer.observe(containerRef.current);
+    }
 
     return () => {
       active = false;
+      observer?.disconnect();
       if (widgetIdRef.current !== null) {
         const api = CAPTCHA_PROVIDER === 'recaptcha' ? window.grecaptcha : window.turnstile;
         api?.remove?.(widgetIdRef.current);

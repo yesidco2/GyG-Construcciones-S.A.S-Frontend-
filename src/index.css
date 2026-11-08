@@ -22,7 +22,19 @@ body {
 }
 
 .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
   vertical-align: middle;
 }
 
@@ -66,4 +78,17 @@ body {
 
 .animate-scale-in {
   animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@media (max-width: 640px) {
+  .cookie-banner-visible .cookie-floating-chat,
+  .cookie-banner-visible .cookie-floating-whatsapp {
+    bottom: 13rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .cookie-banner-visible .cookie-floating-chat,
+  .cookie-banner-visible .cookie-floating-whatsapp {
+    bottom: 11rem;
+  }
 }

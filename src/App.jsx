@@ -7,6 +7,8 @@ import ConsultProjectPage from './pages/ConsultProjectPage';
 import AdminFaqPage from './pages/AdminFaqPage';
 import LoginPage from './pages/LoginPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import CookieConsentManager from './components/CookieConsentManager';
+import CookiePolicyPage from './pages/CookiePolicyPage';
 
 const routes = {
   '': AppShell,
@@ -27,6 +29,7 @@ const routes = {
   'admin-faq': AdminFaqPage,
   'login': LoginPage,
   'politica-datos': PrivacyPolicyPage,
+  'politica-cookies': CookiePolicyPage,
 };
 
 function initializeRoute() {
@@ -42,6 +45,7 @@ function Layout({ children, showFooter = true }) {
       <Header />
       {children}
       {showFooter && <Footer />}
+      <CookieConsentManager />
     </div>
   );
 }

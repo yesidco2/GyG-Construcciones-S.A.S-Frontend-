@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { apiFetch } from '../services/api';
 import CaptchaWidget from './auth/CaptchaWidget';
-import { PRIVACY_POLICY_URL, PRIVACY_POLICY_VERSION } from '../services/privacyPolicy';
+import PrivacyConsent from './PrivacyConsent';
+import { POLICY_URL, POLICY_VERSION } from '../config/privacy';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -25,7 +26,7 @@ export default function Footer() {
       return;
     }
     if (!acceptsPolicy) {
-      setPolicyError('Autoriza el tratamiento de datos para suscribirte.');
+      setPolicyError('Debes autorizar el tratamiento de tus datos para suscribirte.');
       return;
     }
 
@@ -40,7 +41,7 @@ export default function Footer() {
           correo: email.trim(),
           source: 'GG WEB newsletter',
           aceptaPolitica: true,
-          politicaVersion: PRIVACY_POLICY_VERSION,
+          politicaVersion: POLICY_VERSION,
         }),
       });
       setStatus({
@@ -127,9 +128,26 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a className="hover:text-on-primary hover:underline transition-all" href={PRIVACY_POLICY_URL}>
-                Política de Privacidad
+              <a className="hover:text-on-primary hover:underline transition-all" href={POLICY_URL}>
+                Política de tratamiento de datos
               </a>
+            </li>
+            <li>
+              <a className="hover:text-on-primary hover:underline transition-all" href="#politica-cookies">
+                Política de cookies
+              </a>
+            </li>
+            <li>
+              <button
+                type="button"
+                data-cookie-preferences-trigger
+                onClick={(event) => window.dispatchEvent(new CustomEvent('cookie-preferences-open', {
+                  detail: { trigger: event.currentTarget },
+                }))}
+                className="text-left hover:text-on-primary hover:underline transition-all"
+              >
+                Preferencias de cookies
+              </button>
             </li>
             <li>
               <a className="hover:text-on-primary hover:underline transition-all" href="#">
@@ -143,7 +161,7 @@ export default function Footer() {
           <p className="font-body-sm text-body-sm text-on-primary/70 mb-sm">
             Reciba actualizaciones sobre normatividad SST y avances en ingeniería.
           </p>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-xs">
+          <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-xs">
             <label htmlFor="newsletter-email" className="text-xs font-medium text-on-primary">
               Correo electrónico
             </label>
@@ -156,7 +174,7 @@ export default function Footer() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
-              <button className="bg-industrial-orange p-sm rounded-r-lg disabled:opacity-70" type="submit" disabled={isSubmitting || !captchaToken || !acceptsPolicy} aria-label="Suscribirme al boletín">
+              <button className="bg-industrial-orange p-sm rounded-r-lg disabled:opacity-70" type="submit" disabled={isSubmitting || !captchaToken} aria-label="Suscribirme al boletín">
                 <span className="material-symbols-outlined text-white">chevron_right</span>
               </button>
             </div>
@@ -170,25 +188,18 @@ export default function Footer() {
               onError={setCaptchaError}
             />
             {captchaError && <p role="status" className="text-xs text-red-200" aria-live="polite">{captchaError}</p>}
-            <label htmlFor="newsletter-privacy" className="flex items-start gap-2 text-xs text-on-primary/80">
-              <input
-                id="newsletter-privacy"
-                type="checkbox"
-                checked={acceptsPolicy}
-                onChange={(event) => {
-                  setAcceptsPolicy(event.target.checked);
-                  setPolicyError('');
-                }}
-                aria-invalid={Boolean(policyError)}
-                aria-describedby={policyError ? 'newsletter-privacy-error' : undefined}
-                className="mt-0.5 h-4 w-4 rounded border-outline-variant text-industrial-orange focus:ring-industrial-orange/30"
-              />
-              <span>
-                Autorizo el tratamiento de mis datos según la{' '}
-                <a href={PRIVACY_POLICY_URL} className="font-semibold underline">Política de tratamiento de datos</a>.
-              </span>
-            </label>
-            {policyError && <p id="newsletter-privacy-error" role="alert" className="text-xs text-red-200">{policyError}</p>}
+            <PrivacyConsent
+              id="newsletter-privacy"
+              required
+              checked={acceptsPolicy}
+              onChange={(event) => {
+                setAcceptsPolicy(event.target.checked);
+                setPolicyError('');
+              }}
+              error={policyError}
+              className="text-on-primary"
+              label="Autorizo a G&G CONSTRUCCIONESST S.A.S. para enviarme información comercial y técnica a mi correo electrónico. Puedo revocar esta autorización en cualquier momento."
+            />
             {status.message && (
               <p
                 className={`text-xs ${status.type === 'error' ? 'text-red-200' : 'text-green-200'}`}

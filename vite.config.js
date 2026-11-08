@@ -18,8 +18,8 @@ function securityMetadataPlugin(apiUrl) {
   const contentSecurityPolicy = [
     "default-src 'self'",
     "script-src 'self' https://challenges.cloudflare.com https://www.google.com https://www.gstatic.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' data: https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
     `img-src 'self' blob: https:`,
     `connect-src ${connectSources.join(' ')}`,
     "frame-src 'self' https://challenges.cloudflare.com https://www.google.com https://www.recaptcha.net",
