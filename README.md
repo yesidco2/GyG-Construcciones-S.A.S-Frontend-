@@ -30,6 +30,15 @@ npm run preview
 
 El comando `npm run deploy` publica `dist/` en GitHub Pages mediante `gh-pages`; ejecuta `npm run build` previamente o deja que `predeploy` lo haga automáticamente.
 
+## Validación local
+
+```bash
+npm run lint
+npm test
+npm audit --omit=dev
+npm run build
+```
+
 ## Variables de entorno
 
 - `VITE_API_URL` (requerida): URL base de la API Spring Boot, por ejemplo `http://localhost:8080`.
@@ -60,3 +69,7 @@ El panel y la consulta de seguimiento no utilizan datos locales de respaldo; el 
 `public/_headers` define CSP y encabezados para plataformas que admiten archivos `_headers`, como Netlify y Cloudflare Pages. El build sustituye `__API_ORIGIN__` por el origen de `VITE_API_URL`. La etiqueta meta CSP generada en `dist/index.html` sirve como respaldo, pero no sustituye los encabezados HTTP.
 
 GitHub Pages no permite configurar encabezados HTTP personalizados; en ese alojamiento solo se aplica la política meta. Las imágenes entregadas por el backend se muestran únicamente si son del mismo origen o usan HTTPS; las vistas previas locales usan URLs `blob:` del propio navegador.
+
+En Google Cloud Console, restringe la API key pública de Firebase mediante restricciones de aplicación por sitios web (dominios de producción autorizados y los dominios locales necesarios) y restricciones de API a las APIs de Firebase que realmente use la aplicación. La API key de Firebase identifica el proyecto; no la trates como secreto ni publiques claves privadas en variables `VITE_*`.
+
+El cliente espera `POST /api/auth/password-reset` para la recuperación protegida con el header `X-Captcha-Token`, y `POST /api/newsletter` con `aceptaPolitica` y `politicaVersion`. Estos recursos deben existir en el backend para que esas acciones completen correctamente.

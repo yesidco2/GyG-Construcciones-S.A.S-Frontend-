@@ -42,7 +42,10 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
   const widgetIdRef = useRef(null);
   const callbacksRef = useRef({ onToken, onError });
   const [loadError, setLoadError] = useState('');
-  callbacksRef.current = { onToken, onError };
+
+  useEffect(() => {
+    callbacksRef.current = { onToken, onError };
+  }, [onToken, onError]);
 
   useEffect(() => {
     if (!siteKey) return undefined;

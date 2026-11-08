@@ -129,7 +129,6 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       setNewCode(generateProjectCode());
       setCreateError('');
     } catch (error) {
-      console.error('No se pudo generar un código de proyecto:', error);
       setCreateError(error.message || 'No se pudo generar un código de proyecto.');
     }
   };
