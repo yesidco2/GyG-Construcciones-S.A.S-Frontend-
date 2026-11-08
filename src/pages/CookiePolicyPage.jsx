@@ -2,10 +2,13 @@ import { EFFECTIVE_DATE, CONTACT_EMAIL } from '../config/privacy';
 import { COOKIE_POLICY_VERSION } from '../config/cookies';
 import cookieInventory from '../../docs/inventario-cookies.md?raw';
 
-const inventoryRows = cookieInventory
+const inventoryTableLines = cookieInventory
   .split(/\r?\n/)
-  .filter((line) => line.startsWith('|'))
-  .slice(2)
+  .filter((line) => line.startsWith('|'));
+const inventoryRows = [
+  inventoryTableLines[0],
+  ...inventoryTableLines.slice(2),
+]
   .map((line) => line.split('|').slice(1, -1).map((cell) => cell.trim()));
 
 export default function CookiePolicyPage() {

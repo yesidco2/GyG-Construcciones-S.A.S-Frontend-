@@ -152,14 +152,24 @@ export default function CookieConsentManager() {
 
   const closePreferences = useCallback(() => {
     setPreferencesOpen(false);
-    requestAnimationFrame(() => triggerRef.current?.focus?.());
+    requestAnimationFrame(() => {
+      const target = triggerRef.current?.isConnected
+        ? triggerRef.current
+        : document.querySelector('[data-cookie-preferences-trigger]');
+      target?.focus?.();
+    });
   }, []);
 
   const savePreferences = (analytics) => {
     save(analytics);
     setPreferencesOpen(false);
     setConfirmation('Tus preferencias de cookies se guardaron.');
-    requestAnimationFrame(() => triggerRef.current?.focus?.());
+    requestAnimationFrame(() => {
+      const target = triggerRef.current?.isConnected
+        ? triggerRef.current
+        : document.querySelector('[data-cookie-preferences-trigger]');
+      target?.focus?.();
+    });
   };
 
   return (

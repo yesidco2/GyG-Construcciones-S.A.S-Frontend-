@@ -140,6 +140,7 @@ export default function Footer() {
             <li>
               <button
                 type="button"
+                data-cookie-preferences-trigger
                 onClick={(event) => window.dispatchEvent(new CustomEvent('cookie-preferences-open', {
                   detail: { trigger: event.currentTarget },
                 }))}
