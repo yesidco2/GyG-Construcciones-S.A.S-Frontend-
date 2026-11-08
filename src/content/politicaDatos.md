@@ -57,6 +57,8 @@ G&G aplica los principios de legalidad, finalidad, libertad, veracidad o calidad
 
 **Cookies y almacenamiento local.** El sitio usa almacenamiento del navegador para mantener la sesión de usuarios autenticados y recordar preferencias. [COMPLETAR si se usan herramientas de analítica o publicidad y, en ese caso, informar proveedor y finalidad]
 
+Consulta la [Política de cookies](#politica-cookies) para ver el inventario de cookies y gestionar tus preferencias.
+
 ## 6. Autorización del titular
 
 G&G solicita autorización previa, expresa e informada antes de tratar datos personales. En los formularios del sitio la autorización se otorga marcando una casilla que no viene seleccionada de antemano. G&G conserva la fecha, la versión de esta política y la finalidad aceptada.
