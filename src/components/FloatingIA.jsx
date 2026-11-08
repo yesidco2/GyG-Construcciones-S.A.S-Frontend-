@@ -141,7 +141,7 @@ export default function FloatingIA() {
   };
 
   return (
-    <div className="fixed left-4 bottom-8 z-50 flex flex-col items-start">
+    <div className="cookie-floating-chat fixed left-4 bottom-8 z-50 flex flex-col items-start">
       {open && (
         <div className="mb-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-surface-variant overflow-hidden flex flex-col h-[480px]">
           {/* Encabezado */}

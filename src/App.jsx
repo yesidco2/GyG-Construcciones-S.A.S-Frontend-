@@ -7,6 +7,7 @@ import ConsultProjectPage from './pages/ConsultProjectPage';
 import AdminFaqPage from './pages/AdminFaqPage';
 import LoginPage from './pages/LoginPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import CookieConsentManager from './components/CookieConsentManager';
 
 const routes = {
   '': AppShell,
@@ -42,6 +43,7 @@ function Layout({ children, showFooter = true }) {
       <Header />
       {children}
       {showFooter && <Footer />}
+      <CookieConsentManager />
     </div>
   );
 }

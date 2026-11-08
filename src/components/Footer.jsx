@@ -133,6 +133,22 @@ export default function Footer() {
               </a>
             </li>
             <li>
+              <a className="hover:text-on-primary hover:underline transition-all" href="#politica-cookies">
+                Política de cookies
+              </a>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={(event) => window.dispatchEvent(new CustomEvent('cookie-preferences-open', {
+                  detail: { trigger: event.currentTarget },
+                }))}
+                className="text-left hover:text-on-primary hover:underline transition-all"
+              >
+                Preferencias de cookies
+              </button>
+            </li>
+            <li>
               <a className="hover:text-on-primary hover:underline transition-all" href="#">
                 Términos de Servicio
               </a>

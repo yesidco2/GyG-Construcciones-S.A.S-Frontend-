@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function FloatingWhatsapp() {
   return (
-    <div className="fixed right-4 bottom-8 z-50">
+    <div className="cookie-floating-whatsapp fixed right-4 bottom-8 z-50">
       <a
         href="https://wa.me/573022019694?text=Hola%20G%26G"
         target="_blank"

@@ -67,3 +67,16 @@ body {
 .animate-scale-in {
   animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+@media (max-width: 640px) {
+  .cookie-banner-visible .cookie-floating-chat,
+  .cookie-banner-visible .cookie-floating-whatsapp {
+    bottom: 13rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .cookie-banner-visible .cookie-floating-chat,
+  .cookie-banner-visible .cookie-floating-whatsapp {
+    bottom: 11rem;
+  }
+}
