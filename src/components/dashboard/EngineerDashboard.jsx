@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
-  getStoredProjects,
+  getProjects,
   generateProjectCode,
-  DEFAULT_PROJECT_PHOTO,
   updateProjectProgress,
+  updateProject,
   addProjectPhoto,
   createProject,
   deleteProject,
@@ -11,13 +11,22 @@ import {
 
 function compressProjectPhoto(file) {
   return new Promise((resolve, reject) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      reject(new Error('Selecciona una imagen JPG, PNG o WebP.'));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      reject(new Error('La imagen debe pesar máximo 5 MB.'));
+      return;
+    }
+
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('No se pudo leer la imagen seleccionada.'));
     reader.onload = () => {
       const image = new Image();
       image.onerror = () => reject(new Error('El archivo seleccionado no es una imagen válida.'));
       image.onload = () => {
-        const maxDimension = 1280;
+        const maxDimension = 1600;
         const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -32,7 +41,10 @@ function compressProjectPhoto(file) {
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
         try {
-          resolve(canvas.toDataURL('image/jpeg', 0.78));
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('No se pudo procesar la imagen seleccionada.'));
+          }, 'image/jpeg', 0.82);
         } catch {
           reject(new Error('No se pudo procesar la imagen seleccionada.'));
         }
@@ -43,23 +55,19 @@ function compressProjectPhoto(file) {
   });
 }
 
-// Fotos sugeridas para agilizar pruebas
-const PRESET_PHOTOS = [
-  { label: 'Estructura', url: DEFAULT_PROJECT_PHOTO },
-  { label: 'Seguridad SST', url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&auto=format&fit=crop&q=80' },
-  { label: 'Maquinaria', url: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&auto=format&fit=crop&q=80' },
-  { label: 'Topografía', url: 'https://images.unsplash.com/photo-1590496793929-36417d3117de?w=600&auto=format&fit=crop&q=80' },
-];
-
 export default function EngineerDashboard({ currentUser, onLogout }) {
   const [projects, setProjects] = useState([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [projectsError, setProjectsError] = useState('');
   const [activeTab, setActiveTab] = useState('list'); // 'list' | 'create' | 'session'
   const [notification, setNotification] = useState(null);
 
   // Estados para Modal de Agregar Imagen
   const [photoModalProject, setPhotoModalProject] = useState(null);
-  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
   const [photoDesc, setPhotoDesc] = useState('');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Estados para Formulario de Creación de Proyecto
   const [newCode, setNewCode] = useState('');
@@ -67,7 +75,14 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const [newCategory, setNewCategory] = useState('Ingeniería Civil');
   const [newClient, setNewClient] = useState('');
   const [newProgress, setNewProgress] = useState(15);
-  const [newPhotoUrl, setNewPhotoUrl] = useState(DEFAULT_PROJECT_PHOTO);
+  const [newPhotoFile, setNewPhotoFile] = useState(null);
+  const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [isUpdatingProgress, setIsUpdatingProgress] = useState({});
+  const [deletingProject, setDeletingProject] = useState('');
+  const [editingProject, setEditingProject] = useState(null);
+  const [projectEdits, setProjectEdits] = useState(null);
+  const [isSavingProject, setIsSavingProject] = useState(false);
   const [newDescription, setNewDescription] = useState('');
   const [createError, setCreateError] = useState('');
   const [photoError, setPhotoError] = useState('');
@@ -88,8 +103,23 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [expandedPhoto]);
 
+  useEffect(() => () => {
+    if (newPhotoUrl.startsWith('blob:')) URL.revokeObjectURL(newPhotoUrl);
+  }, [newPhotoUrl]);
+
+  useEffect(() => () => {
+    if (photoPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(photoPreviewUrl);
+  }, [photoPreviewUrl]);
+
   const loadProjects = () => {
-    setProjects(getStoredProjects());
+    setIsLoadingProjects(true);
+    setProjectsError('');
+    return getProjects()
+      .then(setProjects)
+      .catch(() => {
+        setProjectsError('No se pudieron cargar las obras desde el servidor. Intenta de nuevo.');
+      })
+      .finally(() => setIsLoadingProjects(false));
   };
 
   const suggestNextCode = () => {
@@ -107,58 +137,80 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
     setTimeout(() => setNotification(null), 4000);
   };
 
+  const closePhotoModal = () => {
+    setPhotoModalProject(null);
+    setPhotoFile(null);
+    setPhotoPreviewUrl('');
+    setPhotoDesc('');
+    setPhotoError('');
+  };
+
   const handleProjectPhotoChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setPhotoError('Selecciona una imagen JPG, PNG o WebP.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setPhotoError('La imagen debe pesar menos de 10 MB.');
-      return;
-    }
-
     setPhotoError('');
+    setNewPhotoFile(null);
+    setNewPhotoUrl('');
     try {
-      setNewPhotoUrl(await compressProjectPhoto(file));
+      const compressed = await compressProjectPhoto(file);
+      setNewPhotoFile(compressed);
+      setNewPhotoUrl(URL.createObjectURL(compressed));
+    } catch (error) {
+      setPhotoError(error.message || 'No se pudo cargar la imagen.');
+    }
+  };
+
+  const handleGalleryPhotoChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setPhotoError('');
+    setPhotoFile(null);
+    setPhotoPreviewUrl('');
+    try {
+      const compressed = await compressProjectPhoto(file);
+      setPhotoFile(compressed);
+      setPhotoPreviewUrl(URL.createObjectURL(compressed));
     } catch (error) {
       setPhotoError(error.message || 'No se pudo cargar la imagen.');
     }
   };
 
   // Manejar cambio de avance
-  const handleProgressChange = (code, value) => {
-    const updated = updateProjectProgress(code, value);
-    if (updated) {
-      loadProjects();
+  const handleProgressChange = async (project, value) => {
+    setIsUpdatingProgress((current) => ({ ...current, [project.code]: true }));
+    try {
+      const updated = await updateProjectProgress(project, value);
+      setProjects((current) => current.map((item) => item.code === project.code ? updated : item));
       showNotification(`Avance de ${updated.name} actualizado al ${updated.progress}%.`);
+    } catch {
+      showNotification('No se pudo actualizar el avance en el servidor.', 'error');
+    } finally {
+      setIsUpdatingProgress((current) => ({ ...current, [project.code]: false }));
     }
   };
 
   // Manejar adición de foto
-  const handleAddPhotoSubmit = (e) => {
+  const handleAddPhotoSubmit = async (e) => {
     e.preventDefault();
-    if (!photoUrl.trim()) return;
-
-    const updated = addProjectPhoto(photoModalProject.code, {
-      url: photoUrl.trim(),
-      description: photoDesc.trim() || 'Fotografía de control técnico en obra',
-      fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' }),
-    });
-
-    if (updated) {
-      loadProjects();
+    if (!photoFile || !photoModalProject) return;
+    setIsUploadingPhoto(true);
+    try {
+      const updated = await addProjectPhoto(photoModalProject, photoFile, photoDesc);
       setPhotoModalProject(updated);
-      setPhotoUrl('');
+      setProjects((current) => current.map((item) => item.code === updated.code ? updated : item));
+      setPhotoFile(null);
+      setPhotoPreviewUrl('');
       setPhotoDesc('');
       showNotification(`Nueva imagen agregada al proyecto ${updated.code}.`);
+    } catch {
+      showNotification('No se pudo subir la fotografía al servidor.', 'error');
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
 
   // Manejar creación de nuevo proyecto
-  const handleCreateProjectSubmit = (e) => {
+  const handleCreateProjectSubmit = async (e) => {
     e.preventDefault();
     setCreateError('');
 
@@ -167,41 +219,85 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       return;
     }
 
+    setIsCreatingProject(true);
     try {
-      const created = createProject({
+      let created = await createProject({
         code: newCode.trim(),
         name: newName.trim(),
         category: newCategory,
-        client: newClient.trim() || 'Cliente Corporativo',
-        supervisor: currentUser?.name || 'Ing. Residente SST',
+        client: newClient.trim(),
         progress: newProgress,
-        photoUrl: newPhotoUrl,
         description: newDescription.trim(),
+        startDate: '',
+        estimatedEnd: '',
       });
 
-      loadProjects();
+      if (newPhotoFile) {
+        created = await addProjectPhoto(created, newPhotoFile, 'Fotografía inicial de la obra');
+      }
+      setProjects((current) => [created, ...current]);
       showNotification(`¡Proyecto ${created.code} (${created.name}) registrado con éxito!`);
       
       // Limpiar formulario y volver a la lista
       setNewName('');
       setNewClient('');
       setNewProgress(15);
-      setNewPhotoUrl(DEFAULT_PROJECT_PHOTO);
+      setNewPhotoFile(null);
+      setNewPhotoUrl('');
       setNewDescription('');
       setPhotoError('');
       suggestNextCode();
       setActiveTab('list');
     } catch (err) {
       setCreateError(err.message || 'Error al crear el proyecto.');
+    } finally {
+      setIsCreatingProject(false);
     }
   };
 
   // Manejar eliminación
-  const handleDelete = (code) => {
-    if (window.confirm(`¿Estás seguro de eliminar el proyecto ${code}?`)) {
-      deleteProject(code);
-      loadProjects();
+  const handleDelete = async (project) => {
+    if (window.confirm(`¿Estás seguro de eliminar el proyecto ${project.code}?`)) {
+      setDeletingProject(project.code);
+      try {
+        await deleteProject(project);
+        setProjects((current) => current.filter((item) => item.code !== project.code));
+      } catch {
+        showNotification('No se pudo eliminar la obra en el servidor.', 'error');
+        return;
+      } finally {
+        setDeletingProject('');
+      }
+      const code = project.code;
       showNotification(`Proyecto ${code} eliminado.`, 'info');
+    }
+  };
+
+  const openProjectEditor = (project) => {
+    setEditingProject(project);
+    setProjectEdits({
+      name: project.name,
+      client: project.client,
+      category: project.category,
+      description: project.description,
+      estimatedEnd: project.estimatedEnd,
+    });
+  };
+
+  const handleUpdateProjectSubmit = async (event) => {
+    event.preventDefault();
+    if (!editingProject || !projectEdits) return;
+    setIsSavingProject(true);
+    try {
+      const updated = await updateProject(editingProject, projectEdits);
+      setProjects((current) => current.map((item) => item.code === updated.code ? updated : item));
+      setEditingProject(null);
+      setProjectEdits(null);
+      showNotification(`Proyecto ${updated.code} actualizado.`);
+    } catch (error) {
+      showNotification(error.message || 'No se pudo actualizar la obra en el servidor.', 'error');
+    } finally {
+      setIsSavingProject(false);
     }
   };
 
@@ -313,12 +409,14 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
           className={`p-4 rounded-xl text-xs font-medium flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 shadow-md ${
             notification.type === 'info'
               ? 'bg-blue-50 text-blue-900 border border-blue-200'
+              : notification.type === 'error'
+              ? 'bg-error-container text-error border border-error/20'
               : 'bg-green-50 text-green-900 border border-green-200'
           }`}
         >
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-base">
-              {notification.type === 'info' ? 'info' : 'check_circle'}
+              {notification.type === 'info' ? 'info' : notification.type === 'error' ? 'error' : 'check_circle'}
             </span>
             <span>{notification.message}</span>
           </div>
@@ -375,6 +473,14 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       {/* VISTA 1: LISTADO Y EDICIÓN DE AVANCES */}
       {activeTab === 'list' && (
         <div className="space-y-4">
+          {projectsError && (
+            <div className="rounded-xl border border-error/20 bg-error-container p-4 text-sm text-error" role="alert">
+              <p>{projectsError}</p>
+              <button type="button" onClick={loadProjects} className="mt-2 font-semibold underline">
+                Reintentar
+              </button>
+            </div>
+          )}
           <div className="flex items-center justify-between text-xs text-secondary px-1">
             <p>
               Modifica directamente el <strong>porcentaje de avance</strong> o agrega <strong>nuevas fotografías</strong> para mantener actualizado el seguimiento del cliente.
@@ -383,6 +489,16 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
+            {isLoadingProjects && (
+              <p className="rounded-xl border border-surface-variant bg-white p-6 text-center text-sm text-secondary" role="status">
+                Cargando obras...
+              </p>
+            )}
+            {!isLoadingProjects && !projectsError && projects.length === 0 && (
+              <p className="rounded-xl border border-surface-variant bg-white p-6 text-center text-sm text-secondary">
+                No hay obras asignadas o registradas.
+              </p>
+            )}
             {projects.map((project) => (
               <div
                 key={project.code}
@@ -427,6 +543,14 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   <div className="flex items-center gap-2 self-end sm:self-center">
                     <button
                       type="button"
+                      onClick={() => openProjectEditor(project)}
+                      className="px-3 py-1.5 rounded-lg border border-outline-variant hover:border-industrial-orange bg-surface hover:bg-white text-xs font-semibold text-primary flex items-center gap-1.5 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-sm">edit</span>
+                      <span>Editar</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setPhotoModalProject(project)}
                       className="px-3 py-1.5 rounded-lg border border-outline-variant hover:border-industrial-orange bg-surface hover:bg-white text-xs font-semibold text-primary flex items-center gap-1.5 transition-all"
                     >
@@ -436,7 +560,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
                     <button
                       type="button"
-                      onClick={() => handleDelete(project.code)}
+                      onClick={() => handleDelete(project)}
+                      disabled={deletingProject === project.code}
                       className="p-1.5 rounded-lg border border-error/20 hover:bg-error-container text-error text-xs transition-colors"
                       title="Eliminar proyecto"
                     >
@@ -466,7 +591,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                       min="0"
                       max="100"
                       value={project.progress}
-                      onChange={(e) => handleProgressChange(project.code, e.target.value)}
+                      onChange={(e) => handleProgressChange(project, e.target.value)}
+                      disabled={Boolean(isUpdatingProgress[project.code])}
                       className="w-full h-2 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-industrial-orange"
                     />
                   </div>
@@ -478,7 +604,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                         <button
                           key={val}
                           type="button"
-                          onClick={() => handleProgressChange(project.code, val)}
+                          onClick={() => handleProgressChange(project, val)}
+                          disabled={Boolean(isUpdatingProgress[project.code])}
                           className={`px-2 py-0.5 rounded border text-[10px] font-semibold transition-colors ${
                             project.progress === val
                               ? 'bg-industrial-orange text-white border-industrial-orange'
@@ -662,32 +789,34 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               <input
                 id="new-photo"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleProjectPhotoChange}
                 aria-describedby={photoError ? 'new-photo-error' : 'new-photo-help'}
                 className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
               />
               <p id="new-photo-help" className="mt-1 text-[10px] text-secondary">
-                Elige una foto de tu galería o dispositivo (JPG, PNG o WebP; máximo 10 MB). Se optimizará y guardará junto al proyecto en este dispositivo.
+                Elige una foto JPG, PNG o WebP de máximo 5 MB. Se optimizará y se enviará al servidor.
               </p>
               {photoError && (
                 <p id="new-photo-error" role="alert" className="mt-1 text-xs text-error">
                   {photoError}
                 </p>
               )}
-              <button
-                type="button"
-                onClick={() => setExpandedPhoto(newPhotoUrl)}
-                aria-label="Ampliar vista previa de la fotografía"
-                aria-haspopup="dialog"
-                className="mt-3 block h-96 w-full overflow-hidden rounded-lg border border-surface-variant bg-surface text-left sm:h-[30rem] lg:h-[34rem]"
-              >
-                <img
-                  src={newPhotoUrl}
-                  alt="Vista previa de la fotografía inicial del proyecto. Toca para ampliar."
-                  className="h-full w-full object-cover"
-                />
-              </button>
+              {newPhotoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setExpandedPhoto(newPhotoUrl)}
+                  aria-label="Ampliar vista previa de la fotografía"
+                  aria-haspopup="dialog"
+                  className="mt-3 block h-96 w-full overflow-hidden rounded-lg border border-surface-variant bg-surface text-left sm:h-[30rem] lg:h-[34rem]"
+                >
+                  <img
+                    src={newPhotoUrl}
+                    alt="Vista previa de la fotografía inicial del proyecto. Toca para ampliar."
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              )}
             </div>
 
             {/* Descripción */}
@@ -715,10 +844,11 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               </button>
               <button
                 type="submit"
+                disabled={isCreatingProject}
                 className="px-6 py-2.5 rounded-xl bg-industrial-orange hover:bg-industrial-orange/90 text-white text-xs font-semibold transition-all shadow-md flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-base">save</span>
-                <span>Registrar Proyecto</span>
+                <span>{isCreatingProject ? 'Guardando...' : 'Registrar Proyecto'}</span>
               </button>
             </div>
           </form>
@@ -759,6 +889,51 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         </div>
       )}
 
+      {editingProject && projectEdits && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <form onSubmit={handleUpdateProjectSubmit} className="w-full max-w-xl space-y-4 rounded-2xl border border-surface-variant bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between border-b border-surface-variant pb-3">
+              <div>
+                <p className="font-mono text-xs font-bold text-industrial-orange">{editingProject.code}</p>
+                <h3 className="mt-1 text-lg font-bold text-primary">Editar datos de la obra</h3>
+              </div>
+              <button type="button" onClick={() => setEditingProject(null)} aria-label="Cerrar edición" className="text-secondary hover:text-primary">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div>
+              <label htmlFor="edit-project-name" className="mb-1 block text-xs font-semibold text-secondary">Nombre</label>
+              <input id="edit-project-name" required maxLength={120} value={projectEdits.name} onChange={(event) => setProjectEdits({ ...projectEdits, name: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="edit-project-client" className="mb-1 block text-xs font-semibold text-secondary">Cliente</label>
+                <input id="edit-project-client" maxLength={120} value={projectEdits.client} onChange={(event) => setProjectEdits({ ...projectEdits, client: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label htmlFor="edit-project-category" className="mb-1 block text-xs font-semibold text-secondary">Categoría</label>
+                <select id="edit-project-category" value={projectEdits.category} onChange={(event) => setProjectEdits({ ...projectEdits, category: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm">
+                  <option value="Ingeniería Civil">Ingeniería Civil</option>
+                  <option value="SST & Obras Industriales">SST & Obras Industriales</option>
+                  <option value="Infraestructura Vial">Infraestructura Vial</option>
+                  <option value="Auditoría SG-SST">Auditoría SG-SST</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="edit-project-description" className="mb-1 block text-xs font-semibold text-secondary">Descripción</label>
+              <textarea id="edit-project-description" rows={3} maxLength={1000} value={projectEdits.description} onChange={(event) => setProjectEdits({ ...projectEdits, description: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button type="button" onClick={() => setEditingProject(null)} className="rounded-lg border border-surface-variant px-4 py-2 text-xs font-semibold text-secondary">Cancelar</button>
+              <button type="submit" disabled={isSavingProject} className="rounded-lg bg-industrial-orange px-4 py-2 text-xs font-semibold text-white disabled:opacity-60">
+                {isSavingProject ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* MODAL PARA AGREGAR IMÁGENES AL PROYECTO */}
       {photoModalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
@@ -778,7 +953,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
               <button
                 type="button"
-                onClick={() => setPhotoModalProject(null)}
+                onClick={closePhotoModal}
                 className="text-secondary hover:text-primary"
               >
                 <span className="material-symbols-outlined">close</span>
@@ -793,36 +968,21 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               </h4>
 
               <div>
-                <label className="block text-[11px] font-semibold text-secondary mb-1">
-                  URL de la Fotografía *
+                <label htmlFor="gallery-photo" className="block text-[11px] font-semibold text-secondary mb-1">
+                  Fotografía JPG, PNG o WebP (máximo 5 MB) *
                 </label>
                 <input
-                  type="url"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://ejemplo.com/foto.jpg"
+                  id="gallery-photo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleGalleryPhotoChange}
                   className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-white text-xs focus:ring-2 focus:ring-industrial-orange/40 focus:outline-none"
-                  required
                 />
               </div>
-
-              {/* Botones sugeridos */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-secondary">O elige una foto sugerida:</span>
-                {PRESET_PHOTOS.map((p) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => {
-                      setPhotoUrl(p.url);
-                      setPhotoDesc(`Avance en obra: ${p.label}`);
-                    }}
-                    className="text-[10px] bg-white hover:bg-surface-variant px-2 py-0.5 rounded border border-outline-variant font-medium text-primary shadow-2xs"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+              {photoPreviewUrl && (
+                <img src={photoPreviewUrl} alt="Vista previa de la fotografía" className="max-h-48 rounded-lg object-contain" />
+              )}
+              {photoError && <p role="alert" className="text-xs text-error">{photoError}</p>}
 
               <div>
                 <label className="block text-[11px] font-semibold text-secondary mb-1">
@@ -840,9 +1000,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               <div className="text-right pt-1">
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-industrial-orange text-white text-xs font-semibold hover:bg-industrial-orange/90 transition-all shadow-sm"
+                  disabled={!photoFile || isUploadingPhoto}
+                  className="px-4 py-2 rounded-lg bg-industrial-orange text-white text-xs font-semibold hover:bg-industrial-orange/90 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Subir Fotografía al Registro
+                  {isUploadingPhoto ? 'Subiendo...' : 'Subir Fotografía al Registro'}
                 </button>
               </div>
             </form>

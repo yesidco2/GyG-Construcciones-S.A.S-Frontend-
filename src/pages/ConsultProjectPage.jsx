@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { apiFetch } from '../services/api';
-import { getProjectByCode } from '../services/projectService';
 
 const projectCodePattern = /^[A-Za-z0-9-]{6,40}$/;
 
@@ -21,7 +20,7 @@ export default function ConsultProjectPage() {
     }
 
     if (error === 'not-found') {
-      return 'No encontramos un proyecto con ese código. Verifica la información o contacta a tu gestor.';
+      return 'Código de acceso inválido. Verifica el código e inténtalo de nuevo.';
     }
 
     if (error === 'empty') {
@@ -37,7 +36,7 @@ export default function ConsultProjectPage() {
     }
 
     if (error) {
-      return 'No pudimos consultar el proyecto por un error de red o del servidor. Intenta nuevamente más tarde.';
+      return 'No pudimos consultar el proyecto por un error de red o del servidor. Puedes intentarlo de nuevo.';
     }
 
     if (!trackingResult) {
@@ -69,11 +68,14 @@ export default function ConsultProjectPage() {
     setSearched(false);
 
     try {
-      const data = await apiFetch(`/api/obras/seguimiento/${encodeURIComponent(code)}`);
+      const data = await apiFetch('/api/obras/seguimiento', {
+        method: 'POST',
+        body: JSON.stringify({ codigo: code }),
+      });
       setTrackingResult({
         name: data.nombre,
-        progress: data.porcentajeAvance,
-        photos: (data.fotos || []),
+        progress: data.progreso ?? data.porcentajeAvance,
+        photos: data.fotos || [],
         code,
       });
       setSearched(true);
@@ -84,20 +86,8 @@ export default function ConsultProjectPage() {
         return;
       }
 
-      const localProject = getProjectByCode(code);
-      if (localProject) {
-        setTrackingResult({
-          name: localProject.name,
-          progress: localProject.progress,
-          photos: localProject.photos || [],
-          code: localProject.code,
-        });
-        setSearched(true);
-      } else {
-        console.error('API / Local error:', err);
-        setError('not-found');
-        setSearched(true);
-      }
+      setError(err.status === 404 ? 'not-found' : 'request-failed');
+      setSearched(true);
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +125,7 @@ export default function ConsultProjectPage() {
                 disabled={isLoading}
                 className="inline-flex items-center justify-center rounded-full bg-industrial-orange px-lg py-sm text-white font-headline-sm hover:bg-industrial-orange/90 transition-all gap-xs disabled:opacity-70"
               >
-                {isLoading ? 'Buscando...' : 'Consultar Proyecto'}
+                {isLoading ? 'Buscando...' : error === 'request-failed' ? 'Reintentar' : 'Consultar Proyecto'}
                 <span className="material-symbols-outlined">arrow_forward</span>
               </button>
             </form>
@@ -179,13 +169,13 @@ export default function ConsultProjectPage() {
                   {isLoading
                     ? 'Consultando el proyecto...'
                     : error === 'not-found'
-                      ? 'No se encontró un proyecto con ese código.'
+                      ? 'Código de acceso inválido. Verifica el código e inténtalo de nuevo.'
                       : error === 'rate-limited'
                         ? 'Demasiadas consultas seguidas. Espera un minuto e inténtalo de nuevo.'
                         : error === 'invalid-code'
                           ? 'El código debe tener entre 6 y 40 caracteres y solo puede incluir letras, números y guiones.'
                           : error === 'request-failed'
-                            ? 'No se pudo cargar el proyecto. Intenta nuevamente más tarde.'
+                            ? 'Error de red o del servidor. Usa el botón Reintentar para volver a consultar.'
                         : error === 'empty'
                           ? 'Ingresa un código para iniciar la consulta.'
                           : 'Sin resultados para este código.'}

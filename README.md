@@ -38,13 +38,15 @@ No incluyas secretos en variables `VITE_*`: se incorporan al bundle público del
 
 ## Secciones conectadas a la API
 
-El frontend utiliza `src/services/api.js` para las solicitudes JSON. Estas vistas consultan el backend y mantienen contenido estático de respaldo si la API no está disponible:
+El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 
 - Servicios: `GET /api/servicios`
 - Proyectos: `GET /api/proyectos` y `GET /api/proyectos?categoria=CIVIL|SST`
 - Explorador de riesgos: `GET /api/riesgos/labores` y `GET /api/riesgos/{id}`
 - Formulario de contacto: `POST /api/contacto`
 - Asistente IA: `POST /api/chat`
-- Consulta de proyecto: `GET /api/obras/seguimiento/{codigo}`
+- Consulta de proyecto: `POST /api/obras/seguimiento` con `{ "codigo": "..." }`
+- Panel de obras (requiere autenticación): `/api/panel/obras` para listar, crear, editar, actualizar progreso, eliminar y subir fotos en `multipart/form-data` (`archivo`, `descripcion`)
+- Consultas administrativas del chat: `GET /api/admin/consultas-chat`
 
-El backend debe estar ejecutándose para consultar los datos en vivo.
+El panel y la consulta de seguimiento no utilizan datos locales de respaldo; el backend debe estar ejecutándose para usarlos.

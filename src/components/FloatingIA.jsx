@@ -9,9 +9,9 @@ const fallbackResponses = [
 
 const getFallbackAnswer = () => fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
 
-const getLocalHistory = () => {
+const getSessionHistory = () => {
   try {
-    return JSON.parse(localStorage.getItem('gg-chat-history') || '[]');
+    return JSON.parse(sessionStorage.getItem('gg-chat-history') || '[]');
   } catch {
     return [];
   }
@@ -47,7 +47,7 @@ export default function FloatingIA() {
 
   useEffect(() => {
     if (!open) return;
-    const saved = getLocalHistory();
+    const saved = getSessionHistory();
     if (saved.length > 0) {
       setMessages(saved.slice(-4));
       setShowFAQ(false);
@@ -58,10 +58,19 @@ export default function FloatingIA() {
 
   const saveHistory = (nextMessages) => {
     try {
-      localStorage.setItem('gg-chat-history', JSON.stringify(nextMessages.slice(-20)));
+      sessionStorage.setItem('gg-chat-history', JSON.stringify(nextMessages.slice(-20)));
     } catch (error) {
       console.warn('No se pudo guardar el historial local del chat:', error);
     }
+  };
+
+  const clearConversation = () => {
+    sessionStorage.removeItem('gg-chat-history');
+    setMessages([
+      { type: 'bot', text: 'Hola — soy el asistente virtual de G&G. ¿Sobre qué quieres consultar?' },
+    ]);
+    setInput('');
+    setShowFAQ(true);
   };
 
   const handleSelectFAQ = async (faq) => {
@@ -135,14 +144,23 @@ export default function FloatingIA() {
               <span className="material-symbols-outlined text-industrial-orange">smart_toy</span>
               <strong>Asistente IA</strong>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-white opacity-90 hover:opacity-100"
-              aria-label="Cerrar asistente IA"
-              type="button"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={clearConversation}
+                className="text-xs text-white/80 underline underline-offset-2 hover:text-white"
+              >
+                Borrar conversación
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-white opacity-90 hover:opacity-100"
+                aria-label="Cerrar asistente IA"
+                type="button"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Historial de Mensajes */}
@@ -182,6 +200,9 @@ export default function FloatingIA() {
 
           {/* Formulario de Entrada */}
           <form onSubmit={handleSubmit} className="p-3 border-t border-surface-variant bg-white">
+            <p className="mb-2 text-[10px] leading-relaxed text-secondary" aria-live="polite">
+              Las conversaciones se guardan solo en esta pestaña durante la sesión. Evita compartir datos sensibles.
+            </p>
             <label htmlFor="chat-input" className="sr-only">
               Mensaje para el asistente
             </label>
