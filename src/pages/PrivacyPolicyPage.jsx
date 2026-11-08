@@ -1,3 +1,4 @@
+import { Children } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import policyMarkdown from '../content/politicaDatos.md?raw';
@@ -9,7 +10,7 @@ const policySections = [...policyMarkdown.matchAll(/^## (\d+)\. (.+)$/gm)].map((
 }));
 
 const textFromChildren = (children) =>
-  React.Children.toArray(children)
+  Children.toArray(children)
     .map((child) => (typeof child === 'string' || typeof child === 'number' ? child : ''))
     .join('');
 
