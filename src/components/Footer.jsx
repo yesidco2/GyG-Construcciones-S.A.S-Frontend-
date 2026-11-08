@@ -1,9 +1,14 @@
 import { useState } from 'react';
+import { apiFetch } from '../services/api';
+import CaptchaWidget from './auth/CaptchaWidget';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [captchaError, setCaptchaError] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -12,40 +17,36 @@ export default function Footer() {
       setStatus({ type: 'error', message: 'Ingresa un correo válido para suscribirte.' });
       return;
     }
+    if (!captchaToken) {
+      setCaptchaError('Completa la verificación CAPTCHA antes de suscribirte.');
+      return;
+    }
 
     setIsSubmitting(true);
     setStatus({ type: '', message: '' });
 
-    const endpoint = import.meta.env.VITE_NEWSLETTER_ENDPOINT;
-
     try {
-      if (endpoint) {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source: 'GG WEB newsletter' }),
-        });
-
-        if (!response.ok) {
-          throw new Error('No se pudo completar la suscripción');
-        }
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await apiFetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'X-Captcha-Token': captchaToken },
+        body: JSON.stringify({ correo: email.trim(), source: 'GG WEB newsletter' }),
+      });
       setStatus({
         type: 'success',
-        message: endpoint
-          ? 'Te has suscrito correctamente a nuestro boletín.'
-          : 'Configuración pendiente: agrega VITE_NEWSLETTER_ENDPOINT para activar la suscripción real.',
+        message: 'Te has suscrito correctamente a nuestro boletín.',
       });
       setEmail('');
     } catch (error) {
       setStatus({
         type: 'error',
-        message: 'No pudimos completar la suscripción. Inténtalo nuevamente más tarde.',
+        message: error?.status === 429
+          ? 'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.'
+          : 'No pudimos completar la suscripción. Inténtalo nuevamente más tarde.',
       });
     } finally {
       setIsSubmitting(false);
+      setCaptchaToken('');
+      setCaptchaResetKey((current) => current + 1);
     }
   };
 
@@ -141,10 +142,20 @@ export default function Footer() {
                 onChange={(event) => setEmail(event.target.value)}
                 aria-label="Correo electrónico para newsletter"
               />
-              <button className="bg-industrial-orange p-sm rounded-r-lg disabled:opacity-70" type="submit" disabled={isSubmitting} aria-label="Suscribirme al boletín">
+              <button className="bg-industrial-orange p-sm rounded-r-lg disabled:opacity-70" type="submit" disabled={isSubmitting || !captchaToken} aria-label="Suscribirme al boletín">
                 <span className="material-symbols-outlined text-white">chevron_right</span>
               </button>
             </div>
+            <CaptchaWidget
+              siteKey={import.meta.env.VITE_CAPTCHA_SITE_KEY}
+              resetKey={captchaResetKey}
+              onToken={(token) => {
+                setCaptchaToken(token);
+                setCaptchaError('');
+              }}
+              onError={setCaptchaError}
+            />
+            {captchaError && <p role="status" className="text-xs text-red-200" aria-live="polite">{captchaError}</p>}
             {status.message && (
               <p
                 className={`text-xs ${status.type === 'error' ? 'text-red-200' : 'text-green-200'}`}

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
+import CaptchaWidget from './auth/CaptchaWidget';
 
 const services = [
   'Obra Civil',
@@ -69,6 +70,9 @@ export default function Contact({ sectionId = 'contacto' }) {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionLock = useRef(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [captchaError, setCaptchaError] = useState('');
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -93,6 +97,10 @@ export default function Contact({ sectionId = 'contacto' }) {
     setErrors(validationErrors);
     setStatus({ type: '', message: '' });
     if (Object.keys(validationErrors).length > 0) return;
+    if (!captchaToken) {
+      setCaptchaError('Completa la verificación CAPTCHA antes de enviar.');
+      return;
+    }
 
     submissionLock.current = true;
     setIsSubmitting(true);
@@ -100,6 +108,7 @@ export default function Contact({ sectionId = 'contacto' }) {
     try {
       await apiFetch('/api/contacto', {
         method: 'POST',
+        headers: { 'X-Captcha-Token': captchaToken },
         body: JSON.stringify({
           nombre: formData.name.trim(),
           empresa: formData.company.trim(),
@@ -118,7 +127,6 @@ export default function Contact({ sectionId = 'contacto' }) {
       setFormData(initialForm);
       setErrors({});
     } catch (error) {
-      console.error('No se pudo enviar la solicitud de contacto:', error);
       setStatus({
         type: 'error',
         message:
@@ -129,6 +137,8 @@ export default function Contact({ sectionId = 'contacto' }) {
     } finally {
       submissionLock.current = false;
       setIsSubmitting(false);
+      setCaptchaToken('');
+      setCaptchaResetKey((current) => current + 1);
     }
   };
 
@@ -330,9 +340,20 @@ export default function Contact({ sectionId = 'contacto' }) {
                 </div>
               </div>
 
+              <CaptchaWidget
+                siteKey={import.meta.env.VITE_CAPTCHA_SITE_KEY}
+                resetKey={captchaResetKey}
+                onToken={(token) => {
+                  setCaptchaToken(token);
+                  setCaptchaError('');
+                }}
+                onError={setCaptchaError}
+              />
+              {captchaError && <p role="status" className="text-sm text-error" aria-live="polite">{captchaError}</p>}
+
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !captchaToken}
                 className="w-full rounded-lg bg-industrial-orange py-sm font-headline-sm text-headline-sm text-white transition-colors hover:bg-industrial-orange/90 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import EngineerDashboard from '../components/dashboard/EngineerDashboard';
 import ForgotPasswordModal from '../components/auth/ForgotPasswordModal';
+import CaptchaWidget from '../components/auth/CaptchaWidget';
 import {
   friendlyAuthError,
   loginWithEmail,
@@ -115,18 +116,60 @@ export default function LoginPage() {
   const [verificationError, setVerificationError] = useState('');
   const [verificationAction, setVerificationAction] = useState('');
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [captchaStatus, setCaptchaStatus] = useState('');
+  const [lockoutUntil, setLockoutUntil] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const failedAttemptsRef = useRef(0);
+
+  useEffect(() => {
+    if (!lockoutUntil) return undefined;
+    const updateCooldown = () => {
+      const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+      setCooldownSeconds(remaining);
+      if (remaining === 0) setLockoutUntil(0);
+    };
+    updateCooldown();
+    const intervalId = window.setInterval(updateCooldown, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [lockoutUntil]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
     setError('');
+    if (!captchaToken) {
+      setCaptchaStatus('Completa la verificación CAPTCHA antes de iniciar sesión.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await loginWithEmail(email, password, remember);
+      const credential = await loginWithEmail(email, password, remember, captchaToken);
+      failedAttemptsRef.current = 0;
+      setLockoutUntil(0);
+      await refreshProfile(credential.user);
     } catch (authError) {
       setError(friendlyAuthError(authError));
+      failedAttemptsRef.current += 1;
+      if (failedAttemptsRef.current >= 3) {
+        const delaySeconds = Math.min(60, 5 * (2 ** (failedAttemptsRef.current - 3)));
+        setLockoutUntil(Date.now() + delaySeconds * 1000);
+      }
     } finally {
       setIsSubmitting(false);
+      setCaptchaToken('');
+      setCaptchaResetKey((current) => current + 1);
     }
+  };
+
+  const handleCaptchaToken = (token) => {
+    setCaptchaToken(token);
+    setCaptchaStatus(token ? 'Verificación completada.' : '');
+  };
+
+  const handleCaptchaError = (message) => {
+    setCaptchaToken('');
+    setCaptchaStatus(message);
   };
 
   const handleLogout = async () => {
@@ -338,12 +381,24 @@ export default function LoginPage() {
                   <span className="text-xs font-medium text-secondary">Mantener sesión activa</span>
                 </label>
 
+                <CaptchaWidget
+                  siteKey={import.meta.env.VITE_CAPTCHA_SITE_KEY}
+                  resetKey={captchaResetKey}
+                  onToken={handleCaptchaToken}
+                  onError={handleCaptchaError}
+                />
+                <p className="text-xs text-secondary" aria-live="polite">
+                  {cooldownSeconds > 0
+                    ? `Demasiados intentos. Espera ${cooldownSeconds} segundos para volver a intentar.`
+                    : captchaStatus}
+                </p>
+
                 <button
                   type="submit"
-                  disabled={!isFirebaseConfigured || isSubmitting}
+                  disabled={!isFirebaseConfigured || isSubmitting || !captchaToken || cooldownSeconds > 0}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-industrial-orange px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-industrial-orange/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-outline/50 disabled:shadow-none"
                 >
-                  {isSubmitting ? 'Procesando...' : 'Iniciar sesión'}
+                  {isSubmitting ? 'Procesando...' : cooldownSeconds > 0 ? 'Espera para intentar' : 'Iniciar sesión'}
                 </button>
               </form>
 
