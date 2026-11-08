@@ -246,7 +246,7 @@ export default function FloatingIA() {
             </label>
             {consentError && <p id="chat-privacy-error" role="alert" className="mb-2 text-[10px] text-error">{consentError}</p>}
             {storageError && <p role="status" className="mb-2 text-[10px] text-error" aria-live="polite">{storageError}</p>}
-            <label htmlFor="chat-input" className="sr-only">
+            <label htmlFor="chat-input" className="mb-1 block text-[10px] font-semibold text-secondary">
               Mensaje para el asistente
             </label>
             <input

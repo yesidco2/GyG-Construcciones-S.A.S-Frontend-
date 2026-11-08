@@ -16,6 +16,11 @@ body {
   overflow-x: hidden;
 }
 
+:focus-visible {
+  outline: 3px solid #b84b00;
+  outline-offset: 2px;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   vertical-align: middle;
@@ -35,7 +40,7 @@ body {
 }
 
 .industrial-border {
-  border-left: 4px solid #e16300;
+  border-left: 4px solid #b84b00;
 }
 
 @keyframes shake {

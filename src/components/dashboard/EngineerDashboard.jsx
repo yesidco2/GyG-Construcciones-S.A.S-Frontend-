@@ -426,6 +426,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       {/* NOTIFICACIÓN TOAST FLOTANTE */}
       {notification && (
         <div
+          role={notification.type === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
           className={`p-4 rounded-xl text-xs font-medium flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 shadow-md ${
             notification.type === 'info'
               ? 'bg-blue-50 text-blue-900 border border-blue-200'

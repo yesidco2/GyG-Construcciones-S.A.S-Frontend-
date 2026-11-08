@@ -107,8 +107,10 @@ export default function ConsultProjectPage() {
               </p>
             </div>
 
-            <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <label htmlFor="project-code" className="sr-only">Código del proyecto</label>
+            <form noValidate onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-[1fr_auto]">
+              <label htmlFor="project-code" className="font-label-caps text-label-caps text-secondary sm:col-span-2">
+                Código de acceso del proyecto
+              </label>
               <input
                 id="project-code"
                 type="text"

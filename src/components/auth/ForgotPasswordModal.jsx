@@ -73,6 +73,8 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
 
         {status.message && (
           <div
+            role={status.type === 'error' ? 'alert' : 'status'}
+            aria-live="polite"
             className={`mt-4 p-3 rounded-lg text-sm flex items-start gap-2 ${
               status.type === 'success'
                 ? 'bg-green-50 text-green-800 border border-green-200'

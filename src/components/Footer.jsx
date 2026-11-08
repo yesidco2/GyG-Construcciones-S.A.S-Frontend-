@@ -144,8 +144,10 @@ export default function Footer() {
             Reciba actualizaciones sobre normatividad SST y avances en ingeniería.
           </p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-xs">
+            <label htmlFor="newsletter-email" className="text-xs font-medium text-on-primary">
+              Correo electrónico
+            </label>
             <div className="flex">
-              <label htmlFor="newsletter-email" className="sr-only">Correo electrónico</label>
               <input
                 id="newsletter-email"
                 className="bg-white/10 border-none text-white rounded-l-lg w-full font-body-sm text-body-sm p-sm focus:ring-1 focus:ring-industrial-orange placeholder:text-white/50"
@@ -153,7 +155,6 @@ export default function Footer() {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                aria-label="Correo electrónico para newsletter"
               />
               <button className="bg-industrial-orange p-sm rounded-r-lg disabled:opacity-70" type="submit" disabled={isSubmitting || !captchaToken || !acceptsPolicy} aria-label="Suscribirme al boletín">
                 <span className="material-symbols-outlined text-white">chevron_right</span>
