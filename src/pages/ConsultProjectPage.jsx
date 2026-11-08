@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { apiFetch } from '../services/api';
-import { getProjectByCode } from '../services/projectService';
+import safeImageUrl from '../utils/safeImageUrl';
 
 const projectCodePattern = /^[A-Za-z0-9-]{6,40}$/;
 
@@ -21,7 +21,7 @@ export default function ConsultProjectPage() {
     }
 
     if (error === 'not-found') {
-      return 'No encontramos un proyecto con ese código. Verifica la información o contacta a tu gestor.';
+      return 'Código de acceso inválido. Verifica el código e inténtalo de nuevo.';
     }
 
     if (error === 'empty') {
@@ -37,7 +37,7 @@ export default function ConsultProjectPage() {
     }
 
     if (error) {
-      return 'No pudimos consultar el proyecto por un error de red o del servidor. Intenta nuevamente más tarde.';
+      return 'No pudimos consultar el proyecto por un error de red o del servidor. Puedes intentarlo de nuevo.';
     }
 
     if (!trackingResult) {
@@ -69,11 +69,14 @@ export default function ConsultProjectPage() {
     setSearched(false);
 
     try {
-      const data = await apiFetch(`/api/obras/seguimiento/${encodeURIComponent(code)}`);
+      const data = await apiFetch('/api/obras/seguimiento', {
+        method: 'POST',
+        body: JSON.stringify({ codigo: code }),
+      });
       setTrackingResult({
         name: data.nombre,
-        progress: data.porcentajeAvance,
-        photos: (data.fotos || []),
+        progress: data.progreso ?? data.porcentajeAvance,
+        photos: data.fotos || [],
         code,
       });
       setSearched(true);
@@ -84,20 +87,8 @@ export default function ConsultProjectPage() {
         return;
       }
 
-      const localProject = getProjectByCode(code);
-      if (localProject) {
-        setTrackingResult({
-          name: localProject.name,
-          progress: localProject.progress,
-          photos: localProject.photos || [],
-          code: localProject.code,
-        });
-        setSearched(true);
-      } else {
-        console.error('API / Local error:', err);
-        setError('not-found');
-        setSearched(true);
-      }
+      setError(err.status === 404 ? 'not-found' : 'request-failed');
+      setSearched(true);
     } finally {
       setIsLoading(false);
     }
@@ -116,8 +107,10 @@ export default function ConsultProjectPage() {
               </p>
             </div>
 
-            <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <label htmlFor="project-code" className="sr-only">Código del proyecto</label>
+            <form noValidate onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-[1fr_auto]">
+              <label htmlFor="project-code" className="font-label-caps text-label-caps text-secondary sm:col-span-2">
+                Código de acceso del proyecto
+              </label>
               <input
                 id="project-code"
                 type="text"
@@ -135,7 +128,7 @@ export default function ConsultProjectPage() {
                 disabled={isLoading}
                 className="inline-flex items-center justify-center rounded-full bg-industrial-orange px-lg py-sm text-white font-headline-sm hover:bg-industrial-orange/90 transition-all gap-xs disabled:opacity-70"
               >
-                {isLoading ? 'Buscando...' : 'Consultar Proyecto'}
+                {isLoading ? 'Buscando...' : error === 'request-failed' ? 'Reintentar' : 'Consultar Proyecto'}
                 <span className="material-symbols-outlined">arrow_forward</span>
               </button>
             </form>
@@ -179,13 +172,13 @@ export default function ConsultProjectPage() {
                   {isLoading
                     ? 'Consultando el proyecto...'
                     : error === 'not-found'
-                      ? 'No se encontró un proyecto con ese código.'
+                      ? 'Código de acceso inválido. Verifica el código e inténtalo de nuevo.'
                       : error === 'rate-limited'
                         ? 'Demasiadas consultas seguidas. Espera un minuto e inténtalo de nuevo.'
                         : error === 'invalid-code'
                           ? 'El código debe tener entre 6 y 40 caracteres y solo puede incluir letras, números y guiones.'
                           : error === 'request-failed'
-                            ? 'No se pudo cargar el proyecto. Intenta nuevamente más tarde.'
+                            ? 'Error de red o del servidor. Usa el botón Reintentar para volver a consultar.'
                         : error === 'empty'
                           ? 'Ingresa un código para iniciar la consulta.'
                           : 'Sin resultados para este código.'}
@@ -208,7 +201,7 @@ export default function ConsultProjectPage() {
                   className="overflow-hidden rounded-xl bg-white shadow-sm"
                 >
                   <img
-                    src={photo.url}
+                    src={safeImageUrl(photo.url)}
                     alt={`${trackingResult.name} foto ${index + 1}`}
                     className="h-36 w-full object-cover hover:scale-105 transition-transform"
                   />

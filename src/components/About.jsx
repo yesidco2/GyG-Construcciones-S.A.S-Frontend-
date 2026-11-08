@@ -64,15 +64,15 @@ export default function About() {
           <h3 className="mb-sm font-headline-sm text-headline-sm text-primary">Testimonios</h3>
           <div className="grid grid-cols-1 gap-md md:grid-cols-3">
             <div className="rounded-lg bg-surface-container-high p-md shadow-sm">
-              <p className="font-body-sm text-body-sm text-secondary">"La intervención técnica de G&G redujo nuestros incidentes y mejoró la productividad."</p>
+              <p className="font-body-sm text-body-sm text-secondary">&quot;La intervención técnica de G&amp;G redujo nuestros incidentes y mejoró la productividad.&quot;</p>
               <div className="mt-3 font-label-caps text-label-caps text-primary">— Ing. Laura Martínez</div>
             </div>
             <div className="rounded-lg bg-surface-container-high p-md shadow-sm">
-              <p className="font-body-sm text-body-sm text-secondary">"Profesionales, responsables y orientados a resultados. Altamente recomendados."</p>
+              <p className="font-body-sm text-body-sm text-secondary">&quot;Profesionales, responsables y orientados a resultados. Altamente recomendados.&quot;</p>
               <div className="mt-3 font-label-caps text-label-caps text-primary">— Sr. Carlos Gómez</div>
             </div>
             <div className="rounded-lg bg-surface-container-high p-md shadow-sm">
-              <p className="font-body-sm text-body-sm text-secondary">"Implementaron un SG-SST claro y efectivo en tiempo récord."</p>
+              <p className="font-body-sm text-body-sm text-secondary">&quot;Implementaron un SG-SST claro y efectivo en tiempo récord.&quot;</p>
               <div className="mt-3 font-label-caps text-label-caps text-primary">— Dra. Paula Ríos</div>
             </div>
           </div>

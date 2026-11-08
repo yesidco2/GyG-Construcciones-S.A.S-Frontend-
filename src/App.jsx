@@ -6,6 +6,7 @@ import GestionSSTPage from './pages/GestionSSTPage';
 import ConsultProjectPage from './pages/ConsultProjectPage';
 import AdminFaqPage from './pages/AdminFaqPage';
 import LoginPage from './pages/LoginPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 const routes = {
   '': AppShell,
@@ -25,6 +26,7 @@ const routes = {
   'consultar-proyecto': ConsultProjectPage,
   'admin-faq': AdminFaqPage,
   'login': LoginPage,
+  'politica-datos': PrivacyPolicyPage,
 };
 
 function initializeRoute() {

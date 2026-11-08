@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../services/api';
+import { PRIVACY_POLICY_URL, PRIVACY_POLICY_VERSION } from '../services/privacyPolicy';
 
 const fallbackResponses = [
   'Para resolver dudas de SST, revisa primero el tipo de actividad, los riesgos asociados y los EPP mínimos recomendados. Si quieres, puedo orientarte sobre trabajo en alturas, riesgo eléctrico o excavaciones.',
@@ -9,9 +10,9 @@ const fallbackResponses = [
 
 const getFallbackAnswer = () => fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
 
-const getLocalHistory = () => {
+const getSessionHistory = () => {
   try {
-    return JSON.parse(localStorage.getItem('gg-chat-history') || '[]');
+    return JSON.parse(sessionStorage.getItem('gg-chat-history') || '[]');
   } catch {
     return [];
   }
@@ -44,10 +45,13 @@ export default function FloatingIA() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFAQ, setShowFAQ] = useState(true);
+  const [acceptsPolicy, setAcceptsPolicy] = useState(false);
+  const [consentError, setConsentError] = useState('');
+  const [storageError, setStorageError] = useState('');
 
   useEffect(() => {
     if (!open) return;
-    const saved = getLocalHistory();
+    const saved = getSessionHistory();
     if (saved.length > 0) {
       setMessages(saved.slice(-4));
       setShowFAQ(false);
@@ -58,13 +62,28 @@ export default function FloatingIA() {
 
   const saveHistory = (nextMessages) => {
     try {
-      localStorage.setItem('gg-chat-history', JSON.stringify(nextMessages.slice(-20)));
-    } catch (error) {
-      console.warn('No se pudo guardar el historial local del chat:', error);
+      sessionStorage.setItem('gg-chat-history', JSON.stringify(nextMessages.slice(-20)));
+      setStorageError('');
+    } catch {
+      setStorageError('No se pudo guardar el historial de esta conversación en la sesión.');
     }
   };
 
+  const clearConversation = () => {
+    sessionStorage.removeItem('gg-chat-history');
+    setMessages([
+      { type: 'bot', text: 'Hola — soy el asistente virtual de G&G. ¿Sobre qué quieres consultar?' },
+    ]);
+    setInput('');
+    setShowFAQ(true);
+  };
+
   const handleSelectFAQ = async (faq) => {
+    if (!acceptsPolicy) {
+      setConsentError('Autoriza el tratamiento de datos para iniciar la conversación.');
+      return;
+    }
+    setConsentError('');
     const userMessage = { type: 'user', text: faq.question };
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
@@ -74,14 +93,17 @@ export default function FloatingIA() {
     try {
       const data = await apiFetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ pregunta: faq.question }),
+        body: JSON.stringify({
+          pregunta: faq.question,
+          aceptaPolitica: true,
+          politicaVersion: PRIVACY_POLICY_VERSION,
+        }),
       });
       const botMessage = { type: 'bot', text: data?.respuesta || faq.answer };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
-    } catch (error) {
-      console.error('FAQ API error:', error);
+    } catch {
       const botMessage = { type: 'bot', text: faq.answer };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
@@ -96,6 +118,11 @@ export default function FloatingIA() {
 
     const trimmed = input.trim();
     if (!trimmed) return;
+    if (!acceptsPolicy) {
+      setConsentError('Autoriza el tratamiento de datos para enviar tu consulta.');
+      return;
+    }
+    setConsentError('');
 
     const userMessage = { type: 'user', text: trimmed };
     const nextMessages = [...messages, userMessage];
@@ -106,7 +133,11 @@ export default function FloatingIA() {
     try {
       const data = await apiFetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ pregunta: trimmed }),
+        body: JSON.stringify({
+          pregunta: trimmed,
+          aceptaPolitica: true,
+          politicaVersion: PRIVACY_POLICY_VERSION,
+        }),
       });
 
       const aiText = data?.respuesta || getFallbackAnswer();
@@ -114,8 +145,7 @@ export default function FloatingIA() {
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
-    } catch (error) {
-      console.error('Chat API error:', error);
+    } catch {
       const botMessage = { type: 'bot', text: getFallbackAnswer() };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
@@ -135,14 +165,23 @@ export default function FloatingIA() {
               <span className="material-symbols-outlined text-industrial-orange">smart_toy</span>
               <strong>Asistente IA</strong>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-white opacity-90 hover:opacity-100"
-              aria-label="Cerrar asistente IA"
-              type="button"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={clearConversation}
+                className="text-xs text-white/80 underline underline-offset-2 hover:text-white"
+              >
+                Borrar conversación
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-white opacity-90 hover:opacity-100"
+                aria-label="Cerrar asistente IA"
+                type="button"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Historial de Mensajes */}
@@ -182,7 +221,32 @@ export default function FloatingIA() {
 
           {/* Formulario de Entrada */}
           <form onSubmit={handleSubmit} className="p-3 border-t border-surface-variant bg-white">
-            <label htmlFor="chat-input" className="sr-only">
+            <p className="mb-2 text-[10px] leading-relaxed text-secondary" aria-live="polite">
+              Las conversaciones se guardan solo en esta pestaña durante la sesión. Evita compartir datos sensibles.
+            </p>
+            <label htmlFor="chat-privacy" className="mb-2 flex items-start gap-2 text-[10px] leading-relaxed text-secondary">
+              <input
+                id="chat-privacy"
+                type="checkbox"
+                checked={acceptsPolicy}
+                onChange={(event) => {
+                  setAcceptsPolicy(event.target.checked);
+                  setConsentError('');
+                }}
+                aria-invalid={Boolean(consentError)}
+                aria-describedby={consentError ? 'chat-privacy-error' : undefined}
+                className="mt-0.5 h-3.5 w-3.5 rounded border-outline-variant text-industrial-orange focus:ring-industrial-orange/30"
+              />
+              <span>
+                Autorizo el tratamiento de datos según la{' '}
+                <a href={PRIVACY_POLICY_URL} className="font-semibold text-industrial-orange underline">
+                  Política de tratamiento de datos
+                </a>.
+              </span>
+            </label>
+            {consentError && <p id="chat-privacy-error" role="alert" className="mb-2 text-[10px] text-error">{consentError}</p>}
+            {storageError && <p role="status" className="mb-2 text-[10px] text-error" aria-live="polite">{storageError}</p>}
+            <label htmlFor="chat-input" className="mb-1 block text-[10px] font-semibold text-secondary">
               Mensaje para el asistente
             </label>
             <input
@@ -194,7 +258,7 @@ export default function FloatingIA() {
             />
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || !acceptsPolicy}
               className="mt-2 w-full bg-industrial-orange text-white py-2 rounded-md text-xs font-semibold hover:opacity-95 transition-opacity disabled:opacity-60"
             >
               {isLoading ? 'Enviando...' : 'Enviar'}
