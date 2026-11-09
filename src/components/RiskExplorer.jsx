@@ -185,9 +185,9 @@ export default function RiskExplorer() {
                     setSelectedActivityId(activity.id ?? null);
                     setApiRisk(null);
                   }}
-                  className={`flex min-h-[56px] w-full items-center rounded-xl border px-md py-sm text-left transition-all ${
+                  className={`risk-activity-option flex min-h-[56px] w-full items-center rounded-xl border px-md py-sm text-left transition-all ${
                     isActive
-                      ? 'border-primary bg-primary text-on-primary shadow-md'
+                      ? 'risk-activity-option--active border-primary bg-primary text-on-primary shadow-md'
                       : 'border-surface-variant bg-surface text-on-surface hover:border-primary/60'
                   }`}
                 >
@@ -217,7 +217,7 @@ export default function RiskExplorer() {
             </span>
           </div>
 
-          <p className="mb-md font-body-md text-body-md text-secondary">
+          <p className="risk-summary mb-md font-body-md text-body-md text-secondary">
             {isLoadingRisk ? 'Cargando información de riesgos...' : currentRisk.summary}
           </p>
 
@@ -241,7 +241,7 @@ export default function RiskExplorer() {
             <h3 className="mb-sm font-headline-sm text-headline-sm">EPP mínimos sugeridos</h3>
             <ul className="grid grid-cols-1 gap-xs sm:grid-cols-2">
               {currentRisk.epp.map((item) => (
-                <li key={item} className="flex min-h-[56px] items-center gap-xs rounded-lg bg-white/10 px-sm py-xs font-body-sm text-body-sm">
+                <li key={item} className="risk-epp-item flex min-h-[56px] items-center gap-xs rounded-lg bg-white/10 px-sm py-xs font-body-sm text-body-sm">
                   <span className="material-symbols-outlined text-industrial-orange">check_circle</span>
                   {item}
                 </li>

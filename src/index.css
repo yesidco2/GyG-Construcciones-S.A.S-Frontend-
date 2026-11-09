@@ -27,42 +27,103 @@ body {
 }
 
 .risk-results {
-  animation: riskResultsEnter 550ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+  animation: riskResultsEnter 700ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-activity-option--active {
+  animation: riskActivitySelect 650ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-summary {
+  animation: riskSummaryEnter 650ms ease-out both;
 }
 
 .risk-result-card {
-  animation: riskCardEnter 650ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+  animation: riskCardEnter 800ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
 }
 
 .risk-result-card:nth-child(2),
 .risk-result-card:nth-child(5) {
-  animation-delay: 120ms;
+  animation-delay: 130ms;
 }
 
 .risk-result-card:nth-child(3),
 .risk-result-card:nth-child(6) {
-  animation-delay: 240ms;
+  animation-delay: 260ms;
 }
 
 .risk-result-card:nth-child(4) {
-  animation-delay: 360ms;
+  animation-delay: 390ms;
+}
+
+.risk-epp-item {
+  animation: riskEppEnter 550ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-epp-item:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.risk-epp-item:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.risk-epp-item:nth-child(4) {
+  animation-delay: 270ms;
+}
+
+@keyframes riskActivitySelect {
+  0% {
+    transform: scale(0.93);
+    box-shadow: 0 0 0 0 rgba(184, 75, 0, 0.75);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 8px rgba(184, 75, 0, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 8px rgba(0, 10, 30, 0.16);
+  }
+}
+
+@keyframes riskSummaryEnter {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes riskResultsEnter {
   from {
-    opacity: 0.5;
-    transform: translateY(18px);
+    opacity: 0;
+    transform: translateX(64px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0) scale(1);
   }
 }
 
 @keyframes riskCardEnter {
   from {
     opacity: 0;
-    transform: translateY(28px) scale(0.96);
+    transform: translateX(72px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes riskEppEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -174,10 +235,6 @@ body {
     transform: none;
   }
 
-  .risk-results,
-  .risk-result-card {
-    animation: none;
-  }
 }
 
 @keyframes shake {
