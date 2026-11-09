@@ -13,8 +13,8 @@ const services = [
   {
     title: 'Ejecución de Obras',
     icon: 'construction',
-    variant: 'bg-primary',
-    textClass: 'text-white',
+    variant: 'bg-white',
+    textClass: 'text-primary',
     description: 'Construcción y dirección técnica integral de proyectos civiles y comerciales.'
   },
   {
@@ -28,7 +28,7 @@ const services = [
   {
     title: 'Estudios de Suelos',
     icon: 'layers',
-    variant: 'bg-surface-container-high',
+    variant: 'bg-white',
     textClass: 'text-primary',
     description: 'Exploración geotécnica y ensayos de laboratorio para cimentaciones seguras.'
   },
@@ -70,8 +70,8 @@ const sstServices = [
   {
     title: 'Seguridad en Alturas',
     icon: 'height',
-    variant: 'bg-primary',
-    textClass: 'text-white',
+    variant: 'bg-white',
+    textClass: 'text-primary',
     description: 'Planes de protección contra caídas, inspección de equipos y certificación de puntos.'
   },
   {
@@ -93,7 +93,7 @@ const sstServices = [
   {
     title: 'Investigación de Accidentes',
     icon: 'search',
-    variant: 'bg-surface-container-high',
+    variant: 'bg-white',
     textClass: 'text-primary',
     description: 'Análisis de causas raíz e implementación de medidas correctivas para el personal.'
   }
