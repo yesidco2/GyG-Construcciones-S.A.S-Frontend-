@@ -51,6 +51,37 @@ body {
   box-shadow: 0 12px 24px rgba(0, 33, 71, 0.12);
 }
 
+.service-card {
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.service-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 500ms ease-in-out;
+}
+
+.service-card__inner--flipped {
+  transform: rotateY(180deg);
+}
+
+.service-card__face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.service-card__face--back {
+  transform: rotateY(180deg);
+}
+
 .industrial-border {
   border-left: 4px solid #b84b00;
 }
