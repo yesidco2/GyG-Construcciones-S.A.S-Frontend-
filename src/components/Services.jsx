@@ -145,7 +145,7 @@ function ServiceCard({ title, icon, variant, textClass, border, borderClass, des
       >
         {/* Cara Frontal */}
         <div 
-          className={`service-card__face ${variant} p-md rounded-xl shadow-sm ${border || ''} ${borderClass || ''} flex flex-col justify-between group`}
+          className={`service-card__face ${variant} p-md rounded-xl shadow-sm ${border || 'industrial-border'} ${borderClass || ''} flex flex-col justify-between group`}
         >
           <span className={`material-symbols-outlined ${textClass} group-hover:scale-110 transition-transform`} style={{ fontSize: 40 }}>
             {icon}
@@ -159,7 +159,7 @@ function ServiceCard({ title, icon, variant, textClass, border, borderClass, des
         <div 
           className={`service-card__face service-card__face--back ${
             isDark ? 'bg-primary text-white' : 'bg-white text-primary'
-          } p-md rounded-xl shadow-sm ${border || ''} ${borderClass || ''} flex flex-col justify-between`}
+          } p-md rounded-xl shadow-sm ${border || 'industrial-border'} ${borderClass || ''} flex flex-col justify-between`}
         >
           <p className="font-body-md text-body-md leading-relaxed text-xs sm:text-sm">
             {description}
