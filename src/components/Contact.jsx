@@ -141,7 +141,9 @@ export default function Contact({ sectionId = 'contacto' }) {
       setStatus({
         type: 'error',
         message:
-          (error.status === 400 || error.status === 429) && error.message
+          error?.name === 'TimeoutError'
+            ? 'La verificación tardó demasiado. Completa el CAPTCHA nuevamente e inténtalo.'
+            : (error.status === 400 || error.status === 429) && error.message
             ? error.message
             : `No pudimos enviar el mensaje. Intenta de nuevo o escríbenos directamente a ${CONTACT_EMAIL}.`,
       });

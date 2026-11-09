@@ -3,8 +3,7 @@ import { resolve } from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
-function securityMetadataPlugin(apiUrl) {
-  const apiOrigin = apiUrl ? new URL(apiUrl).origin : '';
+function contentSecurityPolicy(apiOrigin, development = false) {
   const connectSources = [
     "'self'",
     apiOrigin,
@@ -14,10 +13,16 @@ function securityMetadataPlugin(apiUrl) {
     'https://challenges.cloudflare.com',
     'https://www.google.com',
     'https://www.recaptcha.net',
+    'data:',
+    ...(development ? ['ws://localhost:*', 'ws://127.0.0.1:*'] : []),
   ].filter(Boolean);
-  const contentSecurityPolicy = [
-    "default-src 'self'",
+  const scriptSources = [
     "script-src 'self' https://challenges.cloudflare.com https://www.google.com https://www.gstatic.com",
+    ...(development ? ["'unsafe-inline'"] : []),
+  ];
+  return [
+    "default-src 'self'",
+    scriptSources.join(' '),
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
     `img-src 'self' blob: https:`,
@@ -27,6 +32,11 @@ function securityMetadataPlugin(apiUrl) {
     "base-uri 'self'",
     "form-action 'self'",
   ].join('; ');
+}
+
+function securityMetadataPlugin(apiUrl) {
+  const apiOrigin = apiUrl ? new URL(apiUrl).origin : '';
+  const policy = contentSecurityPolicy(apiOrigin);
 
   return {
     name: 'production-security-metadata',
@@ -38,7 +48,7 @@ function securityMetadataPlugin(apiUrl) {
             tag: 'meta',
             attrs: {
               'http-equiv': 'Content-Security-Policy',
-              content: contentSecurityPolicy,
+              content: policy,
             },
             injectTo: 'head',
           },
@@ -66,6 +76,7 @@ function securityMetadataPlugin(apiUrl) {
 
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const apiOrigin = env.VITE_API_URL ? new URL(env.VITE_API_URL).origin : '';
   if (command === 'build' && mode === 'production') {
     if (!env.VITE_API_URL) {
       throw new Error('VITE_API_URL debe configurarse para generar el build de producción.');
@@ -90,6 +101,7 @@ export default defineConfig(({ mode, command }) => {
     server: {
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+        'Content-Security-Policy': contentSecurityPolicy(apiOrigin, true),
       },
     },
   };

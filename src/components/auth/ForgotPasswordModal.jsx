@@ -40,7 +40,11 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
             ? 'Si existe una cuenta asociada a ese correo, recibirás instrucciones para restablecer la contraseña.'
             : error?.status === 429
               ? 'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.'
-              : friendlyAuthError(error),
+              : error?.status === 400
+                ? 'La verificación CAPTCHA no fue aceptada. Complétala otra vez e inténtalo.'
+              : error?.name === 'TimeoutError'
+                ? 'La verificación o el envío tardó demasiado. Completa el CAPTCHA nuevamente e inténtalo.'
+                : friendlyAuthError(error),
       });
     } finally {
       setIsSubmitting(false);
