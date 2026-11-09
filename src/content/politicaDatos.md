@@ -1,16 +1,14 @@
-# Política de Tratamiento de Datos Personales de G&G CONSTRUCCIONES SST S.A.S.
+# Política de tratamiento de datos personales
 
 ## 1. Responsable del tratamiento
 
+G&G CONSTRUCCIONES SST S.A.S., con domicilio principal en Medellin, Colombia, es responsable del tratamiento de los datos personales descritos en esta política.
+
 | Dato | Información |
 |---|---|
-| Razón social | G&G CONSTRUCCIONES SST S.A.S. [VERIFICAR contra el certificado de existencia y representación legal y el RUT] |
-| NIT | [COMPLETAR: el backend muestra 901.458.322-1 y el sitio un marcador 900.XXX.XXX-1; usar el del RUT] |
-| Domicilio | Bogotá D.C., Colombia. Dirección: [COMPLETAR con la del certificado de Cámara de Comercio] |
-| Correo para consultas y reclamos | proyectos@gng.co [CONFIRMAR; se recomienda un correo exclusivo para protección de datos] |
-| Teléfono | [COMPLETAR] |
-| Sitio web | [COMPLETAR con la URL final del sitio] |
-| Área o persona responsable | [COMPLETAR: quien atiende las solicitudes de datos personales] |
+| Razón social | G&G CONSTRUCCIONES SST S.A.S. |
+| Domicilio | Medellin, Colombia |
+| Correo para consultas y reclamos | [proyectos@gng.co](mailto:proyectos@gng.co) |
 
 ## 2. Marco normativo
 
@@ -40,22 +38,22 @@ G&G aplica los principios de legalidad, finalidad, libertad, veracidad o calidad
 
 ## 5. Datos que se tratan y finalidades
 
-| Canal | Datos | Finalidad | Conservación |
+| Canal | Datos tratados | Finalidad | Criterio de conservación |
 |---|---|---|---|
-| Formulario de contacto y solicitud de cotización | Nombre, correo, teléfono, empresa, tipo de servicio y mensaje | Responder la solicitud, elaborar propuestas o cotizaciones y contactar al interesado | [COMPLETAR; sugerencia: 12 meses desde el último contacto] |
-| Boletín informativo y recursos descargables | Correo electrónico | Enviar información comercial y técnica, como guías y listas de verificación | Hasta que el titular revoque su autorización |
-| Asistente virtual (chat) | Preguntas escritas, fecha y un identificador técnico de sesión | Responder consultas, mejorar el servicio y analizar las preguntas frecuentes del sector | [COMPLETAR; sugerencia: 12 meses] |
-| Consulta de avance de proyecto | Código de proyecto y datos de la obra asociada (nombre, avance, fotografías) | Permitir al cliente consultar el estado de su obra de forma privada | Mientras dure el contrato y los plazos legales aplicables |
-| Acceso de ingenieros y administradores | Nombre, correo, identificador de la cuenta, rol y registro de actividad | Autenticar usuarios, controlar permisos y mantener trazabilidad | Mientras la persona tenga acceso y los plazos legales aplicables |
-| Seguridad del sitio | Dirección IP, navegador, señales de la verificación anti-bot (CAPTCHA) y registros técnicos | Prevenir abusos y fraudes, limitar solicitudes y proteger el servicio | [COMPLETAR; sugerencia: 6 a 12 meses] |
+| Formulario de contacto y solicitud de cotización | Nombre, correo electrónico, teléfono, empresa, tipo de servicio y mensaje, según los campos diligenciados | Atender la solicitud, preparar propuestas o cotizaciones y mantener comunicación relacionada | Durante la atención de la solicitud y el tiempo necesario para cumplir obligaciones contractuales y legales |
+| Boletín informativo | Correo electrónico y constancia de autorización | Enviar comunicaciones informativas y comerciales relacionadas con los servicios de G&G | Hasta que el titular retire su autorización o solicite la supresión, salvo que exista una obligación legal de conservación |
+| Asistente virtual | Mensajes enviados, fecha de interacción e identificadores técnicos asociados | Responder consultas, mantener el servicio y atender solicitudes de soporte | Durante el tiempo necesario para responder la consulta, mantener la seguridad y cumplir obligaciones legales |
+| Consulta de avance de proyecto | Código de proyecto y datos de la obra asociados, incluidos avances e imágenes disponibles | Permitir a los clientes consultar información de sus proyectos | Durante la relación contractual y los plazos legales aplicables |
+| Acceso de ingenieros y administradores | Nombre, correo electrónico, identificador de cuenta, rol y registros de actividad | Autenticar usuarios, administrar permisos y mantener la seguridad y trazabilidad del sistema | Mientras la cuenta permanezca activa y durante los plazos legales aplicables |
+| Seguridad del sitio | Dirección IP, datos del navegador, señales de verificación anti-bot y registros técnicos | Prevenir abusos y fraudes, proteger las cuentas y mantener la disponibilidad del servicio | Durante el tiempo necesario para investigar incidentes y proteger el servicio |
 
 **Datos sensibles.** G&G no solicita datos sensibles. Si el titular los entrega voluntariamente (por ejemplo, en el campo de mensaje), no está obligado a hacerlo y le pedimos no incluirlos. De acuerdo con el artículo 6 de la Ley 1581 de 2012, su tratamiento requiere autorización explícita.
 
 **Niños, niñas y adolescentes.** El sitio no está dirigido a menores de edad y G&G no recolecta de forma intencional sus datos (artículo 7 de la Ley 1581 de 2012).
 
-**Imágenes de obra.** Las fotografías de avance pueden mostrar personas. G&G solo publica o comparte con el cliente imágenes de trabajadores y terceros cuando cuenta con su autorización o cuando no permiten identificarlos. [VERIFICAR el procedimiento interno de autorización con el personal en obra]
+**Imágenes de obra.** Las fotografías de avance pueden incluir personas identificables. Su uso y divulgación se limitan a las finalidades del proyecto y se realizan de acuerdo con las autorizaciones y obligaciones legales aplicables.
 
-**Cookies y almacenamiento local.** El sitio usa almacenamiento del navegador para mantener la sesión de usuarios autenticados y recordar preferencias. [COMPLETAR si se usan herramientas de analítica o publicidad y, en ese caso, informar proveedor y finalidad]
+**Cookies y almacenamiento del navegador.** El sitio utiliza tecnologías necesarias para recordar las preferencias de cookies, mantener sesiones autenticadas y proteger el servicio. Actualmente no hay herramientas de analítica o publicidad configuradas. La Política de cookies describe las tecnologías identificadas y permite administrar las preferencias opcionales.
 
 Consulta la [Política de cookies](#politica-cookies) para ver el inventario de cookies y gestionar tus preferencias.
 
@@ -82,7 +80,7 @@ G&G se compromete, entre otros deberes del artículo 17 de la Ley 1581 de 2012, 
 
 ## 9. Procedimiento para consultas y reclamos
 
-**Cómo presentarlos.** El titular, sus causahabientes o su representante pueden escribir a proyectos@gng.co [CONFIRMAR] o por correo postal a la dirección indicada en la sección 1, con: nombre e identificación del titular, descripción de lo que solicita, dirección o correo para recibir la respuesta y los documentos que quiera hacer valer.
+**Cómo presentarlos.** El titular, sus causahabientes o su representante pueden escribir a [proyectos@gng.co](mailto:proyectos@gng.co), indicando su nombre e identificación, el motivo de la solicitud, los datos de contacto para recibir respuesta y los documentos que considere pertinentes. G&G podrá solicitar información adicional para verificar la identidad y la legitimación de quien presenta la solicitud.
 
 **Consultas.** Se atienden en un máximo de diez (10) días hábiles contados desde la fecha de recibo. Si no es posible hacerlo en ese plazo, se informará al interesado los motivos de la demora y la fecha de respuesta, que no podrá superar cinco (5) días hábiles adicionales al vencimiento del primer plazo.
 
@@ -97,20 +95,20 @@ G&G se compromete, entre otros deberes del artículo 17 de la Ley 1581 de 2012, 
 
 ## 10. Encargados, proveedores y transferencias
 
-Para operar el sitio, G&G puede apoyarse en proveedores que tratan datos por su cuenta, entre ellos servicios de alojamiento web y base de datos, autenticación de usuarios (Google Firebase Authentication), verificación anti-bot (CAPTCHA) y correo electrónico. [COMPLETAR con los nombres definitivos de los proveedores]
+Para operar el sitio, G&G puede utilizar proveedores tecnológicos que prestan servicios de alojamiento, base de datos, autenticación de usuarios y verificación anti-bot. Estos proveedores acceden únicamente a la información necesaria para prestar sus servicios y deben protegerla conforme a las obligaciones contractuales y legales aplicables.
 
-Algunos de estos proveedores pueden almacenar o procesar información fuera de Colombia. En esos casos G&G exige condiciones de seguridad y confidencialidad y realiza las transmisiones o transferencias internacionales conforme a la Ley 1581 de 2012 y sus decretos reglamentarios. [VERIFICAR con asesoría legal los contratos o cláusulas con cada proveedor]
+El uso de algunos proveedores puede implicar el tratamiento de datos fuera de Colombia. Cuando se realicen transmisiones o transferencias internacionales, estas se efectuarán conforme a la Ley 1581 de 2012 y sus normas reglamentarias, con las garantías de seguridad y confidencialidad correspondientes.
 
-Cuando el usuario hace clic en el botón de WhatsApp, la conversación se realiza en esa aplicación y se rige por la política de privacidad de WhatsApp.
+Si el titular inicia una conversación mediante un enlace a WhatsApp, el tratamiento que realice esa plataforma se regirá por sus propias condiciones y políticas de privacidad.
 
 ## 11. Medidas de seguridad
 
-G&G aplica medidas técnicas y organizativas razonables para evitar la pérdida, el acceso no autorizado o el uso fraudulento de la información, entre ellas: conexiones cifradas (HTTPS), autenticación de usuarios con verificación de correo, control de acceso por roles, límite de solicitudes, verificación anti-bot, registro de actividad de los usuarios con acceso administrativo y custodia de los códigos de proyecto. [VERIFICAR antes de publicar que cada medida esté efectivamente implementada y retirar las que no lo estén]
+G&G adopta medidas técnicas, humanas y administrativas razonables para proteger los datos frente a pérdida, acceso, uso o divulgación no autorizados. Estas medidas incluyen controles de acceso, mecanismos de autenticación y herramientas de seguridad y prevención de abuso, y se revisan de acuerdo con los riesgos y las necesidades del servicio.
 
 ## 12. Conservación y supresión
 
-Los datos se conservan durante el tiempo necesario para cumplir las finalidades descritas, las obligaciones contractuales, contables, tributarias y legales, y los plazos de la sección 5. Cumplido ese tiempo, se suprimen o se anonimizan.
+Los datos se conservan únicamente durante el tiempo necesario para cumplir las finalidades informadas, atender la relación contractual y satisfacer las obligaciones legales o los requerimientos de las autoridades. Una vez cumplidos esos propósitos, se suprimen o se someten a procedimientos de anonimización, salvo que deban conservarse por un deber legal o contractual.
 
 ## 13. Vigencia y modificaciones
 
-Esta política rige desde el [COMPLETAR fecha]. G&G puede modificarla; los cambios se publicarán en el sitio con su nueva versión y, si son sustanciales, se comunicarán a los titulares por un medio eficiente antes de aplicarse. Versión actual: 1.0-borrador.
+Esta política rige desde el 9 de noviembre de 2026. G&G podrá actualizarla cuando sea necesario; la versión vigente estará disponible en el sitio web. Cuando los cambios sean sustanciales, se informarán a los titulares por un medio idóneo antes de su aplicación.

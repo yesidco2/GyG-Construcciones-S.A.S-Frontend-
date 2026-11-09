@@ -3,7 +3,7 @@ import useCookieConsent from '../hooks/useCookieConsent';
 
 const COOKIE_NOTICE = (
   <>
-    Usamos cookies necesarias para que el sitio funcione y mantenga tu sesión segura. Con tu autorización también podemos usar cookies de analítica para mejorar el sitio. Puedes cambiar tu decisión cuando quieras. Más información en nuestra{' '}
+    Usamos cookies necesarias para el funcionamiento y la seguridad del sitio. Actualmente no hay cookies de analítica configuradas. Puedes administrar tus preferencias cuando quieras. Más información en nuestra{' '}
     <a href="#politica-cookies" className="font-semibold underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
       Política de cookies
     </a>{' '}
@@ -102,9 +102,8 @@ function PreferenceDialog({ categories, onClose, onSave }) {
               />
             </div>
             <p className="mt-2 text-sm text-secondary">
-              Permitiría medir el uso del sitio para mejorarlo. No hay un proveedor de analítica configurado actualmente.
+              Esta categoría está reservada para medir el uso del sitio. Actualmente no hay herramientas de analítica configuradas.
             </p>
-            <p className="mt-1 text-xs text-secondary">Proveedor: [VERIFICAR]</p>
           </div>
         </div>
 

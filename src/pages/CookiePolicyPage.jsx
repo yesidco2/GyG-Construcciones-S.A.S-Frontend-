@@ -1,4 +1,4 @@
-import { EFFECTIVE_DATE, CONTACT_EMAIL } from '../config/privacy';
+import { EFFECTIVE_DATE_LABEL, CONTACT_EMAIL } from '../config/privacy';
 import { COOKIE_POLICY_VERSION } from '../config/cookies';
 import cookieInventory from '../../docs/inventario-cookies.md?raw';
 
@@ -15,15 +15,6 @@ export default function CookiePolicyPage() {
   return (
     <main className="min-h-screen bg-surface px-md py-xl pt-24">
       <article className="mx-auto max-w-4xl rounded-2xl border border-surface-variant bg-white p-6 shadow-sm md:p-10">
-        {COOKIE_POLICY_VERSION.toLowerCase().includes('borrador') && (
-          <div role="status" className="mb-8 rounded-lg border border-amber-500 bg-amber-50 p-4 text-amber-950">
-            <p className="font-bold">
-              BORRADOR – pendiente de revisión y aprobación por G&amp;G Construcciones S.A.S.
-            </p>
-            <p className="mt-1">Los datos identificados como [VERIFICAR] requieren confirmación antes de publicar la política definitiva.</p>
-          </div>
-        )}
-
         <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
           Privacidad y almacenamiento
         </p>
@@ -35,7 +26,7 @@ export default function CookiePolicyPage() {
           </div>
           <div className="flex gap-1">
             <dt className="font-semibold">Fecha de vigencia:</dt>
-            <dd>{EFFECTIVE_DATE || 'Pendiente de definir'}</dd>
+            <dd>{EFFECTIVE_DATE_LABEL}</dd>
           </div>
         </dl>
 
@@ -50,7 +41,7 @@ export default function CookiePolicyPage() {
           <section>
             <h2 className="font-headline-sm text-xl font-bold text-primary">Cookies y almacenamiento identificados</h2>
             <p className="mt-2">
-              La tabla se genera a partir del inventario del proyecto. Los valores [VERIFICAR] indican información de terceros que no se pudo confirmar desde el código.
+              Este inventario describe el almacenamiento propio identificado en el sitio y los servicios externos que pueden intervenir. Actualmente no hay herramientas de analítica ni publicidad configuradas. La información que un proveedor externo almacene puede variar según la configuración y el navegador.
             </p>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[760px] border-collapse text-left text-sm">
@@ -77,7 +68,7 @@ export default function CookiePolicyPage() {
           <section>
             <h2 className="font-headline-sm text-xl font-bold text-primary">Cómo gestionar o revocar tu decisión</h2>
             <p className="mt-2">
-              En el sitio, usa el enlace “Preferencias de cookies” del pie de página para aceptar o rechazar analítica. También puedes revocar una aceptación desactivando Analítica y guardando las preferencias; se retirarán los elementos de almacenamiento de analítica reconocidos por el sitio.
+              En el sitio, usa el enlace “Preferencias de cookies” del pie de página para administrar las categorías opcionales. Actualmente no hay cookies de analítica activas. Si en el futuro se incorporan, solo se utilizarán con tu autorización y podrás retirarla guardando tus preferencias.
             </p>
             <p className="mt-2">
               Puedes administrar o borrar cookies y datos de sitios desde la configuración de privacidad de tu navegador. La forma de hacerlo depende del navegador que uses.

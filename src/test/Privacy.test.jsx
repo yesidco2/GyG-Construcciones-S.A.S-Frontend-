@@ -133,29 +133,26 @@ describe('Chat privacy notice', () => {
 });
 
 describe('Privacy policy page', () => {
-  it('shows draft notice and all section links when the configured version is a draft', async () => {
+  it('shows the published policy version, effective date, and all section links', async () => {
     vi.stubEnv('VITE_PRIVACY_POLICY_VERSION', '1.0-borrador');
     vi.stubEnv('VITE_PRIVACY_POLICY_EFFECTIVE_DATE', '2026-01-15');
     vi.resetModules();
     const { default: PrivacyPolicyPage } = await import('../pages/PrivacyPolicyPage');
     render(<PrivacyPolicyPage />);
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'BORRADOR – pendiente de revisión y aprobación por G&G Construcciones S.A.S.',
-    );
-    expect(screen.getByText('Los campos marcados como [COMPLETAR] aún no se han llenado.')).toBeInTheDocument();
-    expect(screen.getByText('2026-01-15')).toBeInTheDocument();
+    expect(screen.getByText('1.0')).toBeInTheDocument();
+    expect(screen.getByText('15 de enero de 2026')).toBeInTheDocument();
+    expect(screen.queryByText(/borrador|pendiente|\[(completar|verificar)/i)).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /^\d+\./ })).toHaveLength(13);
   });
 
-  it('hides the draft notice for version 1.0 and links the footer to the policy route', async () => {
+  it('links the footer to the policy route', async () => {
     vi.stubEnv('VITE_PRIVACY_POLICY_VERSION', '1.0');
     vi.resetModules();
     const { default: PrivacyPolicyPage } = await import('../pages/PrivacyPolicyPage');
     const { default: FooterPage } = await import('../components/Footer');
     const { unmount } = render(<PrivacyPolicyPage />);
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByText('1.0')).toBeInTheDocument();
     unmount();
 

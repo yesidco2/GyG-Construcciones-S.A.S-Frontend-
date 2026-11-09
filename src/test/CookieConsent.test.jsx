@@ -181,12 +181,13 @@ describe('cookie preferences accessibility', () => {
 });
 
 describe('cookie policy page', () => {
-  it('displays the draft status, configured version, inventory table, and privacy contact link', () => {
+  it('displays the published policy, inventory table, and privacy contact link', () => {
     render(<CookiePolicyPage />);
 
     expect(screen.getByRole('heading', { name: 'Política de cookies', level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('BORRADOR');
+    expect(screen.queryByText(/borrador|pendiente|verificar/i)).not.toBeInTheDocument();
     expect(screen.getByText(COOKIE_POLICY_VERSION)).toBeInTheDocument();
+    expect(screen.getByText('9 de noviembre de 2026')).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Duración' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'proyectos@gng.co' }))
