@@ -169,7 +169,7 @@ export default function RiskExplorer() {
       </div>
 
       <div className="grid items-start gap-lg lg:grid-cols-12">
-        <aside className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:sticky lg:top-24 lg:col-span-4">
+        <aside className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:col-span-4">
           <h2 className="mb-md font-headline-sm text-headline-sm text-primary">Selecciona una labor</h2>
           <div className="space-y-sm">
             {activityItems.map((activity) => {
@@ -203,7 +203,10 @@ export default function RiskExplorer() {
           )}
         </aside>
 
-        <div className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:col-span-8">
+        <div
+          key={selectedActivity}
+          className="risk-results rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:col-span-8"
+        >
           <div className="mb-md flex items-start justify-between gap-md border-b border-surface-variant pb-md">
             <div>
               <p className="font-label-caps text-label-caps uppercase text-secondary">Labor activa</p>
@@ -220,7 +223,7 @@ export default function RiskExplorer() {
 
           <div className={`grid auto-rows-fr gap-md ${riskGridColumns}`}>
             {normalizedRisks.map((risk) => (
-              <div key={risk.label || risk.description} className="flex h-full flex-col rounded-xl border border-surface-variant bg-surface p-sm">
+              <div key={risk.label || risk.description} className="risk-result-card flex h-full flex-col rounded-xl border border-surface-variant bg-surface p-sm">
                 <div className="mb-sm flex items-start justify-between gap-xs">
                   <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-bold uppercase ${severityStyles[risk.level]}`}>
                     {risk.level}

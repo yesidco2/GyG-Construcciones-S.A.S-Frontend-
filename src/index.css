@@ -16,6 +16,71 @@ body {
   overflow-x: hidden;
 }
 
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 600ms ease, transform 600ms cubic-bezier(0.2, 0.65, 0.3, 1);
+}
+
+.scroll-reveal--visible {
+  animation: sectionReveal 650ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-results {
+  animation: riskResultsEnter 550ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-result-card {
+  animation: riskCardEnter 650ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-result-card:nth-child(2),
+.risk-result-card:nth-child(5) {
+  animation-delay: 120ms;
+}
+
+.risk-result-card:nth-child(3),
+.risk-result-card:nth-child(6) {
+  animation-delay: 240ms;
+}
+
+.risk-result-card:nth-child(4) {
+  animation-delay: 360ms;
+}
+
+@keyframes riskResultsEnter {
+  from {
+    opacity: 0.5;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes riskCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 :focus-visible {
   outline: 3px solid #b84b00;
   outline-offset: 2px;
@@ -62,7 +127,7 @@ body {
   height: 100%;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  transition: transform 500ms ease-in-out;
+  transition: transform 750ms ease-in-out;
 }
 
 .service-card__inner--flipped {
@@ -84,6 +149,35 @@ body {
 
 .industrial-border {
   border-left: 4px solid #b84b00;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal--visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .bento-card,
+  .service-card__inner {
+    transition-duration: 150ms;
+  }
+
+  .bento-card:hover {
+    transform: none;
+  }
+
+  .scroll-reveal--visible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .risk-results,
+  .risk-result-card {
+    animation: none;
+  }
 }
 
 @keyframes shake {

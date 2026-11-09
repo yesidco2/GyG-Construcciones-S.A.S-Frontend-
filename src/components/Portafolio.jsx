@@ -40,7 +40,7 @@ function ProjectCard({ project }) {
   const imageUrl = safeImageUrl(project.image);
 
   return (
-    <article className="group overflow-hidden rounded-xl bg-white shadow-md">
+    <article className="bento-card group overflow-hidden rounded-xl bg-white shadow-md">
       <div className="relative flex h-64 items-center justify-center overflow-hidden bg-surface-variant">
         <ProjectImage key={imageUrl || 'no-image'} src={imageUrl} title={project.title} />
         <div className="absolute right-sm top-sm rounded bg-primary px-sm py-xs font-label-caps text-label-caps text-white">
