@@ -13,10 +13,17 @@ function getScriptUrl(provider) {
     : 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 }
 
+function getCaptchaApi(provider) {
+  return provider === 'recaptcha' ? window.grecaptcha : window.turnstile;
+}
+
 function loadCaptchaScript(provider) {
   const scriptId = SCRIPT_IDS[provider];
   const existingScript = document.getElementById(scriptId);
-  if (existingScript?.dataset.loaded === 'true') return Promise.resolve();
+  if (existingScript?.dataset.loaded === 'true' || (existingScript && getCaptchaApi(provider))) {
+    if (existingScript) existingScript.dataset.loaded = 'true';
+    return Promise.resolve();
+  }
 
   return new Promise((resolve, reject) => {
     const script = existingScript || document.createElement('script');
@@ -24,7 +31,10 @@ function loadCaptchaScript(provider) {
       script.dataset.loaded = 'true';
       resolve();
     };
-    const handleError = () => reject(new Error('No se pudo cargar el servicio CAPTCHA.'));
+    const handleError = () => {
+      script.remove();
+      reject(new Error('No se pudo cargar el servicio CAPTCHA.'));
+    };
     script.addEventListener('load', handleLoad, { once: true });
     script.addEventListener('error', handleError, { once: true });
     if (!existingScript) {
@@ -40,6 +50,8 @@ function loadCaptchaScript(provider) {
 export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
+  const retryRef = useRef(null);
+  const initializingRef = useRef(false);
   const callbacksRef = useRef({ onToken, onError });
   const [loadError, setLoadError] = useState('');
 
@@ -53,28 +65,61 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
     let observer;
 
     const initializeWidget = () => {
+      if (initializingRef.current || widgetIdRef.current !== null) return;
+      initializingRef.current = true;
       loadCaptchaScript(CAPTCHA_PROVIDER)
         .then(() => {
+          initializingRef.current = false;
           if (!active || !containerRef.current) return;
-          const api = CAPTCHA_PROVIDER === 'recaptcha' ? window.grecaptcha : window.turnstile;
+          const api = getCaptchaApi(CAPTCHA_PROVIDER);
           if (!api) throw new Error('El servicio CAPTCHA no está disponible.');
 
           widgetIdRef.current = api.render(containerRef.current, {
             sitekey: siteKey,
-            callback: (token) => callbacksRef.current.onToken(token),
-            'expired-callback': () => callbacksRef.current.onToken(''),
-            'error-callback': () => {
+            callback: (token) => {
+              setLoadError('');
+              callbacksRef.current.onError('');
+              callbacksRef.current.onToken(token);
+            },
+            'expired-callback': () => {
               callbacksRef.current.onToken('');
-              callbacksRef.current.onError('No se pudo validar el CAPTCHA. Inténtalo de nuevo.');
+              callbacksRef.current.onError('La verificación CAPTCHA expiró. Complétala nuevamente.');
+            },
+            'timeout-callback': () => {
+              callbacksRef.current.onToken('');
+              const message = 'El desafío CAPTCHA tardó demasiado. Complétalo nuevamente.';
+              setLoadError(message);
+              callbacksRef.current.onError(message);
+            },
+            'error-callback': (errorCode) => {
+              callbacksRef.current.onToken('');
+              const code = typeof errorCode === 'string' ? ` (código ${errorCode})` : '';
+              const message = `Turnstile no pudo completar la verificación${code}. Inténtalo nuevamente.`;
+              setLoadError(message);
+              callbacksRef.current.onError(message);
             },
             ...(CAPTCHA_PROVIDER === 'recaptcha' ? { theme: 'light', size: 'normal' } : {}),
           });
         })
         .catch(() => {
+          initializingRef.current = false;
           if (!active) return;
-          setLoadError('No se pudo cargar el CAPTCHA. Verifica tu conexión e inténtalo de nuevo.');
-          callbacksRef.current.onError('No se pudo cargar el CAPTCHA.');
+          const message = 'No se pudo cargar el CAPTCHA. Verifica tu conexión e inténtalo de nuevo.';
+          setLoadError(message);
+          callbacksRef.current.onError(message);
         });
+    };
+
+    retryRef.current = () => {
+      setLoadError('');
+      callbacksRef.current.onError('');
+      callbacksRef.current.onToken('');
+      const api = getCaptchaApi(CAPTCHA_PROVIDER);
+      if (widgetIdRef.current !== null && api) {
+        api.reset?.(widgetIdRef.current);
+      } else {
+        initializeWidget();
+      }
     };
 
     if (typeof IntersectionObserver === 'undefined') {
@@ -91,8 +136,10 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
     return () => {
       active = false;
       observer?.disconnect();
+      retryRef.current = null;
+      initializingRef.current = false;
       if (widgetIdRef.current !== null) {
-        const api = CAPTCHA_PROVIDER === 'recaptcha' ? window.grecaptcha : window.turnstile;
+        const api = getCaptchaApi(CAPTCHA_PROVIDER);
         api?.remove?.(widgetIdRef.current);
         widgetIdRef.current = null;
       }
@@ -101,7 +148,7 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
 
   useEffect(() => {
     if (widgetIdRef.current === null) return;
-    const api = CAPTCHA_PROVIDER === 'recaptcha' ? window.grecaptcha : window.turnstile;
+    const api = getCaptchaApi(CAPTCHA_PROVIDER);
     api?.reset?.(widgetIdRef.current);
     callbacksRef.current.onToken('');
   }, [resetKey]);
@@ -114,7 +161,15 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
     <div>
       <p className="mb-2 text-xs font-medium text-secondary">Verificación de seguridad</p>
       <div ref={containerRef} aria-label="Desafío CAPTCHA" />
-      {loadError && <p role="alert" className="mt-2 text-xs text-error">{loadError}</p>}
+      {loadError && (
+        <button
+          type="button"
+          className="mt-2 text-xs font-semibold text-industrial-orange underline"
+          onClick={() => retryRef.current?.()}
+        >
+          Reintentar CAPTCHA
+        </button>
+      )}
     </div>
   );
 }

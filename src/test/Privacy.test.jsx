@@ -74,7 +74,7 @@ describe('Privacy consent in contact and newsletter', () => {
       </>,
     );
     const contactConsent = screen.getByLabelText(/Autorizo de manera previa/);
-    const newsletterConsent = screen.getByLabelText(/Autorizo a G&G CONSTRUCCIONESST S\.A\.S\./);
+    const newsletterConsent = screen.getByLabelText(/Autorizo a G&G CONSTRUCCIONES SST S\.A\.S\./);
 
     expect(contactConsent).not.toBeChecked();
     expect(newsletterConsent).not.toBeChecked();
@@ -96,7 +96,7 @@ describe('Privacy consent in contact and newsletter', () => {
       .toHaveAttribute('role', 'alert');
     expect(apiFetch).not.toHaveBeenCalled();
 
-    await user.click(screen.getByLabelText(/Autorizo a G&G CONSTRUCCIONESST S\.A\.S\./));
+    await user.click(screen.getByLabelText(/Autorizo a G&G CONSTRUCCIONES SST S\.A\.S\./));
     await user.click(screen.getByRole('button', { name: 'Suscribirme al boletín' }));
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(1));

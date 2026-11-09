@@ -1,10 +1,10 @@
-# Política de Tratamiento de Datos Personales de G&G CONSTRUCCIONESST S.A.S.
+# Política de Tratamiento de Datos Personales de G&G CONSTRUCCIONES SST S.A.S.
 
 ## 1. Responsable del tratamiento
 
 | Dato | Información |
 |---|---|
-| Razón social | G&G CONSTRUCCIONESST S.A.S. [VERIFICAR contra el certificado de existencia y representación legal y el RUT] |
+| Razón social | G&G CONSTRUCCIONES SST S.A.S. [VERIFICAR contra el certificado de existencia y representación legal y el RUT] |
 | NIT | [COMPLETAR: el backend muestra 901.458.322-1 y el sitio un marcador 900.XXX.XXX-1; usar el del RUT] |
 | Domicilio | Bogotá D.C., Colombia. Dirección: [COMPLETAR con la del certificado de Cámara de Comercio] |
 | Correo para consultas y reclamos | proyectos@gng.co [CONFIRMAR; se recomienda un correo exclusivo para protección de datos] |
@@ -29,7 +29,7 @@ La autoridad de protección de datos en Colombia es la Superintendencia de Indus
 - **Dato personal:** cualquier información vinculada o que pueda asociarse a una persona natural determinada o determinable.
 - **Dato sensible:** dato que afecta la intimidad del titular o cuyo uso indebido puede generar discriminación (origen racial o étnico, orientación política, convicciones religiosas, salud, vida sexual, datos biométricos, entre otros).
 - **Tratamiento:** cualquier operación sobre datos personales, como recolección, almacenamiento, uso, circulación o supresión.
-- **Responsable:** quien decide sobre la base de datos y el tratamiento. En este caso, G&G CONSTRUCCIONESST S.A.S.
+- **Responsable:** quien decide sobre la base de datos y el tratamiento. En este caso, G&G CONSTRUCCIONES SST S.A.S.
 - **Encargado:** quien realiza el tratamiento por cuenta del responsable (por ejemplo, proveedores de hosting o autenticación).
 - **Autorización:** consentimiento previo, expreso e informado del titular para el tratamiento de sus datos.
 - **Aviso de privacidad:** comunicación verbal o escrita dirigida al titular para informarle sobre la existencia de esta política y la forma de acceder a ella.

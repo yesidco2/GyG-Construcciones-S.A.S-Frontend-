@@ -4,10 +4,11 @@ import { auth } from './firebase';
 const API_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_TIMEOUT_MS = 15000;
 const protectedPathPattern = /^\/api\/(auth|panel|admin)(\/|$)/;
+const publicAuthPathPattern = /^\/api\/auth\/(?:captcha\/verify|password-reset)$/;
 const panelPathPattern = /^\/api\/(panel|admin)(\/|$)/;
 
 function isProtectedPath(path) {
-  return protectedPathPattern.test(path);
+  return protectedPathPattern.test(path) && !publicAuthPathPattern.test(path);
 }
 
 function retryAfterSeconds(headerValue) {

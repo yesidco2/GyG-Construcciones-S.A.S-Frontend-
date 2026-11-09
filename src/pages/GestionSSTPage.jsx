@@ -1,5 +1,4 @@
 import RiskExplorer from '../components/RiskExplorer';
-import Contact from '../components/Contact';
 
 export default function GestionSSTPage() {
   const overviewCards = [
@@ -205,8 +204,6 @@ export default function GestionSSTPage() {
           </div>
         </div>
       </section>
-
-      <Contact sectionId="contacto-sst" />
     </div>
   );
 }

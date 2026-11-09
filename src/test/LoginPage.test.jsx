@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoginPage from '../pages/LoginPage';
 import useAuth from '../utils/useAuth';
-import { friendlyAuthError, loginWithEmail } from '../services/authService';
+import { friendlyAuthError, loginWithEmail, logout } from '../services/authService';
 
 vi.mock('../utils/useAuth', () => ({ default: vi.fn() }));
 vi.mock('../services/firebase', () => ({ isFirebaseConfigured: true }));
@@ -35,6 +35,30 @@ describe('LoginPage CAPTCHA flow', () => {
       error: '',
       refreshProfile: vi.fn(),
     });
+  });
+
+  it('lets an unverified user return to the login form', async () => {
+    const user = userEvent.setup();
+    useAuth.mockReturnValue({
+      loading: false,
+      firebaseUser: {
+        email: 'admin@example.com',
+        emailVerified: false,
+      },
+      profile: null,
+      role: '',
+      canAccessPanel: false,
+      error: '',
+      refreshProfile: vi.fn(),
+    });
+    logout.mockResolvedValue(undefined);
+
+    render(<LoginPage />);
+    expect(screen.getByRole('heading', { name: 'Verifica tu correo' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Volver al inicio de sesión' }));
+
+    expect(logout).toHaveBeenCalledOnce();
   });
 
   it('keeps login disabled until CAPTCHA is completed and continues after success', async () => {

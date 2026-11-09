@@ -17,7 +17,6 @@ const sstSections = [
   { id: 'risk-explorer', label: 'Explorador de riesgos', icon: 'warning', description: 'Consulta riesgos y EPP asociados a cada labor.' },
   { id: 'servicios-sst', label: 'Servicios especializados', icon: 'engineering', description: 'Soluciones especializadas para la seguridad de tus proyectos.' },
   { id: 'jerarquia-controles', label: 'Jerarquía de controles', icon: 'account_tree', description: 'Metodología para mitigar riesgos en obra.' },
-  { id: 'contacto-sst', label: 'Contacto SST', icon: 'contact_support', description: 'Solicita un diagnóstico inicial de tu obra.' },
 ];
 
 export default function Header() {

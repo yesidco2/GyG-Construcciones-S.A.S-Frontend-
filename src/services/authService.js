@@ -52,6 +52,7 @@ export async function loginWithEmail(email, password, remember = false, captchaT
 export function resetPassword(email, captchaToken) {
   return apiFetch('/api/auth/password-reset', {
     method: 'POST',
+    timeoutMs: 25000,
     headers: { 'X-Captcha-Token': captchaToken },
     body: JSON.stringify({ email: email.trim() }),
   });
@@ -92,6 +93,12 @@ const AUTH_ERROR_MESSAGES = {
   'auth/user-not-found': 'El correo o la contraseña no son correctos.',
   'auth/wrong-password': 'El correo o la contraseña no son correctos.',
   'auth/invalid-email': 'El formato del correo electrónico no es válido.',
+  'auth/invalid-api-key': 'La configuración de Firebase Auth no es válida. Contacta al administrador.',
+  'auth/api-key-not-valid': 'La clave de Firebase no es válida para este proyecto. Contacta al administrador.',
+  'auth/operation-not-allowed': 'El envío de correos de autenticación no está habilitado en Firebase.',
+  'auth/unauthorized-continue-uri': 'El dominio del enlace no está autorizado en la configuración de Firebase.',
+  'auth/invalid-continue-uri': 'El enlace de verificación no está configurado correctamente en Firebase.',
+  'auth/user-disabled': 'Esta cuenta está deshabilitada. Contacta al administrador.',
   'auth/missing-password': 'Ingresa tu contraseña.',
   'auth/too-many-requests': 'Se realizaron demasiados intentos. Espera un momento e inténtalo de nuevo.',
   'auth/network-request-failed': 'No se pudo conectar con el servicio de autenticación. Verifica tu conexión.',
@@ -103,6 +110,18 @@ const AUTH_ERROR_MESSAGES = {
 export function friendlyAuthError(error) {
   const code = error?.code;
   if (code && AUTH_ERROR_MESSAGES[code]) return AUTH_ERROR_MESSAGES[code];
+  if (error?.status === 503) {
+    if (error.message === 'No fue posible verificar CAPTCHA. Intenta nuevamente.') {
+      return 'El servidor no pudo verificar el CAPTCHA. Completa la verificación nuevamente.';
+    }
+    if (error.message === 'No fue posible procesar la solicitud. Intenta nuevamente más tarde.') {
+      return 'Firebase no pudo procesar el restablecimiento. Revisa la clave API y la configuración del proyecto.';
+    }
+    return 'El servidor no pudo completar la solicitud con Firebase. Contacta al administrador y vuelve a intentarlo más tarde.';
+  }
+  if (error?.status >= 500) {
+    return 'El servicio de autenticación no está disponible temporalmente. Inténtalo más tarde.';
+  }
   if (error?.message?.startsWith('La autenticación no está configurada')) return error.message;
   return 'No se pudo completar la autenticación. Inténtalo de nuevo o contacta al administrador.';
 }

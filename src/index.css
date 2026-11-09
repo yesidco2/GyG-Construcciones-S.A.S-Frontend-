@@ -16,6 +16,132 @@ body {
   overflow-x: hidden;
 }
 
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 600ms ease, transform 600ms cubic-bezier(0.2, 0.65, 0.3, 1);
+}
+
+.scroll-reveal--visible {
+  animation: sectionReveal 650ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-results {
+  animation: riskResultsEnter 700ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-activity-option--active {
+  animation: riskActivitySelect 650ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-summary {
+  animation: riskSummaryEnter 650ms ease-out both;
+}
+
+.risk-result-card {
+  animation: riskCardEnter 800ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-result-card:nth-child(2),
+.risk-result-card:nth-child(5) {
+  animation-delay: 130ms;
+}
+
+.risk-result-card:nth-child(3),
+.risk-result-card:nth-child(6) {
+  animation-delay: 260ms;
+}
+
+.risk-result-card:nth-child(4) {
+  animation-delay: 390ms;
+}
+
+.risk-epp-item {
+  animation: riskEppEnter 550ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.risk-epp-item:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.risk-epp-item:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.risk-epp-item:nth-child(4) {
+  animation-delay: 270ms;
+}
+
+@keyframes riskActivitySelect {
+  0% {
+    transform: scale(0.93);
+    box-shadow: 0 0 0 0 rgba(184, 75, 0, 0.75);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 8px rgba(184, 75, 0, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 8px rgba(0, 10, 30, 0.16);
+  }
+}
+
+@keyframes riskSummaryEnter {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes riskResultsEnter {
+  from {
+    opacity: 0;
+    transform: translateX(64px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes riskCardEnter {
+  from {
+    opacity: 0;
+    transform: translateX(72px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes riskEppEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 :focus-visible {
   outline: 3px solid #b84b00;
   outline-offset: 2px;
@@ -51,8 +177,64 @@ body {
   box-shadow: 0 12px 24px rgba(0, 33, 71, 0.12);
 }
 
+.service-card {
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.service-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 750ms ease-in-out;
+}
+
+.service-card__inner--flipped {
+  transform: rotateY(180deg);
+}
+
+.service-card__face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.service-card__face--back {
+  transform: rotateY(180deg);
+}
+
 .industrial-border {
   border-left: 4px solid #b84b00;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal--visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .bento-card,
+  .service-card__inner {
+    transition-duration: 150ms;
+  }
+
+  .bento-card:hover {
+    transform: none;
+  }
+
+  .scroll-reveal--visible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
 }
 
 @keyframes shake {

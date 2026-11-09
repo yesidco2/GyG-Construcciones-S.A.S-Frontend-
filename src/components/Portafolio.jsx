@@ -2,27 +2,47 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../services/api';
 import safeImageUrl from '../utils/safeImageUrl';
 
+const fallbackProjectImage = 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80';
 const filters = [
   { label: 'Todos', category: '' },
   { label: 'Ingeniería Civil', category: 'CIVIL' },
   { label: 'SST', category: 'SST' },
 ];
 
+function ProjectImage({ src, title }) {
+  const [hasImageError, setHasImageError] = useState(!src);
+  const [hasFallbackError, setHasFallbackError] = useState(false);
+
+  if (hasFallbackError) {
+    return (
+      <span className="material-symbols-outlined text-5xl text-secondary" aria-hidden="true">
+        apartment
+      </span>
+    );
+  }
+
+  const showingFallback = !src || hasImageError;
+
+  return (
+    <img
+      alt={title}
+      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+      src={showingFallback ? fallbackProjectImage : src}
+      onError={() => {
+        if (showingFallback) setHasFallbackError(true);
+        else setHasImageError(true);
+      }}
+    />
+  );
+}
+
 function ProjectCard({ project }) {
   const imageUrl = safeImageUrl(project.image);
 
   return (
-    <article className="group overflow-hidden rounded-xl bg-white shadow-md">
+    <article className="bento-card group overflow-hidden rounded-xl bg-white shadow-md">
       <div className="relative flex h-64 items-center justify-center overflow-hidden bg-surface-variant">
-        {imageUrl ? (
-          <img
-            alt={project.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            src={imageUrl}
-          />
-        ) : (
-          <span className="material-symbols-outlined text-5xl text-secondary" aria-hidden="true">apartment</span>
-        )}
+        <ProjectImage key={imageUrl || 'no-image'} src={imageUrl} title={project.title} />
         <div className="absolute right-sm top-sm rounded bg-primary px-sm py-xs font-label-caps text-label-caps text-white">
           {project.category}
         </div>
