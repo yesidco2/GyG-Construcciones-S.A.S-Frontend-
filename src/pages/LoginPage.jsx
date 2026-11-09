@@ -54,6 +54,7 @@ function VerificationMessage({
   isChecking,
   onResend,
   onCheck,
+  onBackToLogin,
 }) {
   return (
     <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-surface-variant bg-white p-8 shadow-xl">
@@ -91,6 +92,15 @@ function VerificationMessage({
             {isChecking ? 'Comprobando...' : 'Ya verifiqué, volver a comprobar'}
           </button>
         </div>
+        <button
+          type="button"
+          onClick={onBackToLogin}
+          disabled={isSending || isChecking}
+          className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-secondary transition-colors hover:bg-surface hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <span className="material-symbols-outlined text-base" aria-hidden="true">arrow_back</span>
+          Volver al inicio de sesión
+        </button>
       </div>
     </div>
   );
@@ -226,6 +236,7 @@ export default function LoginPage() {
         isChecking={verificationAction === 'check'}
         onResend={handleResendVerification}
         onCheck={handleCheckVerification}
+        onBackToLogin={handleLogout}
       />
     );
   } else if (firebaseUser && profileError) {
