@@ -371,7 +371,7 @@ export default function Contact({ sectionId = 'contacto' }) {
                   setPolicyError('');
                 }}
                 error={policyError}
-                label={`Autorizo de manera previa, expresa e informada a G&G CONSTRUCCIONESST S.A.S. para tratar mis datos personales con el fin de responder mi solicitud y contactarme, de acuerdo con la Política de Tratamiento de Datos Personales. Conozco mis derechos a conocer, actualizar, rectificar y suprimir mis datos y a revocar esta autorización escribiendo a ${CONTACT_EMAIL}.`}
+                label={`Autorizo de manera previa, expresa e informada a G&G CONSTRUCCIONES SST S.A.S. para tratar mis datos personales con el fin de responder mi solicitud y contactarme, de acuerdo con la Política de Tratamiento de Datos Personales. Conozco mis derechos a conocer, actualizar, rectificar y suprimir mis datos y a revocar esta autorización escribiendo a ${CONTACT_EMAIL}.`}
               />
 
               <button

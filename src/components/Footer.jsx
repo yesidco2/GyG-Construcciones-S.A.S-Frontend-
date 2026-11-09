@@ -198,7 +198,7 @@ export default function Footer() {
               }}
               error={policyError}
               className="text-on-primary"
-              label="Autorizo a G&G CONSTRUCCIONESST S.A.S. para enviarme información comercial y técnica a mi correo electrónico. Puedo revocar esta autorización en cualquier momento."
+              label="Autorizo a G&G CONSTRUCCIONES SST S.A.S. para enviarme información comercial y técnica a mi correo electrónico. Puedo revocar esta autorización en cualquier momento."
             />
             {status.message && (
               <p
