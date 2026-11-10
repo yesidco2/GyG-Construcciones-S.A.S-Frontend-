@@ -71,4 +71,37 @@ describe('CaptchaWidget', () => {
     expect(reset).toHaveBeenLastCalledWith('widget-id');
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Reintentar CAPTCHA' })).not.toBeInTheDocument());
   });
+
+  it('retries a stale script tag when the Turnstile API is missing', async () => {
+    const onToken = vi.fn();
+    const onError = vi.fn();
+    delete window.turnstile;
+    render(
+      <CaptchaWidget
+        siteKey="public-site-key"
+        action="login"
+        resetKey={0}
+        onToken={onToken}
+        onError={onError}
+      />,
+    );
+
+    const script = document.getElementById('gg-turnstile-script');
+    await waitFor(() => expect(script).not.toHaveAttribute('data-loaded', 'true'));
+    fireEvent.load(script);
+    await screen.findByRole('button', { name: 'Reintentar CAPTCHA' });
+
+    window.turnstile = {
+      render: vi.fn((_container, options) => {
+        widgetOptions = options;
+        return 'widget-id';
+      }),
+      reset,
+      remove,
+    };
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar CAPTCHA' }));
+
+    await waitFor(() => expect(widgetOptions).not.toBeNull());
+    expect(onError).toHaveBeenLastCalledWith('');
+  });
 });

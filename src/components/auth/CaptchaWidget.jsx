@@ -19,15 +19,24 @@ function getCaptchaApi(provider) {
 
 function loadCaptchaScript(provider) {
   const scriptId = SCRIPT_IDS[provider];
-  const existingScript = document.getElementById(scriptId);
-  if (existingScript?.dataset.loaded === 'true' || (existingScript && getCaptchaApi(provider))) {
+  let existingScript = document.getElementById(scriptId);
+  if (getCaptchaApi(provider)) {
     if (existingScript) existingScript.dataset.loaded = 'true';
     return Promise.resolve();
+  }
+  if (existingScript?.dataset.loaded === 'true') {
+    existingScript.remove();
+    existingScript = null;
   }
 
   return new Promise((resolve, reject) => {
     const script = existingScript || document.createElement('script');
     const handleLoad = () => {
+      if (!getCaptchaApi(provider)) {
+        script.remove();
+        reject(new Error('El script CAPTCHA cargó, pero no inicializó su API.'));
+        return;
+      }
       script.dataset.loaded = 'true';
       resolve();
     };
@@ -102,9 +111,16 @@ export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onEr
             ...(CAPTCHA_PROVIDER === 'recaptcha' ? { theme: 'light', size: 'normal' } : {}),
           });
         })
-        .catch(() => {
+        .catch((error) => {
           initializingRef.current = false;
           if (!active) return;
+          if (import.meta.env.DEV) {
+            console.error('[Turnstile] No se pudo cargar o renderizar el widget.', {
+              error,
+              scriptUrl: getScriptUrl(CAPTCHA_PROVIDER),
+              online: navigator.onLine,
+            });
+          }
           const message = 'No se pudo cargar el CAPTCHA. Verifica tu conexión e inténtalo de nuevo.';
           setLoadError(message);
           callbacksRef.current.onError(message);
