@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import { friendlyAuthError, resetPassword } from '../../services/authService';
-import CaptchaWidget from './CaptchaWidget';
-import { CAPTCHA_SITE_KEY } from '../../config/captcha';
 
 export default function ForgotPasswordModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState('');
-  const [captchaResetKey, setCaptchaResetKey] = useState(0);
-  const [captchaError, setCaptchaError] = useState('');
 
   if (!isOpen) return null;
 
@@ -19,16 +14,11 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
       setStatus({ type: 'error', message: 'Por favor ingresa un correo corporativo válido.' });
       return;
     }
-    if (!captchaToken) {
-      setStatus({ type: 'error', message: 'Completa la verificación CAPTCHA antes de continuar.' });
-      return;
-    }
-
     setIsSubmitting(true);
     setStatus({ type: '', message: '' });
 
     try {
-      await resetPassword(email, captchaToken);
+      await resetPassword(email);
       setStatus({
         type: 'success',
         message: 'Si existe una cuenta asociada a ese correo, recibirás instrucciones para restablecer la contraseña.',
@@ -42,15 +32,13 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
             : error?.status === 429
               ? 'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.'
               : error?.status === 400
-                ? 'La verificación CAPTCHA no fue aceptada. Complétala otra vez e inténtalo.'
+                ? 'No fue posible procesar el correo. Verifica la dirección e inténtalo de nuevo.'
               : error?.name === 'TimeoutError'
-                ? 'La verificación o el envío tardó demasiado. Completa el CAPTCHA nuevamente e inténtalo.'
+                ? 'El envío tardó demasiado. Inténtalo nuevamente.'
                 : friendlyAuthError(error),
       });
     } finally {
       setIsSubmitting(false);
-      setCaptchaToken('');
-      setCaptchaResetKey((current) => current + 1);
     }
   };
 
@@ -114,18 +102,6 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
                 />
               </div>
             </div>
-
-            <CaptchaWidget
-              siteKey={CAPTCHA_SITE_KEY}
-              action="recuperar_contraseña"
-              resetKey={captchaResetKey}
-              onToken={(token) => {
-                setCaptchaToken(token);
-                setCaptchaError('');
-              }}
-              onError={setCaptchaError}
-            />
-            {captchaError && <p role="status" className="text-xs text-error" aria-live="polite">{captchaError}</p>}
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <button

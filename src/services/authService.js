@@ -49,11 +49,10 @@ export async function loginWithEmail(email, password, remember = false, captchaT
   }
 }
 
-export function resetPassword(email, captchaToken) {
+export function resetPassword(email) {
   return apiFetch('/api/auth/password-reset', {
     method: 'POST',
     timeoutMs: 25000,
-    headers: { 'X-Captcha-Token': captchaToken },
     body: JSON.stringify({ email: email.trim() }),
   });
 }

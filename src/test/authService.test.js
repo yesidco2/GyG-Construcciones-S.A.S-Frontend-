@@ -29,16 +29,15 @@ describe('resetPassword', () => {
     sendEmailVerification.mockReset();
   });
 
-  it('allows enough time for CAPTCHA verification and Firebase email delivery', async () => {
+  it('sends password reset requests without requiring a CAPTCHA token', async () => {
     const { resetPassword } = await import('../services/authService');
     apiFetch.mockResolvedValueOnce(null);
 
-    await resetPassword(' user@example.com ', 'captcha-response');
+    await resetPassword(' user@example.com ');
 
     expect(apiFetch).toHaveBeenCalledWith('/api/auth/password-reset', {
       method: 'POST',
       timeoutMs: 25000,
-      headers: { 'X-Captcha-Token': 'captcha-response' },
       body: JSON.stringify({ email: 'user@example.com' }),
     });
   });

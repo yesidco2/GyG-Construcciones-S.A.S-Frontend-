@@ -45,14 +45,14 @@ describe('apiFetch', () => {
     expect(getIdToken).not.toHaveBeenCalled();
   });
 
-  it('sends password-reset requests publicly with the CAPTCHA token', async () => {
+  it('sends password-reset requests publicly without a CAPTCHA token', async () => {
     fetch.mockResolvedValueOnce(response(202, null));
     const { resetPassword } = await import('../services/authService');
 
-    await resetPassword(' user@example.com ', 'captcha-response');
+    await resetPassword(' user@example.com ');
 
     expect(fetch.mock.calls[0][0]).toBe('https://api.example.test/api/auth/password-reset');
-    expect(fetch.mock.calls[0][1].headers.get('X-Captcha-Token')).toBe('captcha-response');
+    expect(fetch.mock.calls[0][1].headers.get('X-Captcha-Token')).toBeNull();
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBeNull();
     expect(fetch.mock.calls[0][1].body).toBe(JSON.stringify({ email: 'user@example.com' }));
     expect(fetch.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
