@@ -94,6 +94,7 @@ export async function apiFetch(path, options = {}) {
     );
     error.status = response.status;
     error.code = typeof responseData === 'object' ? responseData?.code : undefined;
+    error.responseBody = responseData;
     error.retryAfter = response.status === 429
       ? retryAfterSeconds(response.headers.get('Retry-After'))
       : null;

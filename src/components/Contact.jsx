@@ -67,6 +67,60 @@ function FieldError({ id, message }) {
   ) : null;
 }
 
+const serverFieldNames = new Map([
+  ['nombre', 'name'], ['name', 'name'],
+  ['correo', 'email'], ['email', 'email'],
+  ['telefono', 'phone'], ['phone', 'phone'],
+  ['empresa', 'company'], ['company', 'company'],
+  ['tipoServicio', 'service'], ['service', 'service'],
+  ['mensaje', 'message'], ['message', 'message'],
+  ['sitioWeb', 'website'], ['website', 'website'],
+]);
+
+const serverFieldFallbacks = new Map([
+  ['name', 'Revisa el nombre ingresado.'],
+  ['email', 'Ingresa un correo electrónico válido.'],
+  ['phone', 'Ingresa un teléfono válido.'],
+  ['company', 'Revisa el nombre de la empresa.'],
+  ['service', 'Selecciona un tipo de servicio válido.'],
+  ['message', 'Revisa el contenido y la longitud del mensaje.'],
+  ['website', 'Revisa el formulario e inténtalo de nuevo.'],
+]);
+
+function parseServerFieldErrors(responseBody) {
+  const rawIssues = responseBody?.camposInvalidos
+    ?? responseBody?.invalidFields
+    ?? responseBody?.fieldErrors
+    ?? responseBody?.fields
+    ?? responseBody?.errors;
+  const issues = Array.isArray(rawIssues)
+    ? rawIssues
+    : rawIssues && typeof rawIssues === 'object'
+      ? Object.entries(rawIssues).map(([campo, motivo]) => ({ campo, motivo }))
+      : [];
+
+  return issues.reduce((result, issue) => {
+    const field = typeof issue === 'string' ? issue : issue?.campo ?? issue?.field ?? issue?.name;
+    const reason = typeof issue === 'object'
+      ? issue?.motivo ?? issue?.reason ?? issue?.message
+      : '';
+    const message = typeof reason === 'string' && reason.trim()
+      ? `${reason.trim().replace(/[.!?]+$/, '')}.`
+      : '';
+
+    if (field === 'aceptaPolitica' || field === 'acceptsPolicy') {
+      result.policyError = message || 'Debes aceptar la política de tratamiento de datos.';
+      return result;
+    }
+
+    const formField = serverFieldNames.get(field);
+    if (formField) {
+      result.fieldErrors.set(formField, message || serverFieldFallbacks.get(formField));
+    }
+    return result;
+  }, { fieldErrors: new Map(), policyError: '' });
+}
+
 export default function Contact({ sectionId = 'contacto' }) {
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -78,6 +132,7 @@ export default function Contact({ sectionId = 'contacto' }) {
   const [captchaError, setCaptchaError] = useState('');
   const [acceptsPolicy, setAcceptsPolicy] = useState(false);
   const [policyError, setPolicyError] = useState('');
+  const [canRetry, setCanRetry] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -113,22 +168,39 @@ export default function Contact({ sectionId = 'contacto' }) {
 
     submissionLock.current = true;
     setIsSubmitting(true);
+    setCanRetry(false);
+    setCaptchaError('');
+
+    const contactPayload = {
+      nombre: formData.name.trim(),
+      correo: formData.email.trim(),
+      ...(formData.phone.trim() ? { telefono: formData.phone.trim() } : {}),
+      ...(formData.company.trim() ? { empresa: formData.company.trim() } : {}),
+      tipoServicio: formData.service,
+      mensaje: formData.message.trim(),
+      ...(formData.website.trim() ? { sitioWeb: formData.website.trim() } : {}),
+      aceptaPolitica: true,
+      politicaVersion: POLICY_VERSION,
+    };
+    const requestBody = JSON.stringify(contactPayload);
+    const requestHeaders = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-Captcha-Token': captchaToken,
+    };
+
+    if (import.meta.env.DEV) {
+      console.debug('[POST /api/contacto] solicitud', {
+        body: requestBody,
+        headers: { ...requestHeaders, 'X-Captcha-Token': '[REDACTADO]' },
+      });
+    }
 
     try {
       await apiFetch('/api/contacto', {
         method: 'POST',
-        headers: { 'X-Captcha-Token': captchaToken },
-        body: JSON.stringify({
-          nombre: formData.name.trim(),
-          empresa: formData.company.trim(),
-          correo: formData.email.trim(),
-          telefono: formData.phone.trim(),
-          tipoServicio: formData.service,
-          mensaje: formData.message.trim(),
-          sitioWeb: formData.website.trim(),
-          aceptaPolitica: true,
-          politicaVersion: POLICY_VERSION,
-        }),
+        headers: requestHeaders,
+        body: requestBody,
       });
 
       setStatus({
@@ -138,16 +210,31 @@ export default function Contact({ sectionId = 'contacto' }) {
       setFormData(initialForm);
       setErrors({});
       setAcceptsPolicy(false);
+      setCanRetry(false);
     } catch (error) {
-      setStatus({
-        type: 'error',
-        message:
-          error?.name === 'TimeoutError'
-            ? 'La verificación tardó demasiado. Completa el CAPTCHA nuevamente e inténtalo.'
-            : (error.status === 400 || error.status === 429) && error.message
-            ? error.message
-            : `No pudimos enviar el mensaje. Intenta de nuevo o escríbenos directamente a ${CONTACT_EMAIL}.`,
-      });
+      if (import.meta.env.DEV && error.status === 400) {
+        console.debug('[POST /api/contacto] respuesta 400', error.responseBody);
+      }
+
+      if (error.status === 400) {
+        const serverErrors = parseServerFieldErrors(error.responseBody);
+        setErrors(Object.fromEntries(serverErrors.fieldErrors));
+        setPolicyError(serverErrors.policyError);
+        setStatus({ type: 'error', message: 'Revisa los campos señalados e inténtalo de nuevo.' });
+      } else if (error.status === 403) {
+        setStatus({ type: 'error', message: 'Verifica el CAPTCHA e inténtalo de nuevo.' });
+      } else if (error.status === 429) {
+        const waitMessage = error.retryAfter
+          ? `Espera ${error.retryAfter} ${error.retryAfter === 1 ? 'segundo' : 'segundos'} antes de volver a enviar.`
+          : 'Hay demasiadas solicitudes. Espera un momento antes de volver a enviar.';
+        setStatus({ type: 'error', message: waitMessage });
+      } else {
+        setCanRetry(true);
+        setStatus({
+          type: 'error',
+          message: `No pudimos conectar con el servidor. Revisa tu conexión y vuelve a intentar. También puedes escribirnos a ${CONTACT_EMAIL}.`,
+        });
+      }
     } finally {
       submissionLock.current = false;
       setIsSubmitting(false);
@@ -381,9 +468,14 @@ export default function Contact({ sectionId = 'contacto' }) {
               <button
                 type="submit"
                 disabled={isSubmitting || !captchaToken}
+                aria-busy={isSubmitting}
                 className="w-full rounded-lg bg-industrial-orange py-sm font-headline-sm text-headline-sm text-white transition-colors hover:bg-industrial-orange/90 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+                {isSubmitting
+                  ? 'Enviando...'
+                  : canRetry
+                    ? captchaToken ? 'Reintentar envío' : 'Completa el CAPTCHA para reintentar'
+                    : 'Enviar Solicitud'}
               </button>
             </form>
           </div>

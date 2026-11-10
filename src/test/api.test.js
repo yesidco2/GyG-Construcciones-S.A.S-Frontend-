@@ -109,6 +109,20 @@ describe('apiFetch', () => {
     });
   });
 
+  it('preserves the JSON response body for field-level validation errors', async () => {
+    const body = {
+      code: 'VALIDATION_ERROR',
+      message: 'Solicitud inválida',
+      camposInvalidos: [{ campo: 'telefono', motivo: 'formato inválido' }],
+    };
+    fetch.mockResolvedValueOnce(response(400, body));
+
+    await expect(apiFetch('/api/contacto')).rejects.toMatchObject({
+      status: 400,
+      responseBody: body,
+    });
+  });
+
   it('closes the session and routes to login on CAPTCHA_REQUIRED panel responses', async () => {
     fetch.mockResolvedValueOnce(response(403, { code: 'CAPTCHA_REQUIRED', message: 'Verification required' }));
 
