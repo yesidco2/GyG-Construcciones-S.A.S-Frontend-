@@ -47,7 +47,7 @@ function loadCaptchaScript(provider) {
   });
 }
 
-export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
+export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onError }) {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
   const retryRef = useRef(null);
@@ -76,6 +76,7 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
 
           widgetIdRef.current = api.render(containerRef.current, {
             sitekey: siteKey,
+            action,
             callback: (token) => {
               setLoadError('');
               callbacksRef.current.onError('');
@@ -144,7 +145,7 @@ export default function CaptchaWidget({ siteKey, resetKey, onToken, onError }) {
         widgetIdRef.current = null;
       }
     };
-  }, [siteKey]);
+  }, [siteKey, action]);
 
   useEffect(() => {
     if (widgetIdRef.current === null) return;

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import EngineerDashboard from '../components/dashboard/EngineerDashboard';
 import ForgotPasswordModal from '../components/auth/ForgotPasswordModal';
 import CaptchaWidget from '../components/auth/CaptchaWidget';
+import { CAPTCHA_SITE_KEY } from '../config/captcha';
 import {
   friendlyAuthError,
   loginWithEmail,
@@ -393,7 +394,8 @@ export default function LoginPage() {
                 </label>
 
                 <CaptchaWidget
-                  siteKey={import.meta.env.VITE_CAPTCHA_SITE_KEY}
+                  siteKey={CAPTCHA_SITE_KEY}
+                  action="login"
                   resetKey={captchaResetKey}
                   onToken={handleCaptchaToken}
                   onError={handleCaptchaError}

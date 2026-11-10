@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { apiFetch } from '../services/api';
 import CaptchaWidget from './auth/CaptchaWidget';
+import { CAPTCHA_SITE_KEY } from '../config/captcha';
 import PrivacyConsent from './PrivacyConsent';
 import { POLICY_URL, POLICY_VERSION } from '../config/privacy';
 
@@ -179,7 +180,8 @@ export default function Footer() {
               </button>
             </div>
             <CaptchaWidget
-              siteKey={import.meta.env.VITE_CAPTCHA_SITE_KEY}
+              siteKey={CAPTCHA_SITE_KEY}
+              action="newsletter"
               resetKey={captchaResetKey}
               onToken={(token) => {
                 setCaptchaToken(token);

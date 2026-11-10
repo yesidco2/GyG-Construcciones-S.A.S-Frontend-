@@ -42,7 +42,8 @@ npm run build
 ## Variables de entorno
 
 - `VITE_API_URL` (requerida): URL base de la API Spring Boot, por ejemplo `http://localhost:8080`.
-- `VITE_CAPTCHA_SITE_KEY` (requerida para formularios protegidos): clave pública del widget CAPTCHA configurado en el backend.
+- `VITE_CAPTCHA_SITE_KEY` (requerida para formularios protegidos en producción): clave pública del widget CAPTCHA configurado en el backend.
+- `VITE_CAPTCHA_SITE_KEY_DEV` (opcional): clave pública de Turnstile para desarrollo; si se omite, se usa la clave de prueba oficial de Cloudflare.
 - `VITE_PRIVACY_POLICY_URL` (opcional; predeterminada `#politica-datos`): enlace interno a la política.
 - `VITE_PRIVACY_POLICY_VERSION` (opcional; predeterminada `1.0-borrador`): versión enviada en el consentimiento.
 

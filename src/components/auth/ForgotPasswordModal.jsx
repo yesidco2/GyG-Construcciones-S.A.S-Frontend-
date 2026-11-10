@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { friendlyAuthError, resetPassword } from '../../services/authService';
 import CaptchaWidget from './CaptchaWidget';
+import { CAPTCHA_SITE_KEY } from '../../config/captcha';
 
 export default function ForgotPasswordModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
@@ -115,7 +116,8 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
             </div>
 
             <CaptchaWidget
-              siteKey={import.meta.env.VITE_CAPTCHA_SITE_KEY}
+              siteKey={CAPTCHA_SITE_KEY}
+              action="recuperar_contraseña"
               resetKey={captchaResetKey}
               onToken={(token) => {
                 setCaptchaToken(token);
