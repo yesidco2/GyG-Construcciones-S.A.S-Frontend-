@@ -53,7 +53,6 @@ La página de tratamiento de datos está marcada como borrador y debe ser revisa
 
 El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 
-- Proyectos: `GET /api/proyectos` y `GET /api/proyectos?categoria=CIVIL|SST`
 - Formulario de contacto: `POST /api/contacto`
 - Asistente IA: `POST /api/chat`
 - Consulta de proyecto: `POST /api/obras/seguimiento` con `{ "codigo": "..." }`
@@ -62,7 +61,7 @@ El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 
 El panel y la consulta de seguimiento no utilizan datos locales de respaldo; el backend debe estar ejecutándose para usarlos.
 
-La sección **Servicios Integrales** del inicio se mantiene como catálogo local en `src/components/Services.jsx` y no consulta la API.
+Las secciones de servicios, proyectos emblemáticos, EPP, riesgos y política ambiental se mantienen en React y no consultan la API.
 El explorador de labores y riesgos también usa su catálogo local en `src/components/RiskExplorer.jsx`, sin consultar la API.
 
 ## Seguridad del navegador

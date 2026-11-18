@@ -39,7 +39,7 @@ describe('apiFetch', () => {
   it('does not attach Firebase tokens to public API calls', async () => {
     fetch.mockResolvedValueOnce(response(200, []));
 
-    await apiFetch('/api/proyectos');
+    await apiFetch('/api/institucional');
 
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBeNull();
     expect(getIdToken).not.toHaveBeenCalled();
@@ -95,7 +95,7 @@ describe('apiFetch', () => {
       options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
     }));
 
-    await expect(apiFetch('/api/proyectos', { timeoutMs: 1 })).rejects.toMatchObject({
+    await expect(apiFetch('/api/institucional', { timeoutMs: 1 })).rejects.toMatchObject({
       name: 'TimeoutError',
     });
   });
