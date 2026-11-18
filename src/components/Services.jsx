@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../services/api';
+import { useState } from 'react';
 
 const services = [
   {
@@ -99,38 +98,6 @@ const sstServices = [
   }
 ];
 
-const fallbackServices = [
-  ...services.map((service) => ({ ...service, bloque: 'CIVIL' })),
-  ...sstServices.map((service) => ({ ...service, bloque: 'SST' })),
-];
-
-function mergeServiceBlock(apiServices, defaultServices, block) {
-  const blockServices = apiServices.filter(
-    (service) => String(service.bloque || '').trim().toUpperCase() === block,
-  );
-  const mergedServices = defaultServices.map((fallback, index) => {
-    const apiService = blockServices[index];
-    return apiService
-      ? {
-          ...fallback,
-          title: apiService.titulo || fallback.title,
-          description: apiService.descripcion || fallback.description,
-          bloque: block,
-        }
-      : { ...fallback, bloque: block };
-  });
-
-  return [
-    ...mergedServices,
-    ...blockServices.slice(defaultServices.length).map((apiService, index) => ({
-      ...defaultServices[index % defaultServices.length],
-      title: apiService.titulo,
-      description: apiService.descripcion,
-      bloque: block,
-    })),
-  ];
-}
-
 function ServiceCard({ title, icon, variant, textClass, border, borderClass, description }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const isDark = variant === 'bg-primary';
@@ -174,40 +141,6 @@ function ServiceCard({ title, icon, variant, textClass, border, borderClass, des
 }
 
 export default function Services() {
-  const [serviceItems, setServiceItems] = useState(fallbackServices);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-
-    apiFetch('/api/servicios')
-      .then((data) => {
-        if (!active) return;
-        if (Array.isArray(data) && data.length > 0) {
-          const apiServices = data.filter(
-            (item) => ['CIVIL', 'SST'].includes(String(item.bloque || '').trim().toUpperCase()),
-          );
-          setServiceItems([
-            ...mergeServiceBlock(apiServices, services, 'CIVIL'),
-            ...mergeServiceBlock(apiServices, sstServices, 'SST'),
-          ]);
-        }
-      })
-      .catch((error) => {
-        console.error('No se pudieron cargar los servicios:', error);
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const civilServices = serviceItems.filter((service) => service.bloque === 'CIVIL');
-  const occupationalSafetyServices = serviceItems.filter((service) => service.bloque === 'SST');
-
   return (
     <section className="py-xl px-md max-w-container-max mx-auto" id="servicios">
       <div className="flex flex-col md:flex-row justify-between items-end mb-lg gap-sm">
@@ -218,14 +151,11 @@ export default function Services() {
         <div className="hidden md:block w-32 h-1 bg-industrial-orange" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-        <p className="col-span-full text-center font-body-sm text-body-sm text-secondary" aria-live="polite">
-          {isLoading ? 'Cargando servicios' : ''}
-        </p>
         <div className="md:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-sm">
           <div className="col-span-full mb-xs">
             <h3 className="font-label-caps text-label-caps text-industrial-orange uppercase mb-xs tracking-widest">Bloque 01 — Ingeniería Civil</h3>
           </div>
-          {civilServices.map((service) => (
+          {services.map((service) => (
             <ServiceCard key={service.title} {...service} />
           ))}
         </div>
@@ -233,7 +163,7 @@ export default function Services() {
           <div className="col-span-full mb-xs">
             <h3 className="font-label-caps text-label-caps text-industrial-orange uppercase mb-xs tracking-widest">Bloque 02 — SST Especializada</h3>
           </div>
-          {occupationalSafetyServices.map((service) => (
+          {sstServices.map((service) => (
             <ServiceCard key={service.title} {...service} />
           ))}
         </div>

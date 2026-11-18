@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { apiFetch } from '../services/api';
 import safeImageUrl from '../utils/safeImageUrl';
 
 const fallbackProjectImage = 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80';
@@ -7,6 +6,109 @@ const filters = [
   { label: 'Todos', category: '' },
   { label: 'Ingeniería Civil', category: 'CIVIL' },
   { label: 'SST', category: 'SST' },
+];
+
+const emblematicProjects = [
+  {
+    id: 1,
+    title: 'Puente Peatonal Avenida Boyacá',
+    description: 'Estructura peatonal diseñada para mejorar la movilidad segura y la conectividad urbana.',
+    image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=900&q=80',
+    category: 'Ingeniería Civil',
+    categoryKey: 'CIVIL',
+    metric: '320 m',
+    metricLabel: 'Conectividad construida',
+  },
+  {
+    id: 2,
+    title: 'Complejo Industrial Zona Norte',
+    description: 'Construcción industrial con sistemas de seguridad, ventilación y control operativo.',
+    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80',
+    category: 'SST',
+    categoryKey: 'SST',
+    metric: '100%',
+    metricLabel: 'Cumplimiento SST',
+  },
+  {
+    id: 3,
+    title: 'Centro Logístico Metropolitano',
+    description: 'Obra logística con áreas de carga, almacenamiento y circulación optimizada.',
+    image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=80',
+    category: 'Ingeniería Civil',
+    categoryKey: 'CIVIL',
+    metric: '12.500 m²',
+    metricLabel: 'Área intervenida',
+  },
+  {
+    id: 4,
+    title: 'Programa de Seguridad Corporativa',
+    description: 'Implementación integral de gestión preventiva y programas de seguridad laboral.',
+    image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80',
+    category: 'SST',
+    categoryKey: 'SST',
+    metric: 'ISO 45001',
+    metricLabel: 'Sistema aplicado',
+  },
+  {
+    id: 5,
+    title: 'Vías de Acceso Residencial',
+    description: 'Construcción y adecuación vial con pavimentos, drenajes y señalización.',
+    image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=900&q=80',
+    category: 'Ingeniería Civil',
+    categoryKey: 'CIVIL',
+    metric: '2,8 km',
+    metricLabel: 'Vía mejorada',
+  },
+  {
+    id: 6,
+    title: 'Auditoría de Seguridad Industrial',
+    description: 'Diagnóstico y control preventivo para operaciones industriales de alto riesgo.',
+    image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=80',
+    category: 'SST',
+    categoryKey: 'SST',
+    metric: '95%',
+    metricLabel: 'Riesgos controlados',
+  },
+  {
+    id: 7,
+    title: 'Edificación Comercial Central',
+    description: 'Desarrollo estructural, acabados y adecuaciones técnicas de uso comercial.',
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80',
+    category: 'Ingeniería Civil',
+    categoryKey: 'CIVIL',
+    metric: '8 pisos',
+    metricLabel: 'Construcción ejecutada',
+  },
+  {
+    id: 8,
+    title: 'Plan de Emergencias Empresarial',
+    description: 'Diseño de rutas, brigadas, simulacros y respuesta ante emergencias corporativas.',
+    image: 'https://images.unsplash.com/photo-1521791055366-0d553872125f?auto=format&fit=crop&w=900&q=80',
+    category: 'SST',
+    categoryKey: 'SST',
+    metric: '24/7',
+    metricLabel: 'Preparación operativa',
+  },
+  {
+    id: 9,
+    title: 'Infraestructura Urbana Integral',
+    description: 'Intervención coordinada de redes, andenes, espacios públicos y movilidad.',
+    image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=900&q=80',
+    category: 'Ingeniería Civil',
+    categoryKey: 'CIVIL',
+    metric: '18 ha',
+    metricLabel: 'Territorio intervenido',
+  },
+  {
+    id: 10,
+    title: 'Capacitación en Prevención Laboral',
+    description: 'Formación práctica para fortalecer la cultura preventiva y segura del personal.',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=80',
+    category: 'SST',
+    categoryKey: 'SST',
+    metric: '1.200',
+    metricLabel: 'Trabajadores capacitados',
+  },
 ];
 
 function ProjectImage({ src, title }) {
@@ -65,9 +167,6 @@ function ProjectCard({ project }) {
 export default function Portfolio() {
   const [index, setIndex] = useState(0);
   const [filter, setFilter] = useState(filters[0]);
-  const [projectItems, setProjectItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
   const [slidesPerView, setSlidesPerView] = useState(
     typeof window !== 'undefined' && window.innerWidth >= 768 ? 3 : 1,
   );
@@ -82,47 +181,12 @@ export default function Portfolio() {
   }, []);
 
   useEffect(() => {
-    let active = true;
-    const endpoint = filter.category
-      ? `/api/proyectos?categoria=${encodeURIComponent(filter.category)}`
-      : '/api/proyectos';
-
-    setProjectItems([]);
-    setError('');
-    setIsLoading(true);
-
-    apiFetch(endpoint)
-      .then((data) => {
-        if (!active) return;
-        if (!Array.isArray(data)) {
-          throw new Error('El servidor devolvió un formato de proyectos no válido.');
-        }
-        setProjectItems(data.map((project) => ({
-          id: project.id,
-          title: project.nombre || project.name || 'Proyecto',
-          description: project.descripcion || project.description || '',
-          image: project.imagenUrl || project.imageUrl || '',
-          category: project.categoria === 'CIVIL' ? 'Ingeniería Civil' : project.categoria || 'Proyecto',
-          metric: project.metricaDestacada || project.metric || 'Proyecto destacado',
-          metricLabel: project.etiquetaMetrica || project.metricLabel || 'Métrica destacada',
-        })));
-      })
-      .catch(() => {
-        if (active) setError('No se pudieron cargar los proyectos desde el servidor.');
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [filter]);
-
-  useEffect(() => {
     setIndex(0);
   }, [filter]);
 
+  const projectItems = emblematicProjects.filter(
+    (project) => !filter.category || project.categoryKey === filter.category,
+  );
   const groups = Math.ceil(projectItems.length / slidesPerView);
   const previous = () => setIndex((current) => Math.max(0, Math.min(groups - 1, current - 1)));
   const next = () => setIndex((current) => Math.max(0, Math.min(groups - 1, current + 1)));
@@ -155,10 +219,6 @@ export default function Portfolio() {
           ))}
         </div>
 
-        <p className="mb-sm text-center font-body-sm text-body-sm text-secondary" aria-live="polite">
-          {isLoading ? 'Cargando proyectos...' : error}
-        </p>
-
         <div className="relative">
           <button
             type="button"
@@ -180,7 +240,7 @@ export default function Portfolio() {
                   <ProjectCard project={project} />
                 </div>
               ))}
-              {projectItems.length === 0 && !isLoading && !error && (
+              {projectItems.length === 0 && (
                 <p className="w-full py-lg text-center font-body-md text-body-md text-secondary">
                   No hay proyectos disponibles para esta categoría.
                 </p>
