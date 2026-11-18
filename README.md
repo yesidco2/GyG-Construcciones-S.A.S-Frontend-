@@ -42,8 +42,7 @@ npm run build
 ## Variables de entorno
 
 - `VITE_API_URL` (requerida): URL base de la API Spring Boot, por ejemplo `http://localhost:8080`.
-- `VITE_CAPTCHA_SITE_KEY` (requerida para formularios protegidos en producción): clave pública del widget CAPTCHA configurado en el backend.
-- `VITE_CAPTCHA_SITE_KEY_DEV` (opcional): clave pública de Turnstile para desarrollo; si se omite, se usa la clave de prueba oficial de Cloudflare.
+- `VITE_CAPTCHA_SITE_KEY` (requerida en desarrollo y producción): clave pública real del widget Turnstile que debe corresponder al secreto configurado en el backend.
 - `VITE_PRIVACY_POLICY_URL` (opcional; predeterminada `#politica-datos`): enlace interno a la política.
 - `VITE_PRIVACY_POLICY_VERSION` (opcional; predeterminada `1.0-borrador`): versión enviada en el consentimiento.
 
@@ -54,9 +53,7 @@ La página de tratamiento de datos está marcada como borrador y debe ser revisa
 
 El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 
-- Servicios: `GET /api/servicios`
 - Proyectos: `GET /api/proyectos` y `GET /api/proyectos?categoria=CIVIL|SST`
-- Explorador de riesgos: `GET /api/riesgos/labores` y `GET /api/riesgos/{id}`
 - Formulario de contacto: `POST /api/contacto`
 - Asistente IA: `POST /api/chat`
 - Consulta de proyecto: `POST /api/obras/seguimiento` con `{ "codigo": "..." }`
@@ -64,6 +61,9 @@ El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 - Consultas administrativas del chat: `GET /api/admin/consultas-chat`
 
 El panel y la consulta de seguimiento no utilizan datos locales de respaldo; el backend debe estar ejecutándose para usarlos.
+
+La sección **Servicios Integrales** del inicio se mantiene como catálogo local en `src/components/Services.jsx` y no consulta la API.
+El explorador de labores y riesgos también usa su catálogo local en `src/components/RiskExplorer.jsx`, sin consultar la API.
 
 ## Seguridad del navegador
 
@@ -73,6 +73,16 @@ GitHub Pages no permite configurar encabezados HTTP personalizados; en ese aloja
 
 En Google Cloud Console, restringe la API key pública de Firebase mediante restricciones de aplicación por sitios web (dominios de producción autorizados y los dominios locales necesarios) y restricciones de API a las APIs de Firebase que realmente use la aplicación. La API key de Firebase identifica el proyecto; no la trates como secreto ni publiques claves privadas en variables `VITE_*`.
 
-La recuperación de contraseña llama a `POST /api/auth/password-reset` con `X-Captcha-Token`. El backend debe configurar `FIREBASE_WEB_API_KEY`; si `VITE_FIREBASE_API_KEY` tiene restricción de HTTP referrer, utiliza para el backend una clave API separada, restringida a Identity Toolkit API pero sin restricción de aplicación por referrer. El reenvío del correo de verificación usa Firebase Auth directamente desde el navegador y `VITE_FIREBASE_API_KEY`, por lo que requiere que el proveedor Email/Password esté habilitado y que el dominio del frontend esté autorizado en Firebase Authentication.
+La recuperación de contraseña llama a `POST /api/auth/password-reset`; el backend genera el enlace de Firebase y envía el correo. El restablecimiento continúa utilizando la página predeterminada alojada por Firebase. El reenvío de verificación llama a `POST /api/auth/email-verification` con el ID token Firebase actual.
+
+### Verificación de correo personalizada
+
+`src/pages/VerifyEmailPage.jsx` implementa la verificación personalizada, pero solo debe activarse cuando exista una URL pública desplegada y el backend genere enlaces que apunten a ella. Firebase Console aplica **Customize action URL** a las plantillas de acciones; no la configures para este frontend mientras se quiera conservar el restablecimiento predeterminado de Firebase.
+
+```text
+https://<dominio-publicado>/GG-WEB/
+```
+
+Si más adelante se habilita esa página, configura el dominio en **Authentication > Settings > Authorized domains**. `ActionCodeSettings.url` en Firebase Admin SDK es el `continueUrl` y no reemplaza el URL del controlador de acciones. La página personalizada de verificación espera una confirmación explícita antes de consumir el código.
 
 Si Turnstile muestra un error `300*` (por ejemplo, `300010`), Cloudflare lo clasifica como un fallo genérico temporal del desafío; no significa por sí solo que la clave secreta del backend sea incorrecta. Usa **Reintentar CAPTCHA**. Si persiste, prueba sin extensiones o VPN, en otro navegador o red, y confirma que el dominio esté autorizado en el widget de Turnstile. En recuperación, la API permite más tiempo porque verifica el CAPTCHA y luego solicita el correo a Firebase.
