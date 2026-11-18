@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
   getProjects,
-  generateProjectCode,
+  getProjectClients,
+  getProjectStatuses,
+  PROJECT_STATUSES,
+  PROJECT_STATUS_LABELS,
+  getAdminProjectPhoto,
   updateProjectProgress,
   updateProject,
   addProjectPhoto,
@@ -56,7 +60,37 @@ function compressProjectPhoto(file) {
   });
 }
 
+function AuthenticatedProjectPhoto({ project, photo, className = '', alt = '' }) {
+  const [objectUrl, setObjectUrl] = useState('');
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let url = '';
+    setFailed(false);
+    setObjectUrl('');
+    getAdminProjectPhoto(project, photo.id)
+      .then((blob) => {
+        if (!active) return;
+        url = URL.createObjectURL(blob);
+        setObjectUrl(url);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      });
+    return () => {
+      active = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [project, photo.id]);
+
+  if (failed) return <div className={`${className} flex items-center justify-center text-xs text-error`}>Imagen no disponible</div>;
+  if (!objectUrl) return <div className={`${className} animate-pulse bg-surface-variant`} />;
+  return <img src={objectUrl} alt={alt} className={className} />;
+}
+
 export default function EngineerDashboard({ currentUser, onLogout }) {
+  const isAdmin = currentUser?.role === 'ADMIN';
   const [projects, setProjects] = useState([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [projectsError, setProjectsError] = useState('');
@@ -71,10 +105,13 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Estados para Formulario de Creación de Proyecto
-  const [newCode, setNewCode] = useState('');
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState('Ingeniería Civil');
-  const [newClient, setNewClient] = useState('');
+  const [newClientId, setNewClientId] = useState('');
+  const [projectClients, setProjectClients] = useState([]);
+  const [projectStatuses, setProjectStatuses] = useState(PROJECT_STATUSES);
+  const [newStatus, setNewStatus] = useState('PLANIFICADA');
+  const [trackingCodeModal, setTrackingCodeModal] = useState('');
   const [newProgress, setNewProgress] = useState(15);
   const [newPhotoFile, setNewPhotoFile] = useState(null);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
@@ -93,7 +130,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   // Cargar proyectos al montar
   useEffect(() => {
     loadProjects();
-    suggestNextCode();
+    loadProjectOptions();
   }, []);
 
   useEffect(() => {
@@ -124,12 +161,16 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       .finally(() => setIsLoadingProjects(false));
   };
 
-  const suggestNextCode = () => {
+  const loadProjectOptions = async () => {
     try {
-      setNewCode(generateProjectCode());
-      setCreateError('');
+      const [clients, statuses] = await Promise.all([
+        getProjectClients(),
+        getProjectStatuses(),
+      ]);
+      setProjectClients(clients);
+      setProjectStatuses(statuses.filter((status) => PROJECT_STATUSES.includes(status)));
     } catch (error) {
-      setCreateError(error.message || 'No se pudo generar un código de proyecto.');
+      setCreateError(error.message || 'No se pudieron cargar los clientes y estados.');
     }
   };
 
@@ -233,18 +274,18 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
     e.preventDefault();
     setCreateError('');
 
-    if (!newCode.trim() || !newName.trim()) {
-      setCreateError('Por favor completa el código y el nombre del proyecto.');
+    if (!newName.trim() || !newClientId || !newCategory.trim()) {
+      setCreateError('Completa el nombre, el cliente y la categoría de la obra.');
       return;
     }
 
     setIsCreatingProject(true);
     try {
       let created = await createProject({
-        code: newCode.trim(),
         name: newName.trim(),
         category: newCategory,
-        client: newClient.trim(),
+        clientId: Number(newClientId),
+        status: newStatus,
         progress: newProgress,
         description: newDescription.trim(),
         startDate: '',
@@ -255,17 +296,18 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         created = await addProjectPhoto(created, newPhotoFile, 'Fotografía inicial de la obra');
       }
       setProjects((current) => [created, ...current]);
-      showNotification(`¡Proyecto ${created.code} (${created.name}) registrado con éxito!`);
+      if (created.trackingCode) setTrackingCodeModal(created.trackingCode);
+      showNotification(`Obra ${created.name} registrada con éxito.`);
       
       // Limpiar formulario y volver a la lista
       setNewName('');
-      setNewClient('');
+      setNewClientId('');
+      setNewStatus('PLANIFICADA');
       setNewProgress(15);
       setNewPhotoFile(null);
       setNewPhotoUrl('');
       setNewDescription('');
       setPhotoError('');
-      suggestNextCode();
       setActiveTab('list');
     } catch (err) {
       setCreateError(err.message || 'Error al crear el proyecto.');
@@ -296,9 +338,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
     setEditingProject(project);
     setProjectEdits({
       name: project.name,
-      client: project.client,
+      clientId: project.clientId,
       category: project.category,
       description: project.description,
+      status: project.status,
       estimatedEnd: project.estimatedEnd,
     });
   };
@@ -548,7 +591,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                               : 'bg-blue-100 text-blue-800'
                           }`}
                         >
-                          {project.status}
+                          {PROJECT_STATUS_LABELS[project.status] || project.status}
                         </span>
                       </div>
                       <h3 className="font-headline-sm text-lg font-bold text-primary mt-1">
@@ -663,16 +706,12 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => setExpandedPhoto(p.url)}
+                          onClick={() => setExpandedPhoto({ project, photo: p })}
                           aria-label={`Ampliar foto: ${p.description}`}
                           aria-haspopup="dialog"
                           className="relative group block h-20 overflow-hidden rounded-lg border border-surface-variant bg-slate-100 text-left"
                         >
-                          <img
-                            src={safeImageUrl(p.url)}
-                            alt={p.description}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
+                          <AuthenticatedProjectPhoto project={project} photo={p} alt={p.description} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1 text-[9px] text-white">
                             <span className="line-clamp-1">{p.fecha}</span>
                           </div>
@@ -711,34 +750,21 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
           <form onSubmit={handleCreateProjectSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Código del Proyecto */}
+              {/* Estado inicial */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="new-code" className="block text-xs font-semibold uppercase text-secondary">
-                    Código Único del Proyecto *
-                  </label>
-                  <button
-                    type="button"
-                    onClick={suggestNextCode}
-                    className="text-[10px] text-industrial-orange hover:underline font-bold"
-                  >
-                    Generar Código
-                  </button>
-                </div>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
-                    qr_code
-                  </span>
-                  <input
-                    id="new-code"
-                    type="text"
-                    value={newCode}
-                    onChange={(e) => setNewCode(e.target.value)}
-                    placeholder="Ej. GG-2026-00128"
-                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-outline-variant bg-surface focus:bg-white text-sm font-mono font-bold text-primary focus:outline-none focus:ring-2 focus:ring-industrial-orange/40"
-                    required
-                  />
-                </div>
+                <label htmlFor="new-status" className="block text-xs font-semibold uppercase text-secondary mb-1">
+                  Estado inicial *
+                </label>
+                <select
+                  id="new-status"
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-industrial-orange/40"
+                >
+                  {projectStatuses.map((status) => (
+                    <option key={status} value={status}>{PROJECT_STATUS_LABELS[status] || status}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Categoría */}
@@ -784,16 +810,22 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             {/* Cliente */}
             <div>
               <label htmlFor="new-client" className="block text-xs font-semibold uppercase text-secondary mb-1">
-                Cliente / Entidad Contratante
+                Cliente real *
               </label>
-              <input
+              <select
                 id="new-client"
-                type="text"
-                value={newClient}
-                onChange={(e) => setNewClient(e.target.value)}
-                placeholder="Ej: Consorcio Vial Metropolitano"
+                value={newClientId}
+                onChange={(e) => setNewClientId(e.target.value)}
+                required
                 className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-industrial-orange/40"
-              />
+              >
+                <option value="">Selecciona un cliente</option>
+                {projectClients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}{client.email ? ` — ${client.email}` : ''}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Avance Inicial */}
@@ -941,7 +973,21 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="edit-project-client" className="mb-1 block text-xs font-semibold text-secondary">Cliente</label>
-                <input id="edit-project-client" maxLength={120} value={projectEdits.client} onChange={(event) => setProjectEdits({ ...projectEdits, client: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
+                {isAdmin ? (
+                  <select
+                    id="edit-project-client"
+                    value={projectEdits.clientId ?? ''}
+                    onChange={(event) => setProjectEdits({ ...projectEdits, clientId: Number(event.target.value) })}
+                    className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm"
+                  >
+                    <option value="">Selecciona un cliente</option>
+                    {projectClients.map((client) => (
+                      <option key={client.id} value={client.id}>{client.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input id="edit-project-client" value={editingProject.client || ''} disabled className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm bg-surface text-secondary" />
+                )}
               </div>
               <div>
                 <label htmlFor="edit-project-category" className="mb-1 block text-xs font-semibold text-secondary">Categoría</label>
@@ -952,6 +998,19 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   <option value="Auditoría SG-SST">Auditoría SG-SST</option>
                 </select>
               </div>
+            </div>
+            <div>
+              <label htmlFor="edit-project-status" className="mb-1 block text-xs font-semibold text-secondary">Estado</label>
+              <select
+                id="edit-project-status"
+                value={projectEdits.status || ''}
+                onChange={(event) => setProjectEdits({ ...projectEdits, status: event.target.value })}
+                className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm"
+              >
+                {projectStatuses.map((status) => (
+                  <option key={status} value={status}>{PROJECT_STATUS_LABELS[status] || status}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label htmlFor="edit-project-description" className="mb-1 block text-xs font-semibold text-secondary">Descripción</label>
@@ -1053,13 +1112,14 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                     <div key={index} className="rounded-xl overflow-hidden border border-surface-variant bg-white shadow-xs">
                       <button
                         type="button"
-                        onClick={() => setExpandedPhoto(photo.url)}
+                        onClick={() => setExpandedPhoto({ project: photoModalProject, photo })}
                         aria-label={`Ampliar foto: ${photo.description}`}
                         aria-haspopup="dialog"
                         className="block h-48 w-full overflow-hidden bg-slate-100 sm:h-64"
                       >
-                        <img
-                          src={safeImageUrl(photo.url)}
+                        <AuthenticatedProjectPhoto
+                          project={photoModalProject}
+                          photo={photo}
                           alt={photo.description}
                           className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                         />
@@ -1081,6 +1141,40 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         </div>
       )}
 
+      {trackingCodeModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Código de seguimiento generado">
+          <div className="w-full max-w-md rounded-2xl border border-surface-variant bg-white p-6 shadow-2xl">
+            <div className="flex items-center gap-2 text-industrial-orange">
+              <span className="material-symbols-outlined">key</span>
+              <h3 className="text-lg font-bold text-primary">Código de seguimiento generado</h3>
+            </div>
+            <p className="mt-3 text-sm text-secondary">
+              Guárdalo de forma segura. Puede mostrarse una sola vez y no debe compartirlo en URL públicas.
+            </p>
+            <div className="mt-4 rounded-lg border border-surface-variant bg-surface p-3 text-center font-mono font-bold text-primary">
+              {trackingCodeModal}
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(trackingCodeModal);
+                  showNotification('Código copiado al portapapeles.');
+                } catch {
+                  showNotification('No se pudo copiar el código. Cópielo manualmente.', 'error');
+                }
+              }}
+              className="mt-4 w-full rounded-lg bg-industrial-orange px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              Copiar código
+            </button>
+            <button type="button" onClick={() => setTrackingCodeModal('')} className="mt-2 w-full rounded-lg border border-surface-variant px-4 py-2 text-sm font-semibold text-secondary">
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
       {expandedPhoto && (
         <div
           role="dialog"
@@ -1098,12 +1192,21 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
           >
             ×
           </button>
-          <img
-            src={safeImageUrl(expandedPhoto)}
-            alt="Fotografía del proyecto ampliada"
-            className="max-h-[92vh] max-w-full object-contain"
-            onClick={(event) => event.stopPropagation()}
-          />
+          {typeof expandedPhoto === 'string' ? (
+            <img
+              src={safeImageUrl(expandedPhoto)}
+              alt="Fotografía del proyecto ampliada"
+              className="max-h-[92vh] max-w-full object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : (
+            <AuthenticatedProjectPhoto
+              project={expandedPhoto.project}
+              photo={expandedPhoto.photo}
+              alt="Fotografía del proyecto ampliada"
+              className="max-h-[92vh] max-w-full object-contain"
+            />
+          )}
         </div>
       )}
     </div>

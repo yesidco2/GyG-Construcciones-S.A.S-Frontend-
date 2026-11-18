@@ -32,6 +32,7 @@ export async function apiFetch(path, options = {}) {
   const {
     timeoutMs = DEFAULT_TIMEOUT_MS,
     signal: callerSignal,
+    responseType = 'json',
     ...requestOptions
   } = options;
   const headers = new Headers(requestOptions.headers || {});
@@ -74,6 +75,32 @@ export async function apiFetch(path, options = {}) {
   } finally {
     window.clearTimeout(timeoutId);
     callerSignal?.removeEventListener('abort', abortFromCaller);
+  }
+
+  if (responseType === 'blob') {
+    if (!response.ok) {
+      const responseText = await response.text();
+      let responseData = null;
+      try {
+        responseData = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        responseData = responseText || null;
+      }
+      const error = new Error(
+        typeof responseData === 'string'
+          ? responseData
+          : responseData?.message || `Error ${response.status}`,
+      );
+      error.status = response.status;
+      error.code = typeof responseData === 'object' ? responseData?.code : undefined;
+      error.responseBody = responseData;
+      error.retryAfter = response.status === 429
+        ? retryAfterSeconds(response.headers.get('Retry-After'))
+        : null;
+      if (response.status === 401 && isProtectedPath(path)) await redirectToLogin();
+      throw error;
+    }
+    return response.blob();
   }
 
   const responseText = await response.text();

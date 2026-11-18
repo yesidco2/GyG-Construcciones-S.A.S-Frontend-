@@ -1,8 +1,34 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../services/api';
+import { getPublicProjectPhoto } from '../services/projectService';
 import safeImageUrl from '../utils/safeImageUrl';
 
 const projectCodePattern = /^[A-Za-z0-9-]{6,40}$/;
+
+function PublicProjectPhoto({ photo, code, name, index }) {
+  const [objectUrl, setObjectUrl] = useState('');
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let url = '';
+    getPublicProjectPhoto(photo.id, code)
+      .then((blob) => {
+        if (!active) return;
+        url = URL.createObjectURL(blob);
+        setObjectUrl(url);
+      })
+      .catch(() => active && setFailed(true));
+    return () => {
+      active = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [photo.id, code]);
+
+  if (failed) return <div className="flex h-36 items-center justify-center text-xs text-error">Imagen no disponible</div>;
+  if (!objectUrl) return <div className="h-36 animate-pulse bg-surface-variant" />;
+  return <img src={safeImageUrl(objectUrl)} alt={`${name} foto ${index + 1}`} className="h-36 w-full object-cover hover:scale-105 transition-transform" />;
+}
 
 export default function ConsultProjectPage() {
   const [projectCode, setProjectCode] = useState('');
@@ -200,10 +226,11 @@ export default function ConsultProjectPage() {
                   key={`${trackingResult.code}-${photo.url}-${index}`}
                   className="overflow-hidden rounded-xl bg-white shadow-sm"
                 >
-                  <img
-                    src={safeImageUrl(photo.url)}
-                    alt={`${trackingResult.name} foto ${index + 1}`}
-                    className="h-36 w-full object-cover hover:scale-105 transition-transform"
+                  <PublicProjectPhoto
+                    photo={photo}
+                    code={trackingResult.code}
+                    name={trackingResult.name}
+                    index={index}
                   />
                   <p className="p-xs font-body-sm text-body-sm text-secondary">
                     {photo.fecha}

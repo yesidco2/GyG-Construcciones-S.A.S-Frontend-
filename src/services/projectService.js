@@ -1,6 +1,13 @@
 import { apiFetch } from './api';
 
 const PROJECTS_ENDPOINT = '/api/panel/obras';
+export const PROJECT_STATUSES = ['PLANIFICADA', 'EN_PROGRESO', 'PAUSADA', 'FINALIZADA'];
+export const PROJECT_STATUS_LABELS = {
+  PLANIFICADA: 'Planificada',
+  EN_PROGRESO: 'En progreso',
+  PAUSADA: 'Pausada',
+  FINALIZADA: 'Finalizada',
+};
 
 function mapPhoto(photo) {
   return {
@@ -14,7 +21,9 @@ function mapPhoto(photo) {
 function mapProject(project) {
   return {
     id: project.id,
-    code: project.codigo || project.code || '',
+    code: project.codigoSeguimiento || '',
+    trackingCode: project.codigoSeguimiento || '',
+    clientId: project.clienteId ?? project.cliente?.id ?? null,
     name: project.nombre || project.name || '',
     category: project.categoria || project.category || '',
     client: project.cliente || project.client || '',
@@ -45,51 +54,100 @@ export async function getProjects() {
   return projects.map(mapProject);
 }
 
-export function generateProjectCode() {
-  if (!globalThis.crypto?.getRandomValues) {
-    throw new Error('Este navegador no permite generar códigos de proyecto seguros.');
+export async function getProjectClients() {
+  const result = await apiFetch(`${PROJECTS_ENDPOINT}/clientes`);
+  if (!Array.isArray(result)) {
+    throw new Error('La respuesta de clientes del servidor no tiene el formato esperado.');
   }
+  return result.map((client) => ({
+    id: client.id,
+    name: client.nombre || client.name || client.email || `Cliente ${client.id}`,
+    email: client.email || '',
+  })).filter((client) => client.id != null);
+}
 
-  const range = 100000;
-  const maxRandomValue = 0x100000000;
-  const unbiasedLimit = Math.floor(maxRandomValue / range) * range;
-  const randomValues = new Uint32Array(1);
-
-  do {
-    globalThis.crypto.getRandomValues(randomValues);
-  } while (randomValues[0] >= unbiasedLimit);
-
-  const suffix = String(randomValues[0] % range).padStart(5, '0');
-  return `GG-${new Date().getFullYear()}-${suffix}`;
+export async function getProjectStatuses() {
+  const result = await apiFetch(`${PROJECTS_ENDPOINT}/estados`);
+  return Array.isArray(result) ? result : PROJECT_STATUSES;
 }
 
 export async function createProject(projectData) {
+  const progress = Number(projectData.progress);
+  if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+    throw new Error('El avance debe ser un número entero entre 0 y 100.');
+  }
+  if (!projectData.name?.trim() || projectData.clientId == null || !projectData.category?.trim()) {
+    throw new Error('Nombre, cliente y categoría son obligatorios.');
+  }
+  if (!PROJECT_STATUSES.includes(projectData.status)) {
+    throw new Error('Selecciona un estado válido para la obra.');
+  }
   const result = await apiFetch(PROJECTS_ENDPOINT, {
     method: 'POST',
     body: JSON.stringify({
-      codigo: projectData.code.trim().toUpperCase(),
       nombre: projectData.name.trim(),
-      cliente: projectData.client.trim(),
-      categoria: projectData.category,
-      progreso: Number(projectData.progress),
-      descripcion: projectData.description.trim(),
-      fechaInicio: projectData.startDate,
-      fechaFinEstimada: projectData.estimatedEnd,
+      clienteId: Number(projectData.clientId),
+      categoria: projectData.category.trim(),
+      estado: projectData.status,
+      progreso: progress,
+      ...(projectData.description?.trim() ? { descripcion: projectData.description.trim() } : {}),
+      ...(projectData.startDate ? { fechaInicio: projectData.startDate } : {}),
+      ...(projectData.estimatedEnd ? { fechaFinEstimada: projectData.estimatedEnd } : {}),
+    }),
+  });
+  return mapProject(result);
+}
+
+export async function replaceProject(project, projectData) {
+  const progress = Number(projectData.progress);
+  if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+    throw new Error('El avance debe ser un número entero entre 0 y 100.');
+  }
+  const result = await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      nombre: projectData.name.trim(),
+      clienteId: projectData.clientId == null ? undefined : Number(projectData.clientId),
+      categoria: projectData.category?.trim(),
+      estado: projectData.status,
+      progreso: progress,
+      descripcion: projectData.description?.trim() || '',
+      fechaInicio: projectData.startDate || null,
+      fechaFinEstimada: projectData.estimatedEnd || null,
     }),
   });
   return mapProject(result);
 }
 
 export async function updateProject(project, projectData) {
+  const payload = {};
+  if (projectData.name !== undefined) payload.nombre = projectData.name.trim();
+  if (projectData.clientId !== undefined) payload.clienteId = Number(projectData.clientId);
+  if (projectData.category !== undefined) payload.categoria = projectData.category.trim();
+  if (projectData.status !== undefined) payload.estado = projectData.status;
+  if (projectData.progress !== undefined) {
+    const progress = Number(projectData.progress);
+    if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+      throw new Error('El avance debe ser un número entero entre 0 y 100.');
+    }
+    payload.progreso = progress;
+  }
+  if (projectData.description !== undefined) payload.descripcion = projectData.description.trim();
+  if (projectData.startDate !== undefined) payload.fechaInicio = projectData.startDate || null;
+  if (projectData.estimatedEnd !== undefined) payload.fechaFinEstimada = projectData.estimatedEnd || null;
+
   const result = await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}`, {
-    method: 'PUT',
-    body: JSON.stringify({
-      nombre: projectData.name.trim(),
-      cliente: projectData.client.trim(),
-      categoria: projectData.category,
-      descripcion: projectData.description.trim(),
-      fechaFinEstimada: projectData.estimatedEnd,
-    }),
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  return mapProject(result);
+}
+
+export async function updateProjectStatus(project, status) {
+  if (!PROJECT_STATUSES.includes(status)) throw new Error('Selecciona un estado válido.');
+  const result = await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}/estado`, {
+    method: 'PATCH',
+    body: JSON.stringify({ estado: status }),
   });
   return mapProject(result);
 }
@@ -124,6 +182,37 @@ export async function addProjectPhoto(project, file, description) {
     throw new Error('La fotografía se subió, pero no se pudo actualizar la obra.');
   }
   return updatedProject;
+}
+
+export async function getAdminProjectPhoto(project, photoId) {
+  if (!photoId) throw new Error('La fotografía no tiene un identificador válido.');
+  return apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}/fotos/${encodeURIComponent(photoId)}`, {
+    responseType: 'blob',
+  });
+}
+
+export async function getPublicProjectPhoto(photoId, code) {
+  if (!photoId || !code?.trim()) {
+    throw new Error('Se requieren el identificador de la foto y el código de seguimiento.');
+  }
+  return apiFetch(`/api/obras/seguimiento/fotos/${encodeURIComponent(photoId)}`, {
+    method: 'POST',
+    body: JSON.stringify({ codigo: code.trim() }),
+    responseType: 'blob',
+  });
+}
+
+export async function deleteProjectPhoto(project, photoId) {
+  await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}/fotos/${encodeURIComponent(photoId)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function regenerateProjectTrackingCode(project) {
+  const result = await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}/codigo-seguimiento`, {
+    method: 'POST',
+  });
+  return mapProject(result);
 }
 
 export async function deleteProject(project) {
