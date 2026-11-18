@@ -1,6 +1,5 @@
 import {
   onAuthStateChanged,
-  sendEmailVerification,
   setPersistence,
   signInWithEmailAndPassword,
   browserLocalPersistence,
@@ -57,11 +56,16 @@ export function resetPassword(email) {
   });
 }
 
-export function sendVerificationEmail(user = auth?.currentUser) {
+export async function sendVerificationEmail(user = auth?.currentUser) {
   if (!user) {
     throw new Error('No hay una sesión autenticada para reenviar la verificación.');
   }
-  return sendEmailVerification(user);
+  await user.reload();
+  const idToken = await user.getIdToken(true);
+  return apiFetch('/api/auth/email-verification', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
 }
 
 export function logout() {

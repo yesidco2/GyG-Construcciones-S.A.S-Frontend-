@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { apiFetch, sendEmailVerification } = vi.hoisted(() => ({
+const { apiFetch } = vi.hoisted(() => ({
   apiFetch: vi.fn(),
-  sendEmailVerification: vi.fn(),
 }));
 
 vi.mock('../services/api', () => ({ apiFetch }));
@@ -15,7 +14,6 @@ vi.mock('../services/captchaService', () => ({
 }));
 vi.mock('firebase/auth', () => ({
   onAuthStateChanged: vi.fn(),
-  sendEmailVerification,
   setPersistence: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   browserLocalPersistence: {},
@@ -26,7 +24,6 @@ vi.mock('firebase/auth', () => ({
 describe('resetPassword', () => {
   beforeEach(() => {
     apiFetch.mockReset();
-    sendEmailVerification.mockReset();
   });
 
   it('sends password reset requests without requiring a CAPTCHA token', async () => {
@@ -43,13 +40,22 @@ describe('resetPassword', () => {
   });
 
   it('sends verification email through Firebase Auth for the signed-in user', async () => {
-    const user = { uid: 'firebase-user' };
+    const user = {
+      uid: 'firebase-user',
+      reload: vi.fn().mockResolvedValue(undefined),
+      getIdToken: vi.fn().mockResolvedValue('firebase-id-token'),
+    };
     const { sendVerificationEmail } = await import('../services/authService');
-    sendEmailVerification.mockResolvedValueOnce(undefined);
+    apiFetch.mockResolvedValueOnce({ status: 'sent' });
 
     await sendVerificationEmail(user);
 
-    expect(sendEmailVerification).toHaveBeenCalledWith(user);
+    expect(user.reload).toHaveBeenCalled();
+    expect(user.getIdToken).toHaveBeenCalledWith(true);
+    expect(apiFetch).toHaveBeenCalledWith('/api/auth/email-verification', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer firebase-id-token' },
+    });
   });
 
   it('explains Firebase Auth configuration errors', async () => {

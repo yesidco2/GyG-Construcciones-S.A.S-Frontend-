@@ -9,6 +9,8 @@ import LoginPage from './pages/LoginPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookieConsentManager from './components/CookieConsentManager';
 import CookiePolicyPage from './pages/CookiePolicyPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import getAppRouteKey from './utils/appRoute';
 
 const routes = {
   '': AppShell,
@@ -30,13 +32,11 @@ const routes = {
   'login': LoginPage,
   'politica-datos': PrivacyPolicyPage,
   'politica-cookies': CookiePolicyPage,
+  'verify-email': VerifyEmailPage,
 };
 
 function initializeRoute() {
-  if (window.location.hash) {
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
-  }
-  return '';
+  return getAppRouteKey();
 }
 
 function Layout({ children, showFooter = true }) {
@@ -55,9 +55,13 @@ export default function App() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const onHashChange = () => setRouteKey(window.location.hash.replace('#', ''));
+    const onHashChange = () => setRouteKey(getAppRouteKey());
     window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    window.addEventListener('popstate', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('popstate', onHashChange);
+    };
   }, []);
 
   useEffect(() => {

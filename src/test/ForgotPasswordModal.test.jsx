@@ -28,7 +28,7 @@ describe('ForgotPasswordModal', () => {
 
     expect(resetPassword).toHaveBeenCalledOnce();
     expect(resetPassword).toHaveBeenCalledWith('admin@example.com');
-    expect(await screen.findByText(/recibirás instrucciones para restablecer la contraseña/))
+    expect(await screen.findByText(/recibirás un enlace para restablecer tu contraseña/))
       .toBeInTheDocument();
   });
 });

@@ -21,7 +21,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
       await resetPassword(email);
       setStatus({
         type: 'success',
-        message: 'Si existe una cuenta asociada a ese correo, recibirás instrucciones para restablecer la contraseña.',
+        message: 'Si el correo está registrado y autorizado, recibirás un enlace para restablecer tu contraseña.',
       });
     } catch (error) {
       setStatus({
