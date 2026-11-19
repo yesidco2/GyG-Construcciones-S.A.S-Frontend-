@@ -1,156 +1,143 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getProjects,
   getProjectClients,
   getProjectStatuses,
   PROJECT_STATUSES,
   PROJECT_STATUS_LABELS,
-  getAdminProjectPhoto,
+  PROJECT_CATEGORIES,
   updateProjectProgress,
   updateProject,
-  addProjectPhoto,
   createProject,
+  uploadProjectPhotos,
+  describeProjectError,
+  regenerateProjectTrackingCode,
   deleteProject,
 } from '../../services/projectService';
 import safeImageUrl from '../../utils/safeImageUrl';
 
-function compressProjectPhoto(file) {
-  return new Promise((resolve, reject) => {
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      reject(new Error('Selecciona una imagen JPG, PNG o WebP.'));
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      reject(new Error('La imagen debe pesar máximo 5 MB.'));
-      return;
-    }
+import ProjectPhotos, { ProjectPhotoInput } from './ProjectPhotos';
+import ClientPicker from './ClientPicker';
+import { ProjectDate, ProjectMilestones } from '../ProjectMetadata';
 
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen seleccionada.'));
-    reader.onload = () => {
-      const image = new Image();
-      image.onerror = () => reject(new Error('El archivo seleccionado no es una imagen válida.'));
-      image.onload = () => {
-        const maxDimension = 1600;
-        const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-        const context = canvas.getContext('2d');
-        if (!context) {
-          reject(new Error('No se pudo procesar la imagen.'));
-          return;
-        }
-        context.fillStyle = '#ffffff';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+const categoryLabels = new Map(Object.entries(PROJECT_CATEGORIES));
+const statusLabels = new Map(Object.entries(PROJECT_STATUS_LABELS));
+const statusTransitions = new Map([
+  ['PLANIFICADA', ['EN_PROGRESO', 'PAUSADA']],
+  ['EN_PROGRESO', ['PAUSADA', 'FINALIZADA']],
+  ['PAUSADA', ['EN_PROGRESO', 'FINALIZADA']],
+  ['FINALIZADA', []],
+]);
 
-        try {
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('No se pudo procesar la imagen seleccionada.'));
-          }, 'image/jpeg', 0.82);
-        } catch {
-          reject(new Error('No se pudo procesar la imagen seleccionada.'));
-        }
-      };
-      image.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function AuthenticatedProjectPhoto({ project, photo, className = '', alt = '' }) {
-  const [objectUrl, setObjectUrl] = useState('');
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    let url = '';
-    setFailed(false);
-    setObjectUrl('');
-    getAdminProjectPhoto(project, photo.id)
-      .then((blob) => {
-        if (!active) return;
-        url = URL.createObjectURL(blob);
-        setObjectUrl(url);
-      })
-      .catch(() => {
-        if (active) setFailed(true);
-      });
-    return () => {
-      active = false;
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [project, photo.id]);
-
-  if (failed) return <div className={`${className} flex items-center justify-center text-xs text-error`}>Imagen no disponible</div>;
-  if (!objectUrl) return <div className={`${className} animate-pulse bg-surface-variant`} />;
-  return <img src={objectUrl} alt={alt} className={className} />;
+function ProjectDateFields({ prefix, start, end, onStart, onEnd, disabled }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div>
+        <label htmlFor={prefix + '-start'} className="mb-1 block text-xs font-semibold text-secondary">Fecha de inicio (opcional)</label>
+        <input id={prefix + '-start'} type="date" value={start} disabled={disabled}
+          onChange={(event) => onStart(event.target.value)}
+          className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label htmlFor={prefix + '-end'} className="mb-1 block text-xs font-semibold text-secondary">Fecha de fin estimada (opcional)</label>
+        <input id={prefix + '-end'} type="date" value={end} disabled={disabled}
+          onChange={(event) => onEnd(event.target.value)}
+          className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm" />
+      </div>
+    </div>
+  );
 }
 
 export default function EngineerDashboard({ currentUser, onLogout }) {
   const isAdmin = currentUser?.role === 'ADMIN';
+  const canCreate = isAdmin || currentUser?.role === 'INGENIERO';
   const [projects, setProjects] = useState([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [projectsError, setProjectsError] = useState('');
   const [activeTab, setActiveTab] = useState('list'); // 'list' | 'create' | 'session'
   const [notification, setNotification] = useState(null);
 
-  // Estados para Modal de Agregar Imagen
+  // Galería de la obra
   const [photoModalProject, setPhotoModalProject] = useState(null);
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
-  const [photoDesc, setPhotoDesc] = useState('');
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-
   // Estados para Formulario de Creación de Proyecto
   const [newName, setNewName] = useState('');
-  const [newCategory, setNewCategory] = useState('Ingeniería Civil');
-  const [newClientId, setNewClientId] = useState('');
+  const [newCategory, setNewCategory] = useState('CIVIL');
+  const [newClientName, setNewClientName] = useState('');
   const [projectClients, setProjectClients] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [clientsError, setClientsError] = useState('');
+  const clientRequest = useRef(0);
   const [projectStatuses, setProjectStatuses] = useState(PROJECT_STATUSES);
   const [newStatus, setNewStatus] = useState('PLANIFICADA');
   const [trackingCodeModal, setTrackingCodeModal] = useState('');
   const [newProgress, setNewProgress] = useState(15);
-  const [newPhotoFile, setNewPhotoFile] = useState(null);
-  const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isUpdatingProgress, setIsUpdatingProgress] = useState({});
   const [progressDrafts, setProgressDrafts] = useState({});
-  const [deletingProject, setDeletingProject] = useState('');
+  const [deletingProject, setDeletingProject] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
   const [editingProject, setEditingProject] = useState(null);
   const [projectEdits, setProjectEdits] = useState(null);
   const [isSavingProject, setIsSavingProject] = useState(false);
+  const [initialPhotos, setInitialPhotos] = useState([]);
+  const [pendingPhotos, setPendingPhotos] = useState([]);
+  const [retryingPhotos, setRetryingPhotos] = useState(false);
+  const [rotateTarget, setRotateTarget] = useState(null);
+  const [rotatingCode, setRotatingCode] = useState(false);
+  const [rotateError, setRotateError] = useState('');
+  const [copyMessage, setCopyMessage] = useState('');
+  const [editError, setEditError] = useState('');
+  const mutation = useRef(false);
+
+  function showTrackingCode(code) {
+    setCopyMessage('');
+    setTrackingCodeModal(code);
+  }
+
+  function savePhotoFailures(project, failed) {
+    setPendingPhotos((current) => {
+      const others = current.filter((item) => item.project.id !== project.id);
+      return failed.length ? [...others, { project, failed }] : others;
+    });
+  }
+
+  async function retryPhotos(project, failed) {
+    if (mutation.current) return;
+    mutation.current = true;
+    setRetryingPhotos(true);
+    try {
+      savePhotoFailures(project, await uploadProjectPhotos(project, failed.map(({ file }) => file)));
+    } finally {
+      mutation.current = false;
+      setRetryingPhotos(false);
+    }
+  }
+
+  async function rotateTrackingCode() {
+    if (!canCreate || !rotateTarget || mutation.current) return;
+    mutation.current = true;
+    setRotatingCode(true);
+    setRotateError('');
+    try {
+      const { trackingCode } = await regenerateProjectTrackingCode(rotateTarget);
+      if (!trackingCode) throw new Error('El servidor no devolvió el nuevo código.');
+      setProjects((current) => current.map((item) => item.id === rotateTarget.id ? { ...item, trackingCode } : item));
+      setRotateTarget(null);
+      showTrackingCode(trackingCode);
+    } catch (error) {
+      setRotateError(describeProjectError(error, 'No se pudo regenerar el código.'));
+    } finally {
+      setRotatingCode(false);
+      mutation.current = false;
+    }
+  }
   const [newDescription, setNewDescription] = useState('');
+  const [newStart, setNewStart] = useState('');
+  const [newEnd, setNewEnd] = useState('');
   const [createError, setCreateError] = useState('');
-  const [photoError, setPhotoError] = useState('');
-  const [expandedPhoto, setExpandedPhoto] = useState(null);
 
-  // Cargar proyectos al montar
-  useEffect(() => {
-    loadProjects();
-    loadProjectOptions();
-  }, []);
-
-  useEffect(() => {
-    if (!expandedPhoto) return undefined;
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') setExpandedPhoto(null);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [expandedPhoto]);
-
-  useEffect(() => () => {
-    if (newPhotoUrl.startsWith('blob:')) URL.revokeObjectURL(newPhotoUrl);
-  }, [newPhotoUrl]);
-
-  useEffect(() => () => {
-    if (photoPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(photoPreviewUrl);
-  }, [photoPreviewUrl]);
-
-  const loadProjects = () => {
+  const loadProjects = useCallback(() => {
     setIsLoadingProjects(true);
     setProjectsError('');
     return getProjects()
@@ -159,62 +146,41 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         setProjectsError('No se pudieron cargar las obras desde el servidor. Intenta de nuevo.');
       })
       .finally(() => setIsLoadingProjects(false));
-  };
+  }, []);
 
-  const loadProjectOptions = async () => {
+  const loadClients = useCallback(async () => {
+    if (!isAdmin) return;
+    const request = ++clientRequest.current;
+    setClientsLoading(true);
+    setClientsError('');
     try {
-      const [clients, statuses] = await Promise.all([
-        getProjectClients(),
-        getProjectStatuses(),
-      ]);
+      const clients = await getProjectClients();
+      if (clientRequest.current !== request) return;
       setProjectClients(clients);
-      setProjectStatuses(statuses.filter((status) => PROJECT_STATUSES.includes(status)));
     } catch (error) {
-      setCreateError(error.message || 'No se pudieron cargar los clientes y estados.');
+      if (clientRequest.current !== request) return;
+      setClientsError(describeProjectError(error, 'No se pudo cargar la lista de clientes.'));
+    } finally {
+      if (clientRequest.current === request) setClientsLoading(false);
     }
-  };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    loadProjects();
+    getProjectStatuses().then((statuses) => {
+      setProjectStatuses(statuses.filter((status) => PROJECT_STATUSES.includes(status)));
+    }).catch(() => {});
+    return () => { clientRequest.current += 1; };
+  }, [loadProjects]);
+
+  useEffect(() => {
+    if (!notification) return undefined;
+    const timer = window.setTimeout(() => setNotification(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notification]);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  const closePhotoModal = () => {
-    setPhotoModalProject(null);
-    setPhotoFile(null);
-    setPhotoPreviewUrl('');
-    setPhotoDesc('');
-    setPhotoError('');
-  };
-
-  const handleProjectPhotoChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setPhotoError('');
-    setNewPhotoFile(null);
-    setNewPhotoUrl('');
-    try {
-      const compressed = await compressProjectPhoto(file);
-      setNewPhotoFile(compressed);
-      setNewPhotoUrl(URL.createObjectURL(compressed));
-    } catch (error) {
-      setPhotoError(error.message || 'No se pudo cargar la imagen.');
-    }
-  };
-
-  const handleGalleryPhotoChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setPhotoError('');
-    setPhotoFile(null);
-    setPhotoPreviewUrl('');
-    try {
-      const compressed = await compressProjectPhoto(file);
-      setPhotoFile(compressed);
-      setPhotoPreviewUrl(URL.createObjectURL(compressed));
-    } catch (error) {
-      setPhotoError(error.message || 'No se pudo cargar la imagen.');
-    }
   };
 
   // Manejar cambio de avance
@@ -225,47 +191,25 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       return;
     }
 
-    setIsUpdatingProgress((current) => ({ ...current, [project.code]: true }));
+    setIsUpdatingProgress((current) => ({ ...current, [project.id]: true }));
     try {
       const updated = await updateProjectProgress(project, progress);
-      setProjects((current) => current.map((item) => item.code === project.code ? updated : item));
-      setProgressDrafts((current) => {
-        const next = { ...current };
-        delete next[project.code];
-        return next;
-      });
+      setProjects((current) => current.map((item) => item.id === project.id ? { ...item, progress: updated.progress } : item));
+      setProgressDrafts((current) => Object.fromEntries(
+        Object.entries(current).filter(([id]) => id !== String(project.id)),
+      ));
       showNotification(`Avance de ${updated.name} actualizado al ${updated.progress}%.`);
-    } catch {
-      showNotification('No se pudo actualizar el avance en el servidor.', 'error');
+    } catch (error) {
+      showNotification(describeProjectError(error, 'No se pudo actualizar el avance.'), 'error');
     } finally {
-      setIsUpdatingProgress((current) => ({ ...current, [project.code]: false }));
+      setIsUpdatingProgress((current) => ({ ...current, [project.id]: false }));
     }
   };
 
-  const handleProgressDraft = (projectCode, value) => {
+  const handleProgressDraft = (projectId, value) => {
     const progress = Number(value);
     if (Number.isInteger(progress) && progress >= 0 && progress <= 100) {
-      setProgressDrafts((current) => ({ ...current, [projectCode]: progress }));
-    }
-  };
-
-  // Manejar adición de foto
-  const handleAddPhotoSubmit = async (e) => {
-    e.preventDefault();
-    if (!photoFile || !photoModalProject) return;
-    setIsUploadingPhoto(true);
-    try {
-      const updated = await addProjectPhoto(photoModalProject, photoFile, photoDesc);
-      setPhotoModalProject(updated);
-      setProjects((current) => current.map((item) => item.code === updated.code ? updated : item));
-      setPhotoFile(null);
-      setPhotoPreviewUrl('');
-      setPhotoDesc('');
-      showNotification(`Nueva imagen agregada al proyecto ${updated.code}.`);
-    } catch {
-      showNotification('No se pudo subir la fotografía al servidor.', 'error');
-    } finally {
-      setIsUploadingPhoto(false);
+      setProgressDrafts((current) => ({ ...current, [projectId]: progress }));
     }
   };
 
@@ -274,92 +218,131 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
     e.preventDefault();
     setCreateError('');
 
-    if (!newName.trim() || !newClientId || !newCategory.trim()) {
-      setCreateError('Completa el nombre, el cliente y la categoría de la obra.');
+    if (!canCreate || mutation.current) return;
+    if (!newName.trim() || !newClientName.trim() || !newCategory.trim()) {
+      setCreateError('Completa el nombre de la obra, la categoría y el nombre del cliente.');
       return;
     }
 
+    if (initialPhotos.length > 20) {
+      setCreateError('Selecciona hasta 20 fotografías.');
+      return;
+    }
+    mutation.current = true;
     setIsCreatingProject(true);
     try {
-      let created = await createProject({
+      const created = await createProject({
         name: newName.trim(),
         category: newCategory,
-        clientId: Number(newClientId),
+        clientName: newClientName.trim(),
         status: newStatus,
         progress: newProgress,
         description: newDescription.trim(),
-        startDate: '',
-        estimatedEnd: '',
+        startDate: newStart,
+        estimatedEnd: newEnd,
       });
 
-      if (newPhotoFile) {
-        created = await addProjectPhoto(created, newPhotoFile, 'Fotografía inicial de la obra');
-      }
+      const { trackingCode } = created;
       setProjects((current) => [created, ...current]);
-      if (created.trackingCode) setTrackingCodeModal(created.trackingCode);
-      showNotification(`Obra ${created.name} registrada con éxito.`);
+      if (trackingCode) showTrackingCode(trackingCode);
+      if (initialPhotos.length) savePhotoFailures(created, await uploadProjectPhotos(created, initialPhotos));
+      showNotification('Obra ' + created.name + ' registrada con éxito.');
       
       // Limpiar formulario y volver a la lista
       setNewName('');
-      setNewClientId('');
+      setNewClientName('');
       setNewStatus('PLANIFICADA');
       setNewProgress(15);
-      setNewPhotoFile(null);
-      setNewPhotoUrl('');
       setNewDescription('');
-      setPhotoError('');
+      setNewStart('');
+      setNewEnd('');
+      setInitialPhotos([]);
       setActiveTab('list');
     } catch (err) {
-      setCreateError(err.message || 'Error al crear el proyecto.');
+      setCreateError(describeProjectError(err, 'No se pudo crear la obra.'));
     } finally {
       setIsCreatingProject(false);
+      mutation.current = false;
     }
   };
 
-  // Manejar eliminación
-  const handleDelete = async (project) => {
-    if (window.confirm(`¿Estás seguro de eliminar el proyecto ${project.code}?`)) {
-      setDeletingProject(project.code);
-      try {
-        await deleteProject(project);
-        setProjects((current) => current.filter((item) => item.code !== project.code));
-      } catch {
-        showNotification('No se pudo eliminar la obra en el servidor.', 'error');
-        return;
-      } finally {
-        setDeletingProject('');
-      }
-      const code = project.code;
-      showNotification(`Proyecto ${code} eliminado.`, 'info');
+  const handleDelete = async () => {
+    if (!deleteTarget || mutation.current) return;
+    mutation.current = true;
+    const project = deleteTarget;
+    setDeletingProject(project.id);
+    setDeleteError('');
+    try {
+      await deleteProject(project);
+      setProjects((current) => current.filter((item) => item.id !== project.id));
+      savePhotoFailures(project, []);
+      setDeleteTarget(null);
+      showNotification('Se eliminó ' + project.name + '.', 'info');
+    } catch (error) {
+      setDeleteError(describeProjectError(error, 'No se pudo eliminar la obra.'));
+    } finally {
+      mutation.current = false;
+      setDeletingProject(null);
     }
   };
 
   const openProjectEditor = (project) => {
+    if (isAdmin) loadClients();
+    setEditError('');
     setEditingProject(project);
     setProjectEdits({
       name: project.name,
       clientId: project.clientId,
+      client: project.client,
       category: project.category,
       description: project.description,
       status: project.status,
+      milestones: project.milestones,
+      startDate: project.startDate,
       estimatedEnd: project.estimatedEnd,
     });
   };
 
+  const updateMilestone = (index, changes) => {
+    setProjectEdits((current) => ({
+      ...current,
+      milestones: current.milestones.map((hito, i) => i === index ? { ...hito, ...changes } : hito),
+    }));
+  };
+
   const handleUpdateProjectSubmit = async (event) => {
     event.preventDefault();
-    if (!editingProject || !projectEdits) return;
+    if (!editingProject || !projectEdits || mutation.current) return;
+    mutation.current = true;
+    setEditError('');
     setIsSavingProject(true);
     try {
-      const updated = await updateProject(editingProject, projectEdits);
-      setProjects((current) => current.map((item) => item.code === updated.code ? updated : item));
+      const { clientId, client, ...fields } = projectEdits;
+      const clientName = client.trim();
+      if (!clientName || clientName.length > 255) throw new Error('Ingresa el nombre del cliente (máximo 255 caracteres).');
+      const originalFields = new Map(Object.entries(editingProject));
+      const changes = Object.fromEntries(
+        Object.entries(fields).filter(([field, value]) => value !== undefined && value !== originalFields.get(field)),
+      );
+      if (clientName !== editingProject.client.trim()) changes.client = clientName;
+      if (isAdmin && clientId != null && clientId !== editingProject.clientId) {
+        if (clientsLoading || clientsError || !projectClients.some((client) => client.id === clientId)) throw new Error('Selecciona un cliente registrado.');
+        changes.clientId = clientId;
+      }
+      if (Object.keys(changes).length === 0) {
+        setEditingProject(null);
+        return;
+      }
+      const updated = await updateProject(editingProject, changes);
+      setProjects((current) => current.map((item) => item.id === updated.id ? { ...updated, trackingCode: updated.trackingCode || item.trackingCode } : item));
       setEditingProject(null);
       setProjectEdits(null);
-      showNotification(`Proyecto ${updated.code} actualizado.`);
+      showNotification(`Obra ${updated.name} actualizada.`);
     } catch (error) {
-      showNotification(error.message || 'No se pudo actualizar la obra en el servidor.', 'error');
+      setEditError(describeProjectError(error, 'No se pudo actualizar la obra.'));
     } finally {
       setIsSavingProject(false);
+      mutation.current = false;
     }
   };
 
@@ -368,7 +351,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const avgProgress = totalProjects > 0
     ? Math.round(projects.reduce((acc, p) => acc + (p.progress || 0), 0) / totalProjects)
     : 0;
-  const completedProjects = projects.filter((p) => p.progress >= 100).length;
+  const completedProjects = projects.filter((p) => p.status === 'FINALIZADA').length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -492,7 +475,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
       {/* PESTAÑAS DEL DASHBOARD */}
       <div className="flex items-center justify-between border-b border-surface-variant pb-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('list')}
@@ -506,7 +489,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             <span>Gestión de Proyectos ({totalProjects})</span>
           </button>
 
-          <button
+          {canCreate && <button
             type="button"
             onClick={() => setActiveTab('create')}
             className={`py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
@@ -517,7 +500,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
           >
             <span className="material-symbols-outlined text-[16px]">add_circle</span>
             <span>Crear Proyecto con Código</span>
-          </button>
+          </button>}
 
           <button
             type="button"
@@ -535,6 +518,19 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       </div>
 
       {/* VISTA 1: LISTADO Y EDICIÓN DE AVANCES */}
+      {pendingPhotos.map(({ project, failed }) => (
+        <div key={project.id} className="break-words rounded-xl bg-error-container p-4 text-sm text-error">
+          <p role="alert">La obra se guardó. No se pudieron subir estas fotos de {project.name}:</p>
+          <ul className="list-inside list-disc">
+            {failed.map(({ file, message }, index) => <li key={index}>{file.name}: {message}</li>)}
+          </ul>
+          <button type="button" className="mt-2 font-semibold underline disabled:opacity-60"
+            disabled={retryingPhotos || isCreatingProject} onClick={() => retryPhotos(project, failed)}>
+            {retryingPhotos ? 'Reintentando…' : 'Reintentar fotos fallidas'}
+          </button>
+        </div>
+      ))}
+
       {activeTab === 'list' && (
         <div className="space-y-4">
           {projectsError && (
@@ -547,9 +543,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
           )}
           <div className="flex items-center justify-between text-xs text-secondary px-1">
             <p>
-              Modifica directamente el <strong>porcentaje de avance</strong> o agrega <strong>nuevas fotografías</strong> para mantener actualizado el seguimiento del cliente.
+              Modifica directamente el <strong>porcentaje de avance</strong> para mantener actualizado el seguimiento del cliente.
             </p>
-            <span className="font-mono text-[11px]">Sincronización en tiempo real</span>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -565,7 +560,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             )}
             {projects.map((project) => (
               <div
-                key={project.code}
+                key={project.id}
                 className="bg-white rounded-2xl border border-surface-variant p-5 sm:p-6 shadow-sm hover:shadow-md transition-all space-y-4"
               >
                 {/* Cabecera de la tarjeta del proyecto */}
@@ -577,37 +572,44 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-bold bg-primary text-white px-2 py-0.5 rounded-md">
-                          {project.code}
+                          #{project.id}
                         </span>
                         <span className="text-[11px] font-semibold text-industrial-orange uppercase">
-                          {project.category}
+                          {categoryLabels.get(project.category) || project.category}
                         </span>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            project.status === 'Completado'
+                            project.status === 'FINALIZADA'
                               ? 'bg-green-100 text-green-800'
-                              : project.status === 'Fase Final'
+                              : project.status === 'PAUSADA'
                               ? 'bg-amber-100 text-amber-800'
                               : 'bg-blue-100 text-blue-800'
                           }`}
                         >
-                          {PROJECT_STATUS_LABELS[project.status] || project.status}
+                          {statusLabels.get(project.status) || project.status}
                         </span>
                       </div>
                       <h3 className="font-headline-sm text-lg font-bold text-primary mt-1">
                         {project.name}
                       </h3>
                       <p className="text-xs text-secondary mt-0.5">
-                        Cliente: <strong>{project.client}</strong> • Supervisor: {project.supervisor}
+                        Cliente: <strong>{project.client}</strong>
+                      </p>
+                      <p className="mt-1 text-xs text-secondary">
+                        Código de seguimiento{' '}
+                        {project.trackingCode ? (
+                          <strong className="break-all font-mono text-primary">{project.trackingCode}</strong>
+                        ) : 'no disponible'}
                       </p>
                     </div>
                   </div>
 
                   {/* Botones de acción lateral */}
-                  <div className="flex items-center gap-2 self-end sm:self-center">
+                  <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
                     <button
                       type="button"
                       onClick={() => openProjectEditor(project)}
+                      disabled={Boolean(isUpdatingProgress[project.id]) || deletingProject === project.id}
                       className="px-3 py-1.5 rounded-lg border border-outline-variant hover:border-industrial-orange bg-surface hover:bg-white text-xs font-semibold text-primary flex items-center gap-1.5 transition-all"
                     >
                       <span className="material-symbols-outlined text-sm">edit</span>
@@ -619,13 +621,24 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                       className="px-3 py-1.5 rounded-lg border border-outline-variant hover:border-industrial-orange bg-surface hover:bg-white text-xs font-semibold text-primary flex items-center gap-1.5 transition-all"
                     >
                       <span className="material-symbols-outlined text-sm text-industrial-orange">add_a_photo</span>
-                      <span>Fotos ({project.photos?.length || 0})</span>
+                      <span>Fotos</span>
                     </button>
 
+                    {canCreate && (
+                      <button type="button" className="rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-primary"
+                        onClick={() => { setRotateError(''); setRotateTarget(project); }}>
+                        Regenerar código
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => handleDelete(project)}
-                      disabled={deletingProject === project.code}
+                      onClick={() => {
+                        setDeleteError('');
+                        setDeleteTarget(project);
+                      }}
+                      aria-haspopup="dialog"
+                      aria-label={'Eliminar ' + project.name}
+                      disabled={deletingProject === project.id || Boolean(isUpdatingProgress[project.id])}
                       className="p-1.5 rounded-lg border border-error/20 hover:bg-error-container text-error text-xs transition-colors"
                       title="Eliminar proyecto"
                     >
@@ -633,6 +646,23 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                     </button>
                   </div>
                 </div>
+
+                <details className="rounded-xl border border-surface-variant bg-surface p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-primary">Detalle de {project.name}</summary>
+                  <div className="mt-3 space-y-3 text-sm">
+                    {project.description && <p className="whitespace-pre-wrap break-words text-secondary">{project.description}</p>}
+                    {(project.startDate || project.estimatedEnd) && (
+                      <dl className="flex flex-wrap gap-x-6 gap-y-2">
+                        {project.startDate && <div><dt>Fecha de inicio</dt><dd><ProjectDate value={project.startDate} /></dd></div>}
+                        {project.estimatedEnd && <div><dt>Fecha de fin estimada</dt><dd><ProjectDate value={project.estimatedEnd} /></dd></div>}
+                      </dl>
+                    )}
+                    <div>
+                      <h4 className="mb-1 font-semibold text-primary">Hitos</h4>
+                      <ProjectMilestones milestones={project.milestones} />
+                    </div>
+                  </div>
+                </details>
 
                 {/* CONTROL DE AVANCE INTERACTIVO */}
                 <div className="bg-surface-container-low p-4 rounded-xl border border-surface-variant/80 space-y-3">
@@ -652,11 +682,12 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   <div className="flex items-center gap-4">
                     <input
                       type="range"
+                      aria-label={`Avance de ${project.name}`}
                       min="0"
                       max="100"
-                      value={progressDrafts[project.code] ?? project.progress}
-                      onChange={(e) => handleProgressDraft(project.code, e.target.value)}
-                      disabled={Boolean(isUpdatingProgress[project.code])}
+                      value={progressDrafts[project.id] ?? project.progress}
+                      onChange={(e) => handleProgressDraft(project.id, e.target.value)}
+                      disabled={Boolean(isUpdatingProgress[project.id])}
                       className="w-full h-2 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-industrial-orange"
                     />
                   </div>
@@ -668,10 +699,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                         <button
                           key={val}
                           type="button"
-                          onClick={() => handleProgressDraft(project.code, val)}
-                          disabled={Boolean(isUpdatingProgress[project.code])}
+                          onClick={() => handleProgressDraft(project.id, val)}
+                          disabled={Boolean(isUpdatingProgress[project.id])}
                           className={`px-2 py-0.5 rounded border text-[10px] font-semibold transition-colors ${
-                            (progressDrafts[project.code] ?? project.progress) === val
+                            (progressDrafts[project.id] ?? project.progress) === val
                               ? 'bg-industrial-orange text-white border-industrial-orange'
                               : 'bg-white hover:bg-surface border-outline-variant text-secondary'
                           }`}
@@ -682,44 +713,20 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleProgressChange(project, progressDrafts[project.code])}
+                      onClick={() => handleProgressChange(project, progressDrafts[project.id])}
                       disabled={
-                        Boolean(isUpdatingProgress[project.code]) ||
-                        progressDrafts[project.code] === undefined ||
-                        progressDrafts[project.code] === project.progress
+                        Boolean(isUpdatingProgress[project.id]) ||
+                        deletingProject === project.id ||
+                        progressDrafts[project.id] === undefined ||
+                        progressDrafts[project.id] === project.progress
                       }
                       className="rounded border border-primary px-2 py-1 text-[10px] font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {isUpdatingProgress[project.code] ? 'Guardando...' : 'Guardar avance'}
+                      {isUpdatingProgress[project.id] ? 'Guardando...' : 'Guardar avance'}
                     </button>
                   </div>
                 </div>
 
-                {/* MINIATURAS DE FOTOGRAFÍAS */}
-                {project.photos && project.photos.length > 0 && (
-                  <div>
-                    <span className="text-[11px] font-semibold text-secondary block mb-2">
-                      Galería de Fotos en Obra ({project.photos.length}):
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {project.photos.slice(0, 4).map((p, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setExpandedPhoto({ project, photo: p })}
-                          aria-label={`Ampliar foto: ${p.description}`}
-                          aria-haspopup="dialog"
-                          className="relative group block h-20 overflow-hidden rounded-lg border border-surface-variant bg-slate-100 text-left"
-                        >
-                          <AuthenticatedProjectPhoto project={project} photo={p} alt={p.description} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1 text-[9px] text-white">
-                            <span className="line-clamp-1">{p.fecha}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -727,7 +734,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       )}
 
       {/* VISTA 2: FORMULARIO PARA CREAR NUEVO PROYECTO CON CÓDIGO */}
-      {activeTab === 'create' && (
+      {canCreate && activeTab === 'create' && (
         <div className="bg-white rounded-3xl border border-surface-variant p-6 sm:p-8 shadow-sm max-w-3xl mx-auto space-y-6">
           <div className="border-b border-surface-variant pb-4">
             <span className="font-label-caps text-label-caps text-industrial-orange uppercase tracking-wider">
@@ -737,12 +744,12 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               Registrar Nuevo Proyecto en Sistema
             </h3>
             <p className="text-xs text-secondary mt-1">
-              Asigna un código único para que los clientes e interventores puedan consultar el estado del proyecto en la sección pública.
+              El servidor genera un código para que los clientes e interventores puedan consultar el estado del proyecto en la sección pública.
             </p>
           </div>
 
           {createError && (
-            <div className="p-3 rounded-lg bg-error-container text-error text-xs flex items-center gap-2">
+            <div role="alert" className="p-3 rounded-lg bg-error-container text-error text-xs flex items-center gap-2">
               <span className="material-symbols-outlined text-sm">error</span>
               <span>{createError}</span>
             </div>
@@ -762,7 +769,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-industrial-orange/40"
                 >
                   {projectStatuses.map((status) => (
-                    <option key={status} value={status}>{PROJECT_STATUS_LABELS[status] || status}</option>
+                    <option key={status} value={status}>{statusLabels.get(status) || status}</option>
                   ))}
                 </select>
               </div>
@@ -778,10 +785,9 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   onChange={(e) => setNewCategory(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-industrial-orange/40"
                 >
-                  <option value="Ingeniería Civil">Ingeniería Civil & Estructuras</option>
-                  <option value="SST & Obras Industriales">SST & Obras Industriales</option>
-                  <option value="Infraestructura Vial">Infraestructura Vial</option>
-                  <option value="Auditoría SG-SST">Auditoría SG-SST (ISO 45001)</option>
+                  {Object.entries(PROJECT_CATEGORIES).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -797,6 +803,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                 </span>
                 <input
                   id="new-name"
+                  maxLength={255}
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
@@ -810,22 +817,12 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             {/* Cliente */}
             <div>
               <label htmlFor="new-client" className="block text-xs font-semibold uppercase text-secondary mb-1">
-                Cliente real *
+                Nombre del cliente *
               </label>
-              <select
-                id="new-client"
-                value={newClientId}
-                onChange={(e) => setNewClientId(e.target.value)}
-                required
-                className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface focus:bg-white text-sm focus:outline-none focus:ring-2 focus:ring-industrial-orange/40"
-              >
-                <option value="">Selecciona un cliente</option>
-                {projectClients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}{client.email ? ` — ${client.email}` : ''}
-                  </option>
-                ))}
-              </select>
+              <input id="new-client" type="text" required maxLength={255} value={newClientName}
+                disabled={isCreatingProject} onChange={(event) => setNewClientName(event.target.value)}
+                placeholder="Nombre de la persona o empresa"
+                className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-industrial-orange/40" />
             </div>
 
             {/* Avance Inicial */}
@@ -846,51 +843,30 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               />
             </div>
 
-            {/* Fotografía Inicial */}
             <div>
-              <label htmlFor="new-photo" className="block text-xs font-semibold uppercase text-secondary mb-1">
-                Fotografía Inicial de la Obra
+              <label htmlFor="new-tracking-code" className="block text-xs font-semibold uppercase text-secondary">
+                Código de seguimiento
               </label>
-              <input
-                id="new-photo"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleProjectPhotoChange}
-                aria-describedby={photoError ? 'new-photo-error' : 'new-photo-help'}
-                className="w-full px-3 py-2.5 rounded-lg border border-outline-variant bg-surface text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
-              />
-              <p id="new-photo-help" className="mt-1 text-[10px] text-secondary">
-                Elige una foto JPG, PNG o WebP de máximo 5 MB. Se optimizará y se enviará al servidor.
+              <input id="new-tracking-code" readOnly value="Generación aleatoria automática"
+                aria-describedby="new-tracking-code-help"
+                className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2.5 text-sm text-secondary" />
+              <p id="new-tracking-code-help" className="mt-1 text-xs text-secondary">
+                El servidor genera un código de 32 caracteres al registrar la obra. Cópialo para compartirlo con el cliente.
               </p>
-              {photoError && (
-                <p id="new-photo-error" role="alert" className="mt-1 text-xs text-error">
-                  {photoError}
-                </p>
-              )}
-              {newPhotoUrl && (
-                <button
-                  type="button"
-                  onClick={() => setExpandedPhoto(newPhotoUrl)}
-                  aria-label="Ampliar vista previa de la fotografía"
-                  aria-haspopup="dialog"
-                  className="mt-3 block h-96 w-full overflow-hidden rounded-lg border border-surface-variant bg-surface text-left sm:h-[30rem] lg:h-[34rem]"
-                >
-                  <img
-                    src={safeImageUrl(newPhotoUrl)}
-                    alt="Vista previa de la fotografía inicial del proyecto. Toca para ampliar."
-                    className="h-full w-full object-cover"
-                  />
-                </button>
-              )}
             </div>
 
-            {/* Descripción */}
+            <ProjectDateFields prefix="new-work" start={newStart} end={newEnd}
+              onStart={setNewStart} onEnd={setNewEnd} disabled={isCreatingProject} />
+
+            <ProjectPhotoInput id="initial-project-photos" onChange={setInitialPhotos} disabled={isCreatingProject} />
+
             <div>
               <label htmlFor="new-desc" className="block text-xs font-semibold uppercase text-secondary mb-1">
                 Descripción Técnica & Compromiso SST
               </label>
               <textarea
                 id="new-desc"
+                maxLength={2000}
                 rows={3}
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
@@ -912,8 +888,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                 disabled={isCreatingProject}
                 className="px-6 py-2.5 rounded-xl bg-industrial-orange hover:bg-industrial-orange/90 text-white text-xs font-semibold transition-all shadow-md flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-base">save</span>
-                <span>{isCreatingProject ? 'Guardando...' : 'Registrar Proyecto'}</span>
+                <span aria-hidden="true" className="material-symbols-outlined text-base">save</span>
+                <span>{isCreatingProject ? 'Guardando…' : 'Registrar y generar código'}</span>
               </button>
             </div>
           </form>
@@ -956,10 +932,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
       {editingProject && projectEdits && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <form onSubmit={handleUpdateProjectSubmit} className="w-full max-w-xl space-y-4 rounded-2xl border border-surface-variant bg-white p-6 shadow-2xl">
+          <form role="dialog" aria-modal="true" aria-label="Editar datos de la obra" onSubmit={handleUpdateProjectSubmit} className="max-h-[90vh] overflow-y-auto w-full max-w-xl space-y-4 rounded-2xl border border-surface-variant bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between border-b border-surface-variant pb-3">
               <div>
-                <p className="font-mono text-xs font-bold text-industrial-orange">{editingProject.code}</p>
+                <p className="font-mono text-xs font-bold text-industrial-orange">#{editingProject.id}</p>
                 <h3 className="mt-1 text-lg font-bold text-primary">Editar datos de la obra</h3>
               </div>
               <button type="button" onClick={() => setEditingProject(null)} aria-label="Cerrar edición" className="text-secondary hover:text-primary">
@@ -968,34 +944,32 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             </div>
             <div>
               <label htmlFor="edit-project-name" className="mb-1 block text-xs font-semibold text-secondary">Nombre</label>
-              <input id="edit-project-name" required maxLength={120} value={projectEdits.name} onChange={(event) => setProjectEdits({ ...projectEdits, name: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
+              <input id="edit-project-name" required maxLength={255} value={projectEdits.name} onChange={(event) => setProjectEdits({ ...projectEdits, name: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="edit-project-client" className="mb-1 block text-xs font-semibold text-secondary">Cliente</label>
-                {isAdmin ? (
-                  <select
-                    id="edit-project-client"
-                    value={projectEdits.clientId ?? ''}
-                    onChange={(event) => setProjectEdits({ ...projectEdits, clientId: Number(event.target.value) })}
-                    className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm"
-                  >
-                    <option value="">Selecciona un cliente</option>
-                    {projectClients.map((client) => (
-                      <option key={client.id} value={client.id}>{client.name}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input id="edit-project-client" value={editingProject.client || ''} disabled className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm bg-surface text-secondary" />
+                <input id="edit-project-client" type="text" value={projectEdits.client} required maxLength={255}
+                  disabled={isSavingProject} onChange={(event) => setProjectEdits((current) => ({ ...current, client: event.target.value }))}
+                  className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm" />
+                {isAdmin && (clientsLoading || clientsError || projectClients.length > 0) && (
+                  <div className="mt-2">
+                    <label htmlFor="edit-project-client-account" className="mb-1 block text-xs font-semibold text-secondary">
+                      Vincular cuenta de cliente
+                    </label>
+                    <ClientPicker id="edit-project-client-account" clients={projectClients} selectedId={projectEdits.clientId}
+                      initialName={editingProject.clientId == null ? '' : editingProject.client} disabled={isSavingProject}
+                      loading={clientsLoading} error={clientsError} onReload={loadClients}
+                      onSelect={(clientId) => setProjectEdits((current) => ({ ...current, clientId }))} />
+                  </div>
                 )}
               </div>
               <div>
                 <label htmlFor="edit-project-category" className="mb-1 block text-xs font-semibold text-secondary">Categoría</label>
                 <select id="edit-project-category" value={projectEdits.category} onChange={(event) => setProjectEdits({ ...projectEdits, category: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm">
-                  <option value="Ingeniería Civil">Ingeniería Civil</option>
-                  <option value="SST & Obras Industriales">SST & Obras Industriales</option>
-                  <option value="Infraestructura Vial">Infraestructura Vial</option>
-                  <option value="Auditoría SG-SST">Auditoría SG-SST</option>
+                  {Object.entries(PROJECT_CATEGORIES).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -1007,15 +981,58 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                 onChange={(event) => setProjectEdits({ ...projectEdits, status: event.target.value })}
                 className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm"
               >
-                {projectStatuses.map((status) => (
-                  <option key={status} value={status}>{PROJECT_STATUS_LABELS[status] || status}</option>
+                {!projectStatuses.includes(editingProject.status) && (
+                  <option value={editingProject.status}>{editingProject.status || 'Estado sin definir'}</option>
+                )}
+                {projectStatuses.filter((status) => status === editingProject.status ||
+                  statusTransitions.get(editingProject.status)?.includes(status)).map((status) => (
+                  <option key={status} value={status}>{statusLabels.get(status) || status}</option>
                 ))}
               </select>
             </div>
             <div>
               <label htmlFor="edit-project-description" className="mb-1 block text-xs font-semibold text-secondary">Descripción</label>
-              <textarea id="edit-project-description" rows={3} maxLength={1000} value={projectEdits.description} onChange={(event) => setProjectEdits({ ...projectEdits, description: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
+              <textarea id="edit-project-description" rows={3} maxLength={2000} value={projectEdits.description} onChange={(event) => setProjectEdits({ ...projectEdits, description: event.target.value })} className="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm" />
             </div>
+            <ProjectDateFields prefix="edit-work" start={projectEdits.startDate} end={projectEdits.estimatedEnd}
+              onStart={(startDate) => setProjectEdits((current) => ({ ...current, startDate }))}
+              onEnd={(estimatedEnd) => setProjectEdits((current) => ({ ...current, estimatedEnd }))}
+              disabled={isSavingProject} />
+            <fieldset className="space-y-3">
+              <legend className="mb-2 text-xs font-semibold text-secondary">Hitos de la obra</legend>
+              {projectEdits.milestones.map((hito, index) => (
+                <div key={index} className="space-y-2 rounded-lg border border-outline-variant p-3 text-sm">
+                  <label className="block">
+                    Nombre del hito
+                    <input required maxLength={255} value={hito.nombre} className="block w-full rounded border border-outline-variant p-2"
+                      onChange={(event) => updateMilestone(index, { nombre: event.target.value })} />
+                  </label>
+                  <label className="block">
+                    Descripción del hito
+                    <textarea maxLength={1000} value={hito.descripcion ?? ''} className="block w-full rounded border border-outline-variant p-2"
+                      onChange={(event) => updateMilestone(index, { descripcion: event.target.value })} />
+                  </label>
+                  <label className="block">
+                    Fecha objetivo
+                    <input type="date" value={hito.fechaObjetivo ?? ''} className="ml-2"
+                      onChange={(event) => updateMilestone(index, { fechaObjetivo: event.target.value })} />
+                  </label>
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <label><input type="checkbox" checked={hito.completado}
+                      onChange={(event) => updateMilestone(index, { completado: event.target.checked })} /> Completado</label>
+                    <button type="button" onClick={() => setProjectEdits((current) => ({
+                      ...current, milestones: current.milestones.filter((_, i) => i !== index),
+                    }))} className="text-error underline">Quitar hito</button>
+                  </div>
+                </div>
+              ))}
+              <button type="button" disabled={projectEdits.milestones.length >= 50}
+                onClick={() => setProjectEdits((current) => ({
+                  ...current,
+                  milestones: [...current.milestones, { nombre: '', descripcion: '', fechaObjetivo: '', completado: false }],
+                }))} className="text-sm font-semibold text-primary underline disabled:opacity-50">Agregar hito</button>
+            </fieldset>
+            {editError && <p role="alert" className="text-sm text-error">{editError}</p>}
             <div className="flex justify-end gap-2 pt-2">
               <button type="button" onClick={() => setEditingProject(null)} className="rounded-lg border border-surface-variant px-4 py-2 text-xs font-semibold text-secondary">Cancelar</button>
               <button type="submit" disabled={isSavingProject} className="rounded-lg bg-industrial-orange px-4 py-2 text-xs font-semibold text-white disabled:opacity-60">
@@ -1029,12 +1046,12 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       {/* MODAL PARA AGREGAR IMÁGENES AL PROYECTO */}
       {photoModalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-surface-variant p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div role="dialog" aria-modal="true" aria-label="Galería fotográfica de la obra" onKeyDown={(event) => { if (event.key === 'Escape') setPhotoModalProject(null); }} className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-surface-variant p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-surface-variant">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-bold bg-primary text-white px-2 py-0.5 rounded">
-                    {photoModalProject.code}
+                    #{photoModalProject.id}
                   </span>
                   <h3 className="font-headline-sm text-base font-bold text-primary">
                     Galería Fotográfica de la Obra
@@ -1045,99 +1062,60 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
               <button
                 type="button"
-                onClick={closePhotoModal}
+                onClick={() => setPhotoModalProject(null)}
+                autoFocus
+                aria-label="Cerrar galería"
                 className="text-secondary hover:text-primary"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            {/* Formulario para agregar nueva fotografía */}
-            <form onSubmit={handleAddPhotoSubmit} className="bg-surface p-4 rounded-xl border border-surface-variant space-y-3">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-sm text-industrial-orange">add_photo_alternate</span>
-                Agregar Nueva Fotografía de Seguimiento:
-              </h4>
-
-              <div>
-                <label htmlFor="gallery-photo" className="block text-[11px] font-semibold text-secondary mb-1">
-                  Fotografía JPG, PNG o WebP (máximo 5 MB) *
-                </label>
-                <input
-                  id="gallery-photo"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleGalleryPhotoChange}
-                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-white text-xs focus:ring-2 focus:ring-industrial-orange/40 focus:outline-none"
-                />
-              </div>
-              {photoPreviewUrl && (
-                <img src={safeImageUrl(photoPreviewUrl)} alt="Vista previa de la fotografía" className="max-h-48 rounded-lg object-contain" />
-              )}
-              {photoError && <p role="alert" className="text-xs text-error">{photoError}</p>}
-
-              <div>
-                <label className="block text-[11px] font-semibold text-secondary mb-1">
-                  Descripción o Actividad de la Foto
-                </label>
-                <input
-                  type="text"
-                  value={photoDesc}
-                  onChange={(e) => setPhotoDesc(e.target.value)}
-                  placeholder="Ej: Inspección de arneses y anclajes en placa piso 4"
-                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-white text-xs focus:ring-2 focus:ring-industrial-orange/40 focus:outline-none"
-                />
-              </div>
-
-              <div className="text-right pt-1">
-                <button
-                  type="submit"
-                  disabled={!photoFile || isUploadingPhoto}
-                  className="px-4 py-2 rounded-lg bg-industrial-orange text-white text-xs font-semibold hover:bg-industrial-orange/90 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isUploadingPhoto ? 'Subiendo...' : 'Subir Fotografía al Registro'}
-                </button>
-              </div>
-            </form>
-
-            {/* Listado de fotos actuales */}
-            <div>
-              <h5 className="text-xs font-bold text-secondary uppercase tracking-wider mb-2">
-                Fotografías Registradas ({photoModalProject.photos?.length || 0}):
-              </h5>
-
-              {photoModalProject.photos && photoModalProject.photos.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {photoModalProject.photos.map((photo, index) => (
-                    <div key={index} className="rounded-xl overflow-hidden border border-surface-variant bg-white shadow-xs">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedPhoto({ project: photoModalProject, photo })}
-                        aria-label={`Ampliar foto: ${photo.description}`}
-                        aria-haspopup="dialog"
-                        className="block h-48 w-full overflow-hidden bg-slate-100 sm:h-64"
-                      >
-                        <AuthenticatedProjectPhoto
-                          project={photoModalProject}
-                          photo={photo}
-                          alt={photo.description}
-                          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                        />
-                      </button>
-                      <div className="p-2.5">
-                        <span className="text-[10px] text-industrial-orange font-bold block">{photo.fecha}</span>
-                        <p className="text-xs text-primary font-medium mt-0.5 line-clamp-2">{photo.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-secondary italic py-4 text-center">
-                  No hay fotografías registradas aún en este proyecto.
-                </p>
-              )}
-            </div>
+            <ProjectPhotos key={photoModalProject.id} project={photoModalProject} />
           </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-description"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && deletingProject === null) setDeleteTarget(null);
+            }}>
+            <h3 id="delete-title" className="text-lg font-bold text-primary">Eliminar obra</h3>
+            <p id="delete-description" className="mt-2 text-sm text-secondary">
+              ¿Confirmas que quieres eliminar {deleteTarget.name}?
+            </p>
+            {deleteError && <p role="alert" className="mt-3 text-sm text-error">{deleteError}</p>}
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" autoFocus disabled={deletingProject !== null} onClick={() => setDeleteTarget(null)}
+                className="rounded-lg border border-surface-variant px-4 py-2 text-sm text-secondary">Cancelar</button>
+              <button type="button" disabled={deletingProject !== null} onClick={handleDelete}
+                className="rounded-lg bg-error px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                {deletingProject === null ? 'Confirmar eliminación' : 'Eliminando…'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {rotateTarget && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="rotate-code-title"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 id="rotate-code-title" className="text-lg font-bold text-primary">Regenerar código</h3>
+            <p className="mt-2 text-sm text-secondary">El código anterior de {rotateTarget.name} dejará de funcionar.</p>
+            {rotateError && <p role="alert" className="mt-3 text-sm text-error">{rotateError}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" autoFocus disabled={rotatingCode} onClick={() => setRotateTarget(null)}
+                className="rounded-lg border border-surface-variant px-4 py-2 text-sm">Cancelar</button>
+              <button type="button" disabled={rotatingCode} onClick={rotateTrackingCode}
+                className="rounded-lg bg-industrial-orange px-4 py-2 text-sm font-semibold text-white">
+                {rotatingCode ? 'Regenerando…' : 'Confirmar regeneración'}
+              </button>
+            </div>
+          </section>
         </div>
       )}
 
@@ -1149,7 +1127,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               <h3 className="text-lg font-bold text-primary">Código de seguimiento generado</h3>
             </div>
             <p className="mt-3 text-sm text-secondary">
-              Guárdalo de forma segura. Puede mostrarse una sola vez y no debe compartirlo en URL públicas.
+              El código seguirá vigente hasta que lo regeneres. Cópialo ahora y compártelo por un canal privado.
             </p>
             <div className="mt-4 rounded-lg border border-surface-variant bg-surface p-3 text-center font-mono font-bold text-primary">
               {trackingCodeModal}
@@ -1159,15 +1137,16 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(trackingCodeModal);
-                  showNotification('Código copiado al portapapeles.');
+                  setCopyMessage('Código copiado al portapapeles.');
                 } catch {
-                  showNotification('No se pudo copiar el código. Cópielo manualmente.', 'error');
+                  setCopyMessage('No se pudo copiar el código. Cópialo manualmente.');
                 }
               }}
               className="mt-4 w-full rounded-lg bg-industrial-orange px-4 py-2.5 text-sm font-semibold text-white"
             >
               Copiar código
             </button>
+            {copyMessage && <p role="status" className="mt-2 text-sm text-secondary">{copyMessage}</p>}
             <button type="button" onClick={() => setTrackingCodeModal('')} className="mt-2 w-full rounded-lg border border-surface-variant px-4 py-2 text-sm font-semibold text-secondary">
               Entendido
             </button>
@@ -1175,40 +1154,6 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         </div>
       )}
 
-      {expandedPhoto && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Fotografía ampliada"
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 sm:p-6"
-          onClick={() => setExpandedPhoto(null)}
-        >
-          <button
-            type="button"
-            autoFocus
-            onClick={() => setExpandedPhoto(null)}
-            aria-label="Cerrar fotografía ampliada"
-            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-3xl leading-none text-white hover:bg-white/25"
-          >
-            ×
-          </button>
-          {typeof expandedPhoto === 'string' ? (
-            <img
-              src={safeImageUrl(expandedPhoto)}
-              alt="Fotografía del proyecto ampliada"
-              className="max-h-[92vh] max-w-full object-contain"
-              onClick={(event) => event.stopPropagation()}
-            />
-          ) : (
-            <AuthenticatedProjectPhoto
-              project={expandedPhoto.project}
-              photo={expandedPhoto.photo}
-              alt="Fotografía del proyecto ampliada"
-              className="max-h-[92vh] max-w-full object-contain"
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 }
