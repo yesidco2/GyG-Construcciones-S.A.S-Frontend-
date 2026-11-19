@@ -56,7 +56,7 @@ El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 - Formulario de contacto: `POST /api/contacto`
 - Asistente IA: `POST /api/chat`
 - Consulta de proyecto: `POST /api/obras/seguimiento` con `{ "codigo": "..." }`
-- Panel de obras (requiere autenticación): `/api/panel/obras` para listar, crear, editar, actualizar progreso, eliminar y subir fotos en `multipart/form-data` (`archivo`, `descripcion`)
+- Panel de obras (requiere autenticación): `/api/panel/obras` para listar, crear, editar, actualizar avances e hitos, eliminar y renovar códigos según el rol
 - Consultas administrativas del chat: `GET /api/admin/consultas-chat`
 
 El panel y la consulta de seguimiento no utilizan datos locales de respaldo; el backend debe estar ejecutándose para usarlos.
@@ -68,7 +68,7 @@ El explorador de labores y riesgos también usa su catálogo local en `src/compo
 
 `public/_headers` define CSP y encabezados para plataformas que admiten archivos `_headers`, como Netlify y Cloudflare Pages. El build sustituye `__API_ORIGIN__` por el origen de `VITE_API_URL`. La etiqueta meta CSP generada en `dist/index.html` sirve como respaldo, pero no sustituye los encabezados HTTP.
 
-GitHub Pages no permite configurar encabezados HTTP personalizados; en ese alojamiento solo se aplica la política meta. Las imágenes entregadas por el backend se muestran únicamente si son del mismo origen o usan HTTPS; las vistas previas locales usan URLs `blob:` del propio navegador.
+GitHub Pages no permite configurar encabezados HTTP personalizados; en ese alojamiento solo se aplica la política meta. El formulario y la galería administrativa permiten cargar fotos JPEG, PNG o WebP de hasta 5 MB. Requieren la migración V15 y las rutas de fotos en Spring Boot. El seguimiento público carga cada imagen bajo demanda con el código de la consulta. El [informe de auditoría](docs/auditoria-frontend.md) detalla el contrato y sus dependencias.
 
 En Google Cloud Console, restringe la API key pública de Firebase mediante restricciones de aplicación por sitios web (dominios de producción autorizados y los dominios locales necesarios) y restricciones de API a las APIs de Firebase que realmente use la aplicación. La API key de Firebase identifica el proyecto; no la trates como secreto ni publiques claves privadas en variables `VITE_*`.
 
@@ -84,4 +84,4 @@ https://<dominio-publicado>/GG-WEB/
 
 Si más adelante se habilita esa página, configura el dominio en **Authentication > Settings > Authorized domains**. `ActionCodeSettings.url` en Firebase Admin SDK es el `continueUrl` y no reemplaza el URL del controlador de acciones. La página personalizada de verificación espera una confirmación explícita antes de consumir el código.
 
-Si Turnstile muestra un error `300*` (por ejemplo, `300010`), Cloudflare lo clasifica como un fallo genérico temporal del desafío; no significa por sí solo que la clave secreta del backend sea incorrecta. Usa **Reintentar CAPTCHA**. Si persiste, prueba sin extensiones o VPN, en otro navegador o red, y confirma que el dominio esté autorizado en el widget de Turnstile. En recuperación, la API permite más tiempo porque verifica el CAPTCHA y luego solicita el correo a Firebase.
+Si Turnstile muestra un error `300*` (por ejemplo, `300010`), Cloudflare lo clasifica como un fallo genérico temporal del desafío; no significa por sí solo que la clave secreta del backend sea incorrecta. Usa **Reintentar CAPTCHA**. Si persiste, prueba sin extensiones o VPN, en otro navegador o red, y confirma que el dominio esté autorizado en el widget de Turnstile.
