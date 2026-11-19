@@ -36,7 +36,7 @@ export async function apiFetch(path, options = {}) {
     ...requestOptions
   } = options;
   const headers = new Headers(requestOptions.headers || {});
-  if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+  if (!headers.has('Accept')) headers.set('Accept', responseType === 'blob' ? 'image/png, application/json' : 'application/json');
   if (
     requestOptions.body &&
     !(typeof FormData !== 'undefined' && requestOptions.body instanceof FormData) &&
@@ -45,8 +45,10 @@ export async function apiFetch(path, options = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
-  if (isProtectedPath(path) && auth?.currentUser) {
-    const idToken = await auth.currentUser.getIdToken();
+  const protectedRequest = isProtectedPath(path);
+  const requestUser = protectedRequest ? auth?.currentUser : null;
+  if (requestUser && !headers.has('Authorization')) {
+    const idToken = await requestUser.getIdToken();
     headers.set('Authorization', `Bearer ${idToken}`);
   }
 
@@ -57,12 +59,15 @@ export async function apiFetch(path, options = {}) {
 
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   let response;
+  let responseText;
   try {
     response = await fetch(`${API_URL.replace(/\/+$/, '')}${path}`, {
       ...requestOptions,
       headers,
       signal: controller.signal,
     });
+    if (response.ok && responseType === 'blob') return await response.blob();
+    responseText = await response.text();
   } catch (error) {
     if (controller.signal.aborted) {
       const timeoutError = new Error(
@@ -77,33 +82,6 @@ export async function apiFetch(path, options = {}) {
     callerSignal?.removeEventListener('abort', abortFromCaller);
   }
 
-  if (responseType === 'blob') {
-    if (!response.ok) {
-      const responseText = await response.text();
-      let responseData = null;
-      try {
-        responseData = responseText ? JSON.parse(responseText) : null;
-      } catch {
-        responseData = responseText || null;
-      }
-      const error = new Error(
-        typeof responseData === 'string'
-          ? responseData
-          : responseData?.message || `Error ${response.status}`,
-      );
-      error.status = response.status;
-      error.code = typeof responseData === 'object' ? responseData?.code : undefined;
-      error.responseBody = responseData;
-      error.retryAfter = response.status === 429
-        ? retryAfterSeconds(response.headers.get('Retry-After'))
-        : null;
-      if (response.status === 401 && isProtectedPath(path)) await redirectToLogin();
-      throw error;
-    }
-    return response.blob();
-  }
-
-  const responseText = await response.text();
   let responseData = null;
   if (responseText) {
     try {
@@ -117,22 +95,19 @@ export async function apiFetch(path, options = {}) {
     const error = new Error(
       typeof responseData === 'string'
         ? responseData
-        : responseData?.message || `Error ${response.status}`,
+        : responseData?.message || responseData?.mensaje || `Error ${response.status}`,
     );
     error.status = response.status;
-    error.code = typeof responseData === 'object' ? responseData?.code : undefined;
+    error.code = typeof responseData === 'object' ? (responseData?.code ?? responseData?.codigo) : undefined;
     error.responseBody = responseData;
     error.retryAfter = response.status === 429
       ? retryAfterSeconds(response.headers.get('Retry-After'))
       : null;
 
-    if (response.status === 401 && isProtectedPath(path)) {
-      await redirectToLogin();
-    } else if (
-      response.status === 403 &&
-      error.code === 'CAPTCHA_REQUIRED' &&
-      panelPathPattern.test(path)
-    ) {
+    const needsLogin = response.status === 401 || (
+      response.status === 403 && error.code === 'CAPTCHA_REQUIRED' && panelPathPattern.test(path)
+    );
+    if (protectedRequest && needsLogin && requestUser === auth?.currentUser) {
       await redirectToLogin();
     }
 

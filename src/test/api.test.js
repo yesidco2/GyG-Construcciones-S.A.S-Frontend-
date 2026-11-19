@@ -85,7 +85,7 @@ describe('apiFetch', () => {
     const body = new FormData();
     body.append('archivo', new Blob(['image']));
 
-    await apiFetch('/api/panel/obras/1/fotos', { method: 'POST', body });
+    await apiFetch('/api/panel/obras', { method: 'POST', body });
 
     expect(fetch.mock.calls[0][1].headers.has('Content-Type')).toBe(false);
   });
@@ -98,6 +98,23 @@ describe('apiFetch', () => {
     await expect(apiFetch('/api/institucional', { timeoutMs: 1 })).rejects.toMatchObject({
       name: 'TimeoutError',
     });
+  });
+
+  it('keeps the timeout active while reading the response body', async () => {
+    fetch.mockImplementationOnce(async (_url, options) => ({
+      ...response(200, []),
+      text: () => new Promise((_resolve, reject) => {
+        options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+      }),
+    }));
+    await expect(apiFetch('/api/institucional', { timeoutMs: 1 })).rejects.toMatchObject({ name: 'TimeoutError' });
+  });
+
+  it('preserves an explicitly refreshed Firebase token', async () => {
+    fetch.mockResolvedValueOnce(response(202, null));
+    await apiFetch('/api/auth/email-verification', { headers: { Authorization: 'Bearer refreshed' } });
+    expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBe('Bearer refreshed');
+    expect(getIdToken).not.toHaveBeenCalled();
   });
 
   it('exposes 429 status and Retry-After to callers', async () => {
