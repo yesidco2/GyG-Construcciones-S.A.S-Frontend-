@@ -3,37 +3,37 @@ import { apiFetch } from '../services/api';
 import useAuth from '../utils/useAuth';
 
 export default function AdminFaqPage() {
-  const { loading, canAccessPanel } = useAuth();
-  const [faqs, setFaqs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { loading, role } = useAuth();
+  const [result, setResult] = useState(null);
+  const [page, setPage] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (loading || !canAccessPanel) return undefined;
+    if (loading || role !== 'ADMIN') return undefined;
 
-    let active = true;
+    const controller = new AbortController();
     setIsLoading(true);
     setError('');
-    apiFetch('/api/admin/consultas-chat')
+    apiFetch('/api/admin/consultas-chat?page=' + page, { signal: controller.signal })
       .then((data) => {
-        if (!active) return;
-        const entries = Array.isArray(data) ? data : data?.content;
-        if (!Array.isArray(entries)) {
+        if (controller.signal.aborted) return;
+        if (!Array.isArray(data?.content)) {
           throw new Error('El servidor devolvió un formato de historial no válido.');
         }
-        setFaqs(entries);
+        setResult(data);
       })
       .catch(() => {
-        if (active) setError('No se pudo cargar el historial. Intenta de nuevo más tarde.');
+        if (!controller.signal.aborted) setError('No se pudo cargar el historial. Intenta de nuevo más tarde.');
       })
       .finally(() => {
-        if (active) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       });
 
     return () => {
-      active = false;
+      controller.abort();
     };
-  }, [loading, canAccessPanel]);
+  }, [loading, role, page]);
 
   if (loading) {
     return (
@@ -45,13 +45,13 @@ export default function AdminFaqPage() {
     );
   }
 
-  if (!canAccessPanel) {
+  if (role !== 'ADMIN') {
     return (
       <section className="min-h-screen bg-surface px-md py-xl pt-24">
         <div className="mx-auto max-w-5xl rounded-2xl border border-surface-variant bg-white p-lg text-center shadow-sm">
           <h1 className="font-headline-lg text-headline-lg text-primary">Acceso restringido</h1>
           <p className="mt-sm font-body-md text-body-md text-secondary">
-            Necesitas una sesión con rol ADMIN o INGENIERO para consultar esta página.
+            Necesitas una sesión con rol ADMIN para consultar esta página.
           </p>
           <a className="mt-md inline-block font-label-caps text-label-caps text-industrial-orange hover:underline" href="#login">
             Iniciar sesión
@@ -82,19 +82,28 @@ export default function AdminFaqPage() {
           <div className="rounded-xl border border-error/20 bg-error-container p-lg text-center text-error" role="alert">
             {error}
           </div>
-        ) : faqs.length === 0 ? (
+        ) : !result?.content.length ? (
           <div className="rounded-xl border border-dashed border-surface-variant bg-surface p-lg text-center text-secondary">
             No hay preguntas guardadas todavía.
           </div>
         ) : (
           <div className="space-y-sm">
-            {faqs.map((item, index) => (
+            {result.content.map((item, index) => (
               <div key={`${item.id || item.text || 'consulta'}-${index}`} className="rounded-xl border border-surface-variant bg-surface p-md">
-                <p className="mb-xs font-label-caps text-label-caps uppercase text-secondary">Pregunta {index + 1}</p>
+                <p className="mb-xs font-label-caps text-label-caps uppercase text-secondary">Pregunta {result.page * result.size + index + 1}</p>
                 <p className="font-body-md text-body-md text-on-surface">{item.pregunta || item.text || 'Consulta sin texto'}</p>
               </div>
             ))}
           </div>
+        )}
+        {(page > 0 || (result && !result.last)) && (
+          <nav aria-label="Páginas del historial" className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+            <button type="button" disabled={isLoading || page === 0}
+              onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-2 disabled:opacity-50">Anterior</button>
+            <span>Página {page + 1}</span>
+            <button type="button" disabled={isLoading || Boolean(error) || !result || result.last}
+              onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-2 disabled:opacity-50">Siguiente</button>
+          </nav>
         )}
       </div>
     </section>

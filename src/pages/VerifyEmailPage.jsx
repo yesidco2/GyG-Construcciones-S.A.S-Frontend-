@@ -126,9 +126,9 @@ export default function VerifyEmailPage() {
             <p className="text-sm text-secondary">
               Vuelve al inicio de sesión para solicitar otro correo de verificación.
             </p>
-            <button type="button" onClick={() => { window.location.hash = '#login'; }} className="w-full rounded-xl bg-industrial-orange px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-industrial-orange/90">
+            <a href={window.location.pathname + '#login'} className="block w-full rounded-xl bg-industrial-orange px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-industrial-orange/90">
               Ir al inicio de sesión
-            </button>
+            </a>
           </div>
         )}
 
@@ -137,9 +137,9 @@ export default function VerifyEmailPage() {
             <p role="status" className="text-sm leading-relaxed text-secondary">
               Tu dirección de correo fue verificada. Regresa al portal para continuar.
             </p>
-            <button type="button" onClick={() => { window.location.hash = '#login'; }} className="w-full rounded-xl bg-industrial-orange px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-industrial-orange/90">
+            <a href={window.location.pathname + '#login'} className="block w-full rounded-xl bg-industrial-orange px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-industrial-orange/90">
               Regresar al inicio de sesión
-            </button>
+            </a>
           </div>
         )}
       </section>

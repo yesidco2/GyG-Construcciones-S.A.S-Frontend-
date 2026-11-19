@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import getAppRouteKey from '../utils/appRoute';
 import { POLICY_URL } from '../config/privacy';
 
 const homeSections = [
@@ -42,12 +43,23 @@ export default function Header() {
         setGestionMenuOpen(false);
       }
     };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        setInicioMenuOpen(false);
+        setGestionMenuOpen(false);
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, []);
 
   useEffect(() => {
-    const updateCurrentRoute = () => setCurrentRoute(window.location.hash.replace('#', ''));
+    const updateCurrentRoute = () => setCurrentRoute(getAppRouteKey());
     updateCurrentRoute();
     window.addEventListener('hashchange', updateCurrentRoute);
     return () => window.removeEventListener('hashchange', updateCurrentRoute);
@@ -59,6 +71,8 @@ export default function Header() {
       setActiveSection(currentRoute);
       return undefined;
     }
+
+    if (!('IntersectionObserver' in window)) return undefined;
 
     const sectionIds = homeSections.map(({ id }) => id);
     const observer = new IntersectionObserver(
