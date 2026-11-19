@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
 import CaptchaWidget from './auth/CaptchaWidget';
-import { CAPTCHA_SITE_KEY } from '../config/captcha';
+import { CAPTCHA_ACTIONS, CAPTCHA_SITE_KEY } from '../config/captcha';
 import PrivacyConsent from './PrivacyConsent';
 import { CONTACT_EMAIL, POLICY_VERSION } from '../config/privacy';
 
@@ -22,10 +22,19 @@ const initialForm = {
   website: '',
 };
 
-const namePattern = /^[\p{L}][\p{L} .'’-]*$/u;
-const emailPattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
-const phonePattern = /^(?:[0-9]{7,14}|\+[0-9]{7,13})$/;
-const linkPattern = /(?:https?:\/\/|www\.)[^\s]+/gi;
+const namePattern = /^[\p{L}][\p{L} .'-]*$/u;
+const emailLocalPattern = /^[A-Za-z0-9._%+-]+$/;
+const emailDomainLabel = /^[A-Za-z0-9-]+$/;
+const emailDomainSuffix = /^[A-Za-z]{2,}$/;
+
+function isValidEmail(email) {
+  const [local, domain, extra] = email.split('@');
+  if (email.length > 254 || !domain || extra !== undefined || !emailLocalPattern.test(local)) return false;
+  const labels = domain.split('.');
+  return labels.length > 1 && emailDomainSuffix.test(labels.pop()) && labels.every((label) => emailDomainLabel.test(label));
+}
+const phonePattern = /^\+?[0-9][0-9 ()-]{6,19}$/;
+const linkPattern = /(?:https?:\/\/|www\.)/gi;
 
 function validateForm(formData) {
   const name = formData.name.trim();
@@ -38,11 +47,11 @@ function validateForm(formData) {
   if (name.length < 2 || name.length > 100 || !namePattern.test(name)) {
     errors.name = 'Ingresa un nombre de 2 a 100 caracteres con letras, espacios, puntos, apóstrofes o guiones.';
   }
-  if (!emailPattern.test(email)) {
-    errors.email = 'Ingresa un correo electrónico válido.';
+  if ((email && !isValidEmail(email)) || (!email && !phone)) {
+    errors.email = email ? 'Ingresa un correo electrónico válido.' : 'Ingresa un correo electrónico o un teléfono.';
   }
   if (phone && !phonePattern.test(phone)) {
-    errors.phone = 'Ingresa de 7 a 14 números; si incluyes +, cuenta dentro del límite de 14 caracteres.';
+    errors.phone = 'Ingresa un teléfono válido. Puedes incluir prefijo, espacios, paréntesis o guiones.';
   }
   if (company.length > 120 || /[<>]/.test(company)) {
     errors.company = 'La empresa debe tener máximo 120 caracteres y no puede contener < ni >.';
@@ -136,17 +145,10 @@ export default function Contact({ sectionId = 'contacto' }) {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    const updatedValue =
-      name === 'phone'
-        ? value.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '').slice(0, 14)
-        : value;
-    setFormData((previous) => ({ ...previous, [name]: updatedValue }));
-    setErrors((previous) => {
-      if (!previous[name]) return previous;
-      const next = { ...previous };
-      delete next[name];
-      return next;
-    });
+    setFormData((previous) => ({ ...previous, [name]: value }));
+    setErrors((previous) => Object.fromEntries(
+      Object.entries(previous).filter(([field]) => field !== name && !(name === 'phone' && field === 'email')),
+    ));
   };
 
   const handleSubmit = async (event) => {
@@ -156,6 +158,10 @@ export default function Contact({ sectionId = 'contacto' }) {
     const validationErrors = validateForm(formData);
     setErrors(validationErrors);
     setStatus({ type: '', message: '' });
+    if (formData.website.trim()) {
+      setStatus({ type: 'error', message: 'No se pudo enviar la solicitud. Recarga la página y vuelve a intentarlo.' });
+      return;
+    }
     if (Object.keys(validationErrors).length > 0) return;
     if (!acceptsPolicy) {
       setPolicyError('Debes autorizar el tratamiento de tus datos para enviar la solicitud.');
@@ -173,35 +179,23 @@ export default function Contact({ sectionId = 'contacto' }) {
 
     const contactPayload = {
       nombre: formData.name.trim(),
-      correo: formData.email.trim(),
+      ...(formData.email.trim() ? { correo: formData.email.trim() } : {}),
       ...(formData.phone.trim() ? { telefono: formData.phone.trim() } : {}),
       ...(formData.company.trim() ? { empresa: formData.company.trim() } : {}),
       tipoServicio: formData.service,
       mensaje: formData.message.trim(),
-      ...(formData.website.trim() ? { sitioWeb: formData.website.trim() } : {}),
       aceptaPolitica: true,
       politicaVersion: POLICY_VERSION,
     };
-    const requestBody = JSON.stringify(contactPayload);
-    const requestHeaders = {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'X-Captcha-Token': captchaToken,
-    };
-
-    if (import.meta.env.DEV) {
-      console.debug('[POST /api/contacto] solicitud', {
-        body: requestBody,
-        headers: { ...requestHeaders, 'X-Captcha-Token': '[REDACTADO]' },
-      });
-    }
-
     try {
-      await apiFetch('/api/contacto', {
+      const receipt = await apiFetch('/api/contacto', {
         method: 'POST',
-        headers: requestHeaders,
-        body: requestBody,
+        headers: { 'X-Captcha-Token': captchaToken },
+        body: JSON.stringify(contactPayload),
       });
+      if (!Number.isSafeInteger(receipt?.id) || receipt.id < 0) {
+        throw new Error('La API no devolvió un comprobante válido.');
+      }
 
       setStatus({
         type: 'success',
@@ -212,17 +206,18 @@ export default function Contact({ sectionId = 'contacto' }) {
       setAcceptsPolicy(false);
       setCanRetry(false);
     } catch (error) {
-      if (import.meta.env.DEV && error.status === 400) {
-        console.debug('[POST /api/contacto] respuesta 400', error.responseBody);
-      }
-
-      if (error.status === 400) {
+      if (error.status === 503) {
+        setCanRetry(true);
+        setStatus({ type: 'error', message: 'El servicio no está disponible temporalmente. Espera y completa un nuevo CAPTCHA para reintentar.' });
+      } else if ((error.status === 400 && error.code?.startsWith('CAPTCHA_')) || error.status === 403) {
+        setStatus({ type: 'error', message: 'La verificación CAPTCHA no fue válida. Completa un nuevo desafío e inténtalo de nuevo.' });
+      } else if (error.status === 400) {
         const serverErrors = parseServerFieldErrors(error.responseBody);
         setErrors(Object.fromEntries(serverErrors.fieldErrors));
         setPolicyError(serverErrors.policyError);
-        setStatus({ type: 'error', message: 'Revisa los campos señalados e inténtalo de nuevo.' });
-      } else if (error.status === 403) {
-        setStatus({ type: 'error', message: 'Verifica el CAPTCHA e inténtalo de nuevo.' });
+        setStatus({ type: 'error', message: serverErrors.fieldErrors.size || serverErrors.policyError
+          ? 'Revisa los campos señalados e inténtalo de nuevo.'
+          : 'La solicitud contiene datos inválidos. Revisa el formulario e inténtalo de nuevo.' });
       } else if (error.status === 429) {
         const waitMessage = error.retryAfter
           ? `Espera ${error.retryAfter} ${error.retryAfter === 1 ? 'segundo' : 'segundos'} antes de volver a enviar.`
@@ -325,7 +320,7 @@ export default function Contact({ sectionId = 'contacto' }) {
 
               <div>
                 <label htmlFor="contact-email" className="mb-xs block font-label-caps text-label-caps text-primary">
-                  Correo
+                  Correo (si no indicas teléfono)
                 </label>
                 <input
                   id="contact-email"
@@ -354,7 +349,7 @@ export default function Contact({ sectionId = 'contacto' }) {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    maxLength={14}
+                    maxLength={21}
                     className={`w-full rounded-lg border-2 p-sm transition-colors focus:border-primary-container focus:ring-0 ${
                       errors.phone ? 'border-error' : 'border-outline-variant'
                     }`}
@@ -443,7 +438,7 @@ export default function Contact({ sectionId = 'contacto' }) {
 
               <CaptchaWidget
                 siteKey={CAPTCHA_SITE_KEY}
-                action="contacto"
+                action={CAPTCHA_ACTIONS.contact}
                 resetKey={captchaResetKey}
                 onToken={(token) => {
                   setCaptchaToken(token);

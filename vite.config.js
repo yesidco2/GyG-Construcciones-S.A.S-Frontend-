@@ -11,13 +11,11 @@ function contentSecurityPolicy(apiOrigin, development = false) {
     'https://securetoken.googleapis.com',
     'https://www.googleapis.com',
     'https://challenges.cloudflare.com',
-    'https://www.google.com',
-    'https://www.recaptcha.net',
     'data:',
     ...(development ? ['ws://localhost:*', 'ws://127.0.0.1:*'] : []),
   ].filter(Boolean);
   const scriptSources = [
-    "script-src 'self' https://challenges.cloudflare.com https://www.google.com https://www.gstatic.com",
+    "script-src 'self' https://challenges.cloudflare.com",
     ...(development ? ["'unsafe-inline'"] : []),
   ];
   return [
@@ -27,7 +25,7 @@ function contentSecurityPolicy(apiOrigin, development = false) {
     "font-src 'self' data:",
     `img-src 'self' blob: https:`,
     `connect-src ${connectSources.join(' ')}`,
-    "frame-src 'self' https://challenges.cloudflare.com https://www.google.com https://www.recaptcha.net",
+    "frame-src 'self' https://challenges.cloudflare.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -1,24 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { apiFetch } = vi.hoisted(() => ({
+const { apiFetch, verifyCaptcha, setPersistence, signInWithEmailAndPassword, signOut } = vi.hoisted(() => ({
   apiFetch: vi.fn(),
+  verifyCaptcha: vi.fn(),
+  setPersistence: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
 }));
 
 vi.mock('../services/api', () => ({ apiFetch }));
 vi.mock('../services/firebase', () => ({
-  auth: null,
-  isFirebaseConfigured: false,
+  auth: {},
+  isFirebaseConfigured: true,
 }));
 vi.mock('../services/captchaService', () => ({
-  verifyCaptcha: vi.fn(),
+  verifyCaptcha,
 }));
 vi.mock('firebase/auth', () => ({
   onAuthStateChanged: vi.fn(),
-  setPersistence: vi.fn(),
-  signInWithEmailAndPassword: vi.fn(),
+  setPersistence,
+  signInWithEmailAndPassword,
   browserLocalPersistence: {},
   browserSessionPersistence: {},
-  signOut: vi.fn(),
+  signOut,
 }));
 
 describe('resetPassword', () => {
@@ -75,5 +79,38 @@ describe('resetPassword', () => {
       status: 503,
       message: 'No fue posible procesar la solicitud. Intenta nuevamente más tarde.',
     })).toMatch(/Firebase no pudo procesar el restablecimiento/);
+  });
+});
+
+describe('login with a verified session', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    apiFetch.mockReset();
+    verifyCaptcha.mockResolvedValue({ ticket: 'server-ticket' });
+    signInWithEmailAndPassword.mockResolvedValue({ user: { uid: 'firebase-user' } });
+  });
+
+  it('exchanges the CAPTCHA once and sends only the ticket to Spring Boot', async () => {
+    const { loginWithEmail } = await import('../services/authService');
+    const { browserSessionPersistence } = await import('firebase/auth');
+    apiFetch.mockResolvedValueOnce({ verified: true });
+
+    await expect(loginWithEmail(' user@example.com ', 'password', false, 'widget-token')).resolves.toMatchObject({
+      user: { uid: 'firebase-user' },
+    });
+
+    expect(verifyCaptcha).toHaveBeenCalledExactlyOnceWith('widget-token');
+    expect(setPersistence).toHaveBeenCalledWith(expect.any(Object), browserSessionPersistence);
+    expect(apiFetch).toHaveBeenCalledExactlyOnceWith('/api/auth/session', {
+      method: 'POST',
+      body: JSON.stringify({ ticket: 'server-ticket' }),
+    });
+  });
+
+  it('signs out the local Firebase user if Spring Boot fails to confirm the ticket', async () => {
+    const { loginWithEmail } = await import('../services/authService');
+    apiFetch.mockResolvedValueOnce({ verified: false });
+    await expect(loginWithEmail('user@example.com', 'password', true, 'widget-token')).rejects.toThrow(/confirmó la sesión/);
+    expect(signOut).toHaveBeenCalledOnce();
   });
 });

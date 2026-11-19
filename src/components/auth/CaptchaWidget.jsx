@@ -1,26 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
-export const CAPTCHA_PROVIDER = 'turnstile';
+const scriptId = 'gg-turnstile-script';
+const scriptUrl = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
-const SCRIPT_IDS = {
-  turnstile: 'gg-turnstile-script',
-  recaptcha: 'gg-recaptcha-script',
-};
-
-function getScriptUrl(provider) {
-  return provider === 'recaptcha'
-    ? 'https://www.google.com/recaptcha/api.js?render=explicit'
-    : 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-}
-
-function getCaptchaApi(provider) {
-  return provider === 'recaptcha' ? window.grecaptcha : window.turnstile;
-}
-
-function loadCaptchaScript(provider) {
-  const scriptId = SCRIPT_IDS[provider];
+function loadCaptchaScript() {
   let existingScript = document.getElementById(scriptId);
-  if (getCaptchaApi(provider)) {
+  if (window.turnstile) {
     if (existingScript) existingScript.dataset.loaded = 'true';
     return Promise.resolve();
   }
@@ -32,7 +17,7 @@ function loadCaptchaScript(provider) {
   return new Promise((resolve, reject) => {
     const script = existingScript || document.createElement('script');
     const handleLoad = () => {
-      if (!getCaptchaApi(provider)) {
+      if (!window.turnstile) {
         script.remove();
         reject(new Error('El script CAPTCHA cargó, pero no inicializó su API.'));
         return;
@@ -48,7 +33,7 @@ function loadCaptchaScript(provider) {
     script.addEventListener('error', handleError, { once: true });
     if (!existingScript) {
       script.id = scriptId;
-      script.src = getScriptUrl(provider);
+      script.src = scriptUrl;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
@@ -60,7 +45,6 @@ export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onEr
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
   const retryRef = useRef(null);
-  const initializingRef = useRef(false);
   const callbacksRef = useRef({ onToken, onError });
   const [loadError, setLoadError] = useState('');
 
@@ -72,52 +56,57 @@ export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onEr
     if (!siteKey) return undefined;
     let active = true;
     let observer;
+    let initializing = false;
 
     const initializeWidget = () => {
-      if (initializingRef.current || widgetIdRef.current !== null) return;
-      initializingRef.current = true;
-      loadCaptchaScript(CAPTCHA_PROVIDER)
+      if (initializing || widgetIdRef.current !== null) return;
+      initializing = true;
+      loadCaptchaScript()
         .then(() => {
-          initializingRef.current = false;
+          initializing = false;
           if (!active || !containerRef.current) return;
-          const api = getCaptchaApi(CAPTCHA_PROVIDER);
+          const api = window.turnstile;
           if (!api) throw new Error('El servicio CAPTCHA no está disponible.');
 
           widgetIdRef.current = api.render(containerRef.current, {
             sitekey: siteKey,
             action,
             callback: (token) => {
+              if (!active) return;
               setLoadError('');
               callbacksRef.current.onError('');
               callbacksRef.current.onToken(token);
             },
             'expired-callback': () => {
+              if (!active) return;
               callbacksRef.current.onToken('');
               callbacksRef.current.onError('La verificación CAPTCHA expiró. Complétala nuevamente.');
             },
             'timeout-callback': () => {
+              if (!active) return;
               callbacksRef.current.onToken('');
               const message = 'El desafío CAPTCHA tardó demasiado. Complétalo nuevamente.';
               setLoadError(message);
               callbacksRef.current.onError(message);
             },
             'error-callback': (errorCode) => {
+              if (!active) return;
               callbacksRef.current.onToken('');
               const code = typeof errorCode === 'string' ? ` (código ${errorCode})` : '';
               const message = `Turnstile no pudo completar la verificación${code}. Inténtalo nuevamente.`;
               setLoadError(message);
               callbacksRef.current.onError(message);
             },
-            ...(CAPTCHA_PROVIDER === 'recaptcha' ? { theme: 'light', size: 'normal' } : {}),
+            size: 'flexible',
           });
         })
         .catch((error) => {
-          initializingRef.current = false;
+          initializing = false;
           if (!active) return;
           if (import.meta.env.DEV) {
             console.error('[Turnstile] No se pudo cargar o renderizar el widget.', {
               error,
-              scriptUrl: getScriptUrl(CAPTCHA_PROVIDER),
+              scriptUrl: scriptUrl,
               online: navigator.onLine,
             });
           }
@@ -131,7 +120,7 @@ export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onEr
       setLoadError('');
       callbacksRef.current.onError('');
       callbacksRef.current.onToken('');
-      const api = getCaptchaApi(CAPTCHA_PROVIDER);
+      const api = window.turnstile;
       if (widgetIdRef.current !== null && api) {
         api.reset?.(widgetIdRef.current);
       } else {
@@ -154,9 +143,9 @@ export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onEr
       active = false;
       observer?.disconnect();
       retryRef.current = null;
-      initializingRef.current = false;
+      initializing = false;
       if (widgetIdRef.current !== null) {
-        const api = getCaptchaApi(CAPTCHA_PROVIDER);
+        const api = window.turnstile;
         api?.remove?.(widgetIdRef.current);
         widgetIdRef.current = null;
       }
@@ -165,9 +154,9 @@ export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onEr
 
   useEffect(() => {
     if (widgetIdRef.current === null) return;
-    const api = getCaptchaApi(CAPTCHA_PROVIDER);
-    api?.reset?.(widgetIdRef.current);
+    const api = window.turnstile;
     callbacksRef.current.onToken('');
+    api?.reset?.(widgetIdRef.current);
   }, [resetKey]);
 
   if (!siteKey) {

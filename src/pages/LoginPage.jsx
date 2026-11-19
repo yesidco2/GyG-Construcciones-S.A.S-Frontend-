@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import EngineerDashboard from '../components/dashboard/EngineerDashboard';
 import ForgotPasswordModal from '../components/auth/ForgotPasswordModal';
 import CaptchaWidget from '../components/auth/CaptchaWidget';
-import { CAPTCHA_SITE_KEY } from '../config/captcha';
+import { CAPTCHA_ACTIONS, CAPTCHA_SITE_KEY } from '../config/captcha';
 import {
   friendlyAuthError,
   loginWithEmail,
@@ -133,6 +133,7 @@ export default function LoginPage() {
   const [lockoutUntil, setLockoutUntil] = useState(0);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const failedAttemptsRef = useRef(0);
+  const loginInFlight = useRef(false);
 
   useEffect(() => {
     if (!lockoutUntil) return undefined;
@@ -148,11 +149,13 @@ export default function LoginPage() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
+    if (loginInFlight.current || Date.now() < lockoutUntil) return;
     setError('');
     if (!captchaToken) {
       setCaptchaStatus('Completa la verificación CAPTCHA antes de iniciar sesión.');
       return;
     }
+    loginInFlight.current = true;
     setIsSubmitting(true);
     try {
       const credential = await loginWithEmail(email, password, remember, captchaToken);
@@ -162,11 +165,14 @@ export default function LoginPage() {
     } catch (authError) {
       setError(friendlyAuthError(authError));
       failedAttemptsRef.current += 1;
-      if (failedAttemptsRef.current >= 3) {
+      if (authError?.status === 429) {
+        setLockoutUntil(Date.now() + (authError.retryAfter || 60) * 1000);
+      } else if (failedAttemptsRef.current >= 3) {
         const delaySeconds = Math.min(60, 5 * (2 ** (failedAttemptsRef.current - 3)));
         setLockoutUntil(Date.now() + delaySeconds * 1000);
       }
     } finally {
+      loginInFlight.current = false;
       setIsSubmitting(false);
       setCaptchaToken('');
       setCaptchaResetKey((current) => current + 1);
@@ -197,7 +203,13 @@ export default function LoginPage() {
     setVerificationError('');
     setVerificationAction('resend');
     try {
-      await sendVerificationEmail(firebaseUser);
+      const result = await sendVerificationEmail(firebaseUser);
+      if (result?.status === 'already_verified') {
+        await firebaseUser.reload();
+        await firebaseUser.getIdToken(true);
+        await refreshProfile(firebaseUser);
+        return;
+      }
       setVerificationMessage('Correo de verificación enviado. Revisa también la carpeta de correo no deseado.');
     } catch (verificationSendError) {
       setVerificationError(friendlyAuthError(verificationSendError));
@@ -395,7 +407,7 @@ export default function LoginPage() {
 
                 <CaptchaWidget
                   siteKey={CAPTCHA_SITE_KEY}
-                  action="login"
+                  action={CAPTCHA_ACTIONS.login}
                   resetKey={captchaResetKey}
                   onToken={handleCaptchaToken}
                   onError={handleCaptchaError}

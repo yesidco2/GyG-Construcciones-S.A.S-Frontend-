@@ -27,7 +27,7 @@ beforeEach(() => {
 
 async function fillValidContact(user, { phone = '', company = '' } = {}) {
   await user.type(screen.getByLabelText('Nombre'), 'Ana Pérez');
-  await user.type(screen.getByLabelText('Correo'), 'ana@example.com');
+  await user.type(screen.getByLabelText(/^Correo/), 'ana@example.com');
   if (phone) await user.type(screen.getByLabelText('Teléfono (opcional)'), phone);
   if (company) await user.type(screen.getByLabelText('Empresa (opcional)'), company);
   await user.selectOptions(screen.getByLabelText('Tipo de Servicio'), 'Obra Civil');
@@ -42,7 +42,7 @@ describe('Privacy consent in contact and newsletter', () => {
     render(<Contact />);
 
     await user.type(screen.getByLabelText('Nombre'), 'Ana Pérez');
-    await user.type(screen.getByLabelText('Correo'), 'ana@example.com');
+    await user.type(screen.getByLabelText(/^Correo/), 'ana@example.com');
     await user.selectOptions(screen.getByLabelText('Tipo de Servicio'), 'Obra Civil');
     await user.type(screen.getByLabelText('Tu consulta'), 'Necesito una cotización para una obra.');
     await user.click(screen.getByRole('button', { name: /Complete CAPTCHA/ }));
@@ -57,11 +57,11 @@ describe('Privacy consent in contact and newsletter', () => {
 
   it('sends contact consent and the configured policy version', async () => {
     const user = userEvent.setup();
-    apiFetch.mockResolvedValueOnce({});
+    apiFetch.mockResolvedValueOnce({ id: 0 });
     render(<Contact />);
 
     await user.type(screen.getByLabelText('Nombre'), 'Ana Pérez');
-    await user.type(screen.getByLabelText('Correo'), 'ana@example.com');
+    await user.type(screen.getByLabelText(/^Correo/), 'ana@example.com');
     await user.selectOptions(screen.getByLabelText('Tipo de Servicio'), 'Obra Civil');
     await user.type(screen.getByLabelText('Tu consulta'), 'Necesito una cotización para una obra.');
     await user.click(screen.getByRole('button', { name: /Complete CAPTCHA/ }));
@@ -78,7 +78,6 @@ describe('Privacy consent in contact and newsletter', () => {
 
   it('sends a single request, omits empty optional values, and resets the widget', async () => {
     const user = userEvent.setup();
-    const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
     let finishRequest;
     apiFetch.mockImplementation(() => new Promise((resolve) => { finishRequest = resolve; }));
     render(<Contact />);
@@ -93,8 +92,6 @@ describe('Privacy consent in contact and newsletter', () => {
     const [path, options] = apiFetch.mock.calls[0];
     expect(path).toBe('/api/contacto');
     expect(options.headers).toEqual({
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
       'X-Captcha-Token': 'captcha-test-token',
     });
     expect(JSON.parse(options.body)).toEqual({
@@ -105,23 +102,45 @@ describe('Privacy consent in contact and newsletter', () => {
       aceptaPolitica: true,
       politicaVersion: expect.any(String),
     });
-    expect(debug).toHaveBeenCalledWith('[POST /api/contacto] solicitud', {
-      body: options.body,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-Captcha-Token': '[REDACTADO]',
-      },
-    });
-    expect(JSON.stringify(debug.mock.calls)).not.toContain('captcha-test-token');
-
-    finishRequest({});
+    finishRequest({ id: 0 });
+    expect(await screen.findByText(/solicitud se envió correctamente/)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId('contact-captcha')).toHaveTextContent('Complete CAPTCHA 1'));
+  });
+
+  it('accepts phone-only contact and requires a receipt before showing success', async () => {
+    const user = userEvent.setup();
+    apiFetch.mockResolvedValueOnce('<html>Respuesta del hosting</html>');
+    render(<Contact />);
+
+    await fillValidContact(user, { phone: '+57 300 123-4567' });
+    await user.clear(screen.getByLabelText(/^Correo/));
+    await user.click(screen.getByRole('button', { name: 'Enviar Solicitud' }));
+
+    const [, options] = apiFetch.mock.calls[0];
+    const payload = JSON.parse(options.body);
+    expect(payload.telefono).toBe('+57 300 123-4567');
+    expect(payload).not.toHaveProperty('correo');
+    expect(screen.queryByText(/solicitud se envió correctamente/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/No pudimos conectar/)).toBeInTheDocument();
+  });
+
+  it.each([
+    [400, 'CAPTCHA_TOKEN_INVALID', /verificación CAPTCHA no fue válida/],
+    [429, 'RATE_LIMITED', /Espera 25 segundos/],
+    [503, 'CAPTCHA_UNAVAILABLE', /servicio no está disponible temporalmente/],
+  ])('handles contact error %i and resets the widget', async (status, code, message) => {
+    const user = userEvent.setup();
+    apiFetch.mockRejectedValueOnce(Object.assign(new Error('request failed'), { status, code, retryAfter: 25 }));
+    render(<Contact />);
+    await fillValidContact(user);
+    await user.click(screen.getByRole('button', { name: 'Enviar Solicitud' }));
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(screen.getByTestId('contact-captcha')).toHaveTextContent('Complete CAPTCHA 1');
+    expect(screen.getByRole('button', { name: /enviar solicitud|completa el CAPTCHA para reintentar/i })).toBeDisabled();
   });
 
   it('maps a 400 response to accessible field errors and resets the CAPTCHA', async () => {
     const user = userEvent.setup();
-    const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
     const error = Object.assign(new Error('Bad Request'), {
       status: 400,
       responseBody: {
@@ -140,7 +159,6 @@ describe('Privacy consent in contact and newsletter', () => {
     expect(await screen.findByText('formato inválido.')).toBeInTheDocument();
     expect(phone).toHaveAttribute('aria-invalid', 'true');
     expect(phone).toHaveAttribute('aria-describedby', 'contact-phone-error');
-    expect(debug).toHaveBeenCalledWith('[POST /api/contacto] respuesta 400', error.responseBody);
     await waitFor(() => expect(screen.getByTestId('contact-captcha')).toHaveTextContent('Complete CAPTCHA 1'));
   });
 
@@ -151,7 +169,7 @@ describe('Privacy consent in contact and newsletter', () => {
 
     await fillValidContact(user);
     await user.click(screen.getByRole('button', { name: 'Enviar Solicitud' }));
-    expect(await screen.findByText('Verifica el CAPTCHA e inténtalo de nuevo.')).toBeInTheDocument();
+    expect(await screen.findByText('La verificación CAPTCHA no fue válida. Completa un nuevo desafío e inténtalo de nuevo.')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId('contact-captcha')).toHaveTextContent('Complete CAPTCHA 1'));
 
     apiFetch.mockRejectedValueOnce(new TypeError('Network error'));
