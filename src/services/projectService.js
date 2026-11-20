@@ -1,36 +1,36 @@
 import { apiFetch } from './api';
 
 const PROJECTS_ENDPOINT = '/api/panel/obras';
-
-function mapPhoto(photo) {
-  return {
-    id: photo.id,
-    url: photo.url || photo.imagenUrl || photo.archivoUrl || photo.ruta,
-    fecha: photo.fecha || photo.createdAt || '',
-    description: photo.descripcion || photo.description || 'Fotografía de obra',
-  };
-}
+export const PROJECT_STATUSES = ['PLANIFICADA', 'EN_PROGRESO', 'PAUSADA', 'FINALIZADA'];
+export const PROJECT_CATEGORIES = { CIVIL: 'Ingeniería Civil', SST: 'Seguridad y Salud en el Trabajo' };
+export const PROJECT_STATUS_LABELS = {
+  PLANIFICADA: 'Planificada',
+  EN_PROGRESO: 'En progreso',
+  PAUSADA: 'Pausada',
+  FINALIZADA: 'Finalizada',
+};
 
 function mapProject(project) {
   return {
     id: project.id,
-    code: project.codigo || project.code || '',
+    trackingCode: project.codigoSeguimiento || '',
+    clientId: project.clienteId ?? project.cliente?.id ?? null,
     name: project.nombre || project.name || '',
     category: project.categoria || project.category || '',
     client: project.cliente || project.client || '',
-    supervisor: project.supervisor || '',
     progress: Number(project.progreso ?? project.porcentajeAvance ?? project.progress ?? 0),
     status: project.estado || project.status || '',
     startDate: project.fechaInicio || project.startDate || '',
     estimatedEnd: project.fechaFinEstimada || project.estimatedEnd || '',
     description: project.descripcion || project.description || '',
-    photos: (project.fotos || project.photos || []).map(mapPhoto),
+    milestones: project.hitos ?? [],
+    photos: Array.isArray(project.fotos) ? project.fotos : [],
   };
 }
 
 function getProjectIdentifier(project) {
-  const identifier = project.id ?? project.code;
-  if (!identifier) {
+  const identifier = project.id;
+  if (!Number.isSafeInteger(identifier) || identifier <= 0) {
     throw new Error('El proyecto no tiene un identificador válido.');
   }
   return encodeURIComponent(identifier);
@@ -45,51 +45,130 @@ export async function getProjects() {
   return projects.map(mapProject);
 }
 
-export function generateProjectCode() {
-  if (!globalThis.crypto?.getRandomValues) {
-    throw new Error('Este navegador no permite generar códigos de proyecto seguros.');
+export async function getProjectClients() {
+  const result = await apiFetch(`${PROJECTS_ENDPOINT}/clientes`);
+  if (!Array.isArray(result)) {
+    throw new Error('La respuesta de clientes del servidor no tiene el formato esperado.');
   }
+  return result.map((client) => ({
+    id: client.id,
+    name: client.nombre || client.name || client.email || `Cliente ${client.id}`,
+    email: client.email || '',
+  })).filter((client) => Number.isSafeInteger(client.id) && client.id > 0);
+}
 
-  const range = 100000;
-  const maxRandomValue = 0x100000000;
-  const unbiasedLimit = Math.floor(maxRandomValue / range) * range;
-  const randomValues = new Uint32Array(1);
+export async function getProjectStatuses() {
+  const result = await apiFetch(`${PROJECTS_ENDPOINT}/estados`);
+  return Array.isArray(result) ? result : PROJECT_STATUSES;
+}
 
-  do {
-    globalThis.crypto.getRandomValues(randomValues);
-  } while (randomValues[0] >= unbiasedLimit);
-
-  const suffix = String(randomValues[0] % range).padStart(5, '0');
-  return `GG-${new Date().getFullYear()}-${suffix}`;
+function validateProjectDates(start, end) {
+  for (const date of [start, end]) {
+    if (!date) continue;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Usa fechas en formato AAAA-MM-DD.');
+    const parsed = new Date(date + 'T00:00:00Z');
+    if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date || date.startsWith('0000')) {
+      throw new Error('Selecciona una fecha válida.');
+    }
+  }
+  if (start && end && end < start) throw new Error('La fecha de fin no puede ser anterior a la fecha de inicio.');
 }
 
 export async function createProject(projectData) {
+  validateProjectDates(projectData.startDate, projectData.estimatedEnd);
+  const progress = Number(projectData.progress);
+  if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+    throw new Error('El avance debe ser un número entero entre 0 y 100.');
+  }
+  const name = projectData.name?.trim();
+  const clientName = projectData.clientName?.trim();
+  if (!name || name.length > 255) throw new Error('Ingresa el nombre de la obra (máximo 255 caracteres).');
+  if (!clientName || clientName.length > 255) {
+    throw new Error('Ingresa el nombre del cliente (máximo 255 caracteres).');
+  }
+  if (!Object.hasOwn(PROJECT_CATEGORIES, projectData.category)) {
+    throw new Error('Selecciona una categoría válida para la obra.');
+  }
+  if (!PROJECT_STATUSES.includes(projectData.status)) {
+    throw new Error('Selecciona un estado válido para la obra.');
+  }
+  if (projectData.description?.trim().length > 2000) throw new Error('La descripción admite hasta 2000 caracteres.');
   const result = await apiFetch(PROJECTS_ENDPOINT, {
     method: 'POST',
     body: JSON.stringify({
-      codigo: projectData.code.trim().toUpperCase(),
-      nombre: projectData.name.trim(),
-      cliente: projectData.client.trim(),
-      categoria: projectData.category,
-      progreso: Number(projectData.progress),
-      descripcion: projectData.description.trim(),
-      fechaInicio: projectData.startDate,
-      fechaFinEstimada: projectData.estimatedEnd,
+      nombre: name,
+      cliente: clientName,
+      categoria: projectData.category.trim(),
+      estado: projectData.status,
+      progreso: progress,
+      descripcion: projectData.description?.trim() || '',
+      ...(projectData.startDate ? { fechaInicio: projectData.startDate } : {}),
+      ...(projectData.estimatedEnd ? { fechaFinEstimada: projectData.estimatedEnd } : {}),
     }),
   });
   return mapProject(result);
 }
 
 export async function updateProject(project, projectData) {
+  if (projectData.startDate !== undefined || projectData.estimatedEnd !== undefined) {
+    validateProjectDates(
+      projectData.startDate === undefined ? project.startDate : projectData.startDate,
+      projectData.estimatedEnd === undefined ? project.estimatedEnd : projectData.estimatedEnd,
+    );
+  }
+  const payload = {};
+  if (projectData.name !== undefined) {
+    payload.nombre = projectData.name.trim();
+    if (!payload.nombre || payload.nombre.length > 255) throw new Error('El nombre admite entre 1 y 255 caracteres.');
+  }
+  if (projectData.client !== undefined) {
+    const client = projectData.client.trim();
+    if (!client || client.length > 255) throw new Error('Ingresa el nombre del cliente (máximo 255 caracteres).');
+    payload.cliente = client;
+  }
+  if (projectData.clientId !== undefined) {
+    if (!Number.isSafeInteger(projectData.clientId) || projectData.clientId <= 0) {
+      throw new Error('Selecciona un cliente válido.');
+    }
+    payload.clienteId = projectData.clientId;
+  }
+  if (projectData.category !== undefined) {
+    if (!Object.hasOwn(PROJECT_CATEGORIES, projectData.category)) {
+      throw new Error('Selecciona una categoría válida para la obra.');
+    }
+    payload.categoria = projectData.category;
+  }
+  if (projectData.status !== undefined) payload.estado = projectData.status;
+  if (projectData.progress !== undefined) {
+    const progress = Number(projectData.progress);
+    if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+      throw new Error('El avance debe ser un número entero entre 0 y 100.');
+    }
+    payload.progreso = progress;
+  }
+  if (projectData.description !== undefined) {
+    payload.descripcion = projectData.description.trim();
+    if (payload.descripcion.length > 2000) throw new Error('La descripción admite hasta 2000 caracteres.');
+  }
+  if (projectData.milestones !== undefined) {
+    if (projectData.milestones.length > 50) throw new Error('La obra admite hasta 50 hitos.');
+    payload.hitos = projectData.milestones.map((milestone) => {
+      const name = milestone.nombre.trim();
+      if (!name) throw new Error('Ingresa el nombre de cada hito.');
+      return {
+        nombre: name,
+        descripcion: milestone.descripcion?.trim() || null,
+        fechaObjetivo: milestone.fechaObjetivo || null,
+        completado: milestone.completado,
+      };
+    });
+  }
+  if (projectData.startDate !== undefined) payload.fechaInicio = projectData.startDate || null;
+  if (projectData.estimatedEnd !== undefined) payload.fechaFinEstimada = projectData.estimatedEnd || null;
+
   const result = await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}`, {
-    method: 'PUT',
-    body: JSON.stringify({
-      nombre: projectData.name.trim(),
-      cliente: projectData.client.trim(),
-      categoria: projectData.category,
-      descripcion: projectData.description.trim(),
-      fechaFinEstimada: projectData.estimatedEnd,
-    }),
+    method: 'PATCH',
+    body: JSON.stringify(payload),
   });
   return mapProject(result);
 }
@@ -107,27 +186,105 @@ export async function updateProjectProgress(project, progress) {
   return mapProject(result);
 }
 
-export async function addProjectPhoto(project, file, description) {
-  const formData = new FormData();
-  formData.append('archivo', file, file.name || 'fotografia');
-  formData.append('descripcion', description.trim() || 'Fotografía de control técnico en obra');
-
-  await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}/fotos`, {
-    method: 'POST',
-    body: formData,
-  });
-  const refreshedProjects = await getProjects();
-  const updatedProject = refreshedProjects.find((item) =>
-    (project.id && item.id === project.id) || item.code === project.code,
-  );
-  if (!updatedProject) {
-    throw new Error('La fotografía se subió, pero no se pudo actualizar la obra.');
-  }
-  return updatedProject;
-}
-
 export async function deleteProject(project) {
   await apiFetch(`${PROJECTS_ENDPOINT}/${getProjectIdentifier(project)}`, {
     method: 'DELETE',
+  });
+}
+
+export const PROJECT_PHOTO_TYPES = 'image/jpeg,image/png,image/webp';
+
+export function describeProjectError(error, fallback) {
+  if (error.status === 401 || error.code === 'CAPTCHA_REQUIRED') return 'Tu sesión venció. Vuelve a iniciar sesión.';
+  if (error.status === 403) return 'Tu cuenta no tiene permiso para realizar esta acción.';
+  if (error.status === 404) return 'El recurso solicitado no existe o dejó de estar disponible.';
+  if (error.status === 413) return 'El archivo supera el tamaño permitido.';
+  if (error.status === 429) return error.retryAfter > 0
+    ? 'Demasiadas solicitudes. Espera ' + error.retryAfter + ' segundos.'
+    : 'Demasiadas solicitudes. Espera antes de volver a intentarlo.';
+  if (error.status === 400 || error.status === 409) return error.message;
+  if (error instanceof TypeError || error.name === 'TimeoutError') return 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
+  return error.status ? fallback : error.message || fallback;
+}
+
+async function validatePhoto(file) {
+  if (!PROJECT_PHOTO_TYPES.split(',').includes(file.type) || file.size === 0 || file.size > 5 * 1024 * 1024) {
+    throw new Error('Usa fotografías JPEG, PNG o WebP de hasta 5 MB por archivo.');
+  }
+  if (typeof createImageBitmap !== 'function') {
+    if (typeof Image.prototype.decode !== 'function') return;
+    const url = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.src = url;
+      await image.decode().catch(() => { throw new Error('No se pudo leer la imagen.'); });
+      if (image.naturalWidth * image.naturalHeight > 4_000_000) throw new Error('La imagen supera los 4 megapíxeles.');
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+    return;
+  }
+  const bitmap = await createImageBitmap(file).catch(() => {
+    throw new Error('No se pudo leer la imagen.');
+  });
+  try {
+    if (bitmap.width * bitmap.height > 4_000_000) throw new Error('La imagen supera los 4 megapíxeles.');
+  } finally {
+    bitmap.close();
+  }
+}
+
+export async function uploadProjectPhotos(project, files) {
+  if (files.length > 20) throw new Error('Selecciona hasta 20 fotografías.');
+  const failed = [];
+  const path = PROJECTS_ENDPOINT + '/' + getProjectIdentifier(project) + '/fotos';
+  for (const [index, file] of files.entries()) {
+    try {
+      await validatePhoto(file);
+      const body = new FormData();
+      body.append('archivo', file);
+      const result = await apiFetch(path, { method: 'POST', body, timeoutMs: 60000 });
+      if (!Number.isSafeInteger(result?.id) || result.id <= 0) throw new Error('Respuesta de carga inválida.');
+    } catch (error) {
+      const message = describeProjectError(error, 'No se pudo cargar el archivo.');
+      failed.push({ file, message });
+      if (error.status === 429 || error.status === 401 || error.code === 'CAPTCHA_REQUIRED') {
+        failed.push(...files.slice(index + 1).map((pending) => ({ file: pending, message })));
+        break;
+      }
+    }
+  }
+  return failed;
+}
+
+export function getProjectPhotos(project, signal) {
+  return apiFetch(PROJECTS_ENDPOINT + '/' + getProjectIdentifier(project) + '/fotos', { signal });
+}
+
+export function getProjectPhoto(project, photoId, signal) {
+  return apiFetch(PROJECTS_ENDPOINT + '/' + getProjectIdentifier(project) + '/fotos/' + encodeURIComponent(photoId), {
+    responseType: 'blob', signal,
+  });
+}
+
+export function deleteProjectPhoto(project, photoId) {
+  return apiFetch(PROJECTS_ENDPOINT + '/' + getProjectIdentifier(project) + '/fotos/' + encodeURIComponent(photoId), {
+    method: 'DELETE',
+  });
+}
+
+export async function regenerateProjectTrackingCode(project) {
+  const result = await apiFetch(PROJECTS_ENDPOINT + '/' + getProjectIdentifier(project) + '/codigo-seguimiento', {
+    method: 'POST',
+  });
+  return mapProject(result);
+}
+
+export function getPublicProjectPhoto(photoId, code, signal) {
+  return apiFetch('/api/obras/seguimiento/fotos/' + encodeURIComponent(photoId), {
+    method: 'POST',
+    body: JSON.stringify({ codigo: code }),
+    responseType: 'blob',
+    signal,
   });
 }

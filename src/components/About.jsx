@@ -1,19 +1,65 @@
+import { useState } from 'react';
+
 const environmentalPolicies = [
   {
     title: 'Manejo de residuos de construcción',
-    description: 'Clasificación y disposición adecuada de residuos de obra para minimizar impacto ambiental y costear la reutilización segura de materiales.',
+    summary: 'Separar y aprovechar materiales.',
+    detail: 'Clasificar los residuos de obra y disponerlos adecuadamente para reducir impactos y facilitar la reutilización segura.',
+    icon: 'recycling',
   },
   {
     title: 'Control de emisiones de polvo',
-    description: 'Uso de riego, cubrimiento de materiales y procedimientos de trabajo para reducir la dispersión de partículas en el entorno.',
+    summary: 'Reducir partículas en el aire.',
+    detail: 'Cubrir materiales y aplicar controles en las actividades que puedan dispersar polvo en el entorno.',
+    icon: 'air',
   },
   {
     title: 'Gestión de agua en obra',
-    description: 'Prevención de escorrentías, recirculación y control de agua de lavado para reducir el impacto de efluentes y sedimentos.',
+    summary: 'Cuidar el agua y los drenajes.',
+    detail: 'Controlar el agua de lavado y la escorrentía; reutilizar agua cuando sea viable y seguro.',
+    icon: 'water_drop',
+  },
+  {
+    title: 'Control de ruido y vibraciones',
+    summary: 'Mitigar ruido de equipos.',
+    detail: 'Planificar actividades ruidosas y mantener los equipos para reducir molestias e impactos en el entorno.',
+    icon: 'volume_down',
+  },
+  {
+    title: 'Protección del suelo',
+    summary: 'Prevenir erosión y contaminación.',
+    detail: 'Almacenar materiales de forma segura y controlar la escorrentía para proteger el suelo.',
+    icon: 'landscape',
+  },
+  {
+    title: 'Uso eficiente de energía',
+    summary: 'Usar energía eficientemente.',
+    detail: 'Promover el uso eficiente de maquinaria, iluminación y otros recursos durante cada proyecto.',
+    icon: 'bolt',
+  },
+  {
+    title: 'Selección responsable de materiales',
+    summary: 'Elegir materiales durables.',
+    detail: 'Considerar durabilidad, uso eficiente y reducción de desperdicios al seleccionar materiales y proveedores.',
+    icon: 'fact_check',
+  },
+  {
+    title: 'Prevención de derrames',
+    summary: 'Evitar fugas y derrames.',
+    detail: 'Almacenar y manipular combustibles, aceites y sustancias con controles que protejan el suelo y el agua.',
+    icon: 'oil_barrel',
+  },
+  {
+    title: 'Cuidado de flora y fauna',
+    summary: 'Respetar el entorno natural.',
+    detail: 'Identificar elementos naturales en el área de trabajo y aplicar medidas de prevención y protección cuando corresponda.',
+    icon: 'park',
   },
 ];
 
 export default function About() {
+  const [expandedPolicy, setExpandedPolicy] = useState(null);
+
   return (
     <section id="nosotros" className="bg-white py-xl px-md">
       <div className="mx-auto max-w-container-max">
@@ -48,15 +94,39 @@ export default function About() {
         <div className="mb-xl rounded-xl border border-surface-variant bg-surface p-md shadow-sm">
           <h3 className="mb-md font-headline-sm text-headline-sm text-primary">Políticas ambientales y mitigación</h3>
           <div className="grid gap-md md:grid-cols-3">
-            {environmentalPolicies.map((policy) => (
-              <div key={policy.title} className="rounded-lg bg-white p-md shadow-sm ring-1 ring-surface-variant">
-                <div className="mb-sm flex h-12 w-12 items-center justify-center rounded-full bg-primary-container text-on-primary">
-                  <span className="material-symbols-outlined">eco</span>
-                </div>
-                <h4 className="mb-xs font-headline-sm text-headline-sm text-primary">{policy.title}</h4>
-                <p className="font-body-sm text-body-sm text-secondary">{policy.description}</p>
-              </div>
-            ))}
+            {environmentalPolicies.map((policy, index) => {
+              const isExpanded = expandedPolicy === index;
+              const detailId = `environmental-policy-${index}`;
+
+              return (
+                <article key={policy.title} className="rounded-lg bg-white shadow-sm ring-1 ring-surface-variant transition-shadow hover:shadow-md">
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={detailId}
+                    onClick={() => setExpandedPolicy(isExpanded ? null : index)}
+                    className="w-full rounded-lg p-md text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
+                  >
+                    <span className="mb-sm flex h-12 w-12 items-center justify-center rounded-full bg-primary-container text-on-primary">
+                      <span className="material-symbols-outlined" aria-hidden="true">{policy.icon}</span>
+                    </span>
+                    <span className="block font-headline-sm text-headline-sm text-primary">{policy.title}</span>
+                    <span className="mt-xs block font-body-sm text-body-sm text-secondary">{policy.summary}</span>
+                    <span className="mt-sm flex items-center gap-1 text-xs font-semibold text-industrial-orange">
+                      {isExpanded ? 'Ver menos' : 'Ver detalles'}
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">
+                        {isExpanded ? 'expand_less' : 'expand_more'}
+                      </span>
+                    </span>
+                  </button>
+                  <div id={detailId} hidden={!isExpanded} className="px-md pb-md">
+                    <p className="border-t border-surface-variant pt-sm font-body-sm text-body-sm text-secondary">
+                      {policy.detail}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
 

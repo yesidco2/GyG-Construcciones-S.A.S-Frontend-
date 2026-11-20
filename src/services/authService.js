@@ -1,6 +1,5 @@
 import {
   onAuthStateChanged,
-  sendEmailVerification,
   setPersistence,
   signInWithEmailAndPassword,
   browserLocalPersistence,
@@ -31,10 +30,11 @@ export async function loginWithEmail(email, password, remember = false, captchaT
     );
     const credential = await signInWithEmailAndPassword(firebaseAuth, email.trim(), password);
     signedInUser = credential.user;
-    await apiFetch('/api/auth/session', {
+    const session = await apiFetch('/api/auth/session', {
       method: 'POST',
       body: JSON.stringify({ ticket }),
     });
+    if (session?.verified !== true) throw new Error('El servidor no confirmó la sesión.');
     return credential;
   })();
 
@@ -49,20 +49,24 @@ export async function loginWithEmail(email, password, remember = false, captchaT
   }
 }
 
-export function resetPassword(email, captchaToken) {
+export function resetPassword(email) {
   return apiFetch('/api/auth/password-reset', {
     method: 'POST',
     timeoutMs: 25000,
-    headers: { 'X-Captcha-Token': captchaToken },
     body: JSON.stringify({ email: email.trim() }),
   });
 }
 
-export function sendVerificationEmail(user = auth?.currentUser) {
+export async function sendVerificationEmail(user = auth?.currentUser) {
   if (!user) {
     throw new Error('No hay una sesión autenticada para reenviar la verificación.');
   }
-  return sendEmailVerification(user);
+  await user.reload();
+  const idToken = await user.getIdToken(true);
+  return apiFetch('/api/auth/email-verification', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
 }
 
 export function logout() {
@@ -109,7 +113,15 @@ const AUTH_ERROR_MESSAGES = {
 
 export function friendlyAuthError(error) {
   const code = error?.code;
-  if (code && AUTH_ERROR_MESSAGES[code]) return AUTH_ERROR_MESSAGES[code];
+  const firebaseMessage = new Map(Object.entries(AUTH_ERROR_MESSAGES)).get(code);
+  if (firebaseMessage) return firebaseMessage;
+  if (error?.status === 429) return 'Demasiados intentos. Espera antes de volver a intentarlo.';
+  if (code === 'CAPTCHA_REQUIRED' || (error?.status === 400 && code?.startsWith('CAPTCHA_'))) {
+    return 'La verificación CAPTCHA no fue válida. Completa un nuevo desafío.';
+  }
+  if (error?.status === 503 && code?.startsWith('CAPTCHA_')) {
+    return 'El servicio CAPTCHA no está disponible temporalmente. Inténtalo más tarde.';
+  }
   if (error?.status === 503) {
     if (error.message === 'No fue posible verificar CAPTCHA. Intenta nuevamente.') {
       return 'El servidor no pudo verificar el CAPTCHA. Completa la verificación nuevamente.';

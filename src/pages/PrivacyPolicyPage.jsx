@@ -2,7 +2,7 @@ import { Children } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import policyMarkdown from '../content/politicaDatos.md?raw';
-import { EFFECTIVE_DATE, IS_DRAFT, POLICY_VERSION } from '../config/privacy';
+import { EFFECTIVE_DATE_LABEL, POLICY_VERSION } from '../config/privacy';
 
 const policySections = [...policyMarkdown.matchAll(/^## (\d+)\. (.+)$/gm)].map(([, number, title]) => ({
   id: `section-${number}`,
@@ -42,17 +42,6 @@ export default function PrivacyPolicyPage() {
         className="min-h-screen bg-surface px-md py-xl pt-24 focus:outline-none"
       >
         <article className="mx-auto max-w-[75ch] rounded-2xl border border-surface-variant bg-white p-6 shadow-sm print:max-w-none print:border-0 print:p-0 print:shadow-none md:p-10">
-          {IS_DRAFT && (
-            <div role="status" className="mb-8 rounded-lg border border-amber-500 bg-amber-50 p-4 text-amber-950">
-              <p className="font-bold">
-                BORRADOR – pendiente de revisión y aprobación por G&amp;G Construcciones S.A.S.
-              </p>
-              <p className="mt-1">
-                Los campos marcados como [COMPLETAR] aún no se han llenado.
-              </p>
-            </div>
-          )}
-
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
             Protección de datos personales
           </p>
@@ -66,7 +55,7 @@ export default function PrivacyPolicyPage() {
             </div>
             <div className="flex gap-1">
               <dt className="font-semibold">Fecha de vigencia:</dt>
-              <dd>{EFFECTIVE_DATE || 'Pendiente de definir'}</dd>
+              <dd>{EFFECTIVE_DATE_LABEL}</dd>
             </div>
           </dl>
 

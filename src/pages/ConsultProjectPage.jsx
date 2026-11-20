@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
-import safeImageUrl from '../utils/safeImageUrl';
+import { describeProjectError } from '../services/projectService';
+import PublicProjectPhotos from './PublicProjectPhotos';
+import { ProjectMilestones } from '../components/ProjectMetadata';
 
 const projectCodePattern = /^[A-Za-z0-9-]{6,40}$/;
 
@@ -9,6 +11,26 @@ export default function ConsultProjectPage() {
   const [trackingResult, setTrackingResult] = useState(null);
   const [searched, setSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const request = useRef(null);
+  const [blockedUntil, setBlockedUntil] = useState(0);
+  const rateLimitRef = useRef(0);
+  const [retryAfter, setRetryAfter] = useState(null);
+
+  function onRateLimit(error) {
+    const seconds = error.retryAfter > 0 ? error.retryAfter : 60;
+    const until = Date.now() + seconds * 1000;
+    rateLimitRef.current = until;
+    setRetryAfter(error.retryAfter ?? null);
+    setBlockedUntil(until);
+  }
+
+  useEffect(() => () => request.current?.abort(), []);
+
+  useEffect(() => {
+    if (!blockedUntil) return undefined;
+    const timer = window.setTimeout(() => setBlockedUntil(0), Math.max(0, blockedUntil - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [blockedUntil]);
   const [error, setError] = useState('');
 
   const statusMessage = useMemo(() => {
@@ -33,11 +55,13 @@ export default function ConsultProjectPage() {
     }
 
     if (error === 'rate-limited') {
-      return 'Demasiadas consultas seguidas. Espera un minuto e inténtalo de nuevo.';
+      return retryAfter > 0
+        ? 'Demasiadas consultas seguidas. Espera ' + retryAfter + ' segundos antes de intentarlo de nuevo.'
+        : 'Demasiadas consultas seguidas. Espera antes de intentarlo de nuevo.';
     }
 
     if (error) {
-      return 'No pudimos consultar el proyecto por un error de red o del servidor. Puedes intentarlo de nuevo.';
+      return error === 'request-failed' ? 'No pudimos consultar el proyecto. Puedes intentarlo de nuevo.' : error;
     }
 
     if (!trackingResult) {
@@ -45,10 +69,11 @@ export default function ConsultProjectPage() {
     }
 
     return 'Proyecto encontrado con éxito.';
-  }, [searched, trackingResult, error, isLoading]);
+  }, [searched, trackingResult, error, isLoading, retryAfter]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (request.current || Date.now() < rateLimitRef.current) return;
     const code = projectCode.trim();
     if (!code) {
       setSearched(true);
@@ -63,6 +88,8 @@ export default function ConsultProjectPage() {
       return;
     }
 
+    const controller = new AbortController();
+    request.current = controller;
     setIsLoading(true);
     setError('');
     setTrackingResult(null);
@@ -72,25 +99,38 @@ export default function ConsultProjectPage() {
       const data = await apiFetch('/api/obras/seguimiento', {
         method: 'POST',
         body: JSON.stringify({ codigo: code }),
+        signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
+      if (typeof data?.nombre !== 'string' || !Number.isInteger(data.porcentajeAvance)
+          || data.porcentajeAvance < 0 || data.porcentajeAvance > 100) {
+        throw new Error('La respuesta de seguimiento no tiene el formato esperado.');
+      }
+      if (!Array.isArray(data.hitos)) throw new Error('La respuesta de hitos tiene un formato inválido.');
       setTrackingResult({
         name: data.nombre,
-        progress: data.progreso ?? data.porcentajeAvance,
-        photos: data.fotos || [],
+        progress: data.porcentajeAvance,
+        milestones: data.hitos,
+        photos: Array.isArray(data.fotos) ? data.fotos : [],
         code,
       });
       setSearched(true);
     } catch (err) {
+      if (controller.signal.aborted) return;
       if (err.status === 429) {
+        onRateLimit(err);
         setError('rate-limited');
         setSearched(true);
         return;
       }
 
-      setError(err.status === 404 ? 'not-found' : 'request-failed');
+      setError(err.status === 404 ? 'not-found'
+        : (err.status && err.status < 500) ? describeProjectError(err, 'No se pudo realizar la consulta.')
+          : 'request-failed');
       setSearched(true);
     } finally {
-      setIsLoading(false);
+      if (request.current === controller) request.current = null;
+      if (!controller.signal.aborted) setIsLoading(false);
     }
   };
 
@@ -103,9 +143,11 @@ export default function ConsultProjectPage() {
               <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">Seguimiento</p>
               <h1 className="font-headline-xl text-headline-xl text-primary">Consulta el avance de tu proyecto</h1>
               <p className="font-body-lg text-body-lg text-secondary max-w-2xl">
-                Accede a la información detallada, cronogramas y reportes en tiempo real ingresando el código del proyecto.
+                Consulta el avance y los hitos de tu obra con el código asignado.
               </p>
             </div>
+
+            <a href="#hero" className="inline-block text-sm font-semibold text-primary underline">Volver al inicio</a>
 
             <form noValidate onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-[1fr_auto]">
               <label htmlFor="project-code" className="font-label-caps text-label-caps text-secondary sm:col-span-2">
@@ -114,18 +156,20 @@ export default function ConsultProjectPage() {
               <input
                 id="project-code"
                 type="text"
+                autoComplete="off"
+                spellCheck={false}
                 value={projectCode}
                 onChange={(event) => setProjectCode(event.target.value)}
                 minLength={6}
                 maxLength={40}
-                placeholder="Ej: GG-2026-00125"
+                placeholder="Pega el código asignado"
                 className="w-full rounded-full border border-surface-variant bg-white px-6 py-4 text-body-md text-on-background shadow-sm focus:border-primary-container focus:outline-none disabled:opacity-50"
                 aria-label="Código del proyecto"
                 disabled={isLoading}
               />
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || Boolean(blockedUntil)}
                 className="inline-flex items-center justify-center rounded-full bg-industrial-orange px-lg py-sm text-white font-headline-sm hover:bg-industrial-orange/90 transition-all gap-xs disabled:opacity-70"
               >
                 {isLoading ? 'Buscando...' : error === 'request-failed' ? 'Reintentar' : 'Consultar Proyecto'}
@@ -144,7 +188,7 @@ export default function ConsultProjectPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-label-caps text-label-caps uppercase text-secondary">Código</p>
-                    <h2 className="font-headline-sm text-headline-sm text-primary">{trackingResult.code}</h2>
+                    <h2 className="break-all font-headline-sm text-headline-sm text-primary">{trackingResult.code}</h2>
                   </div>
                   <span className="rounded-full bg-primary px-sm py-xs font-label-caps text-label-caps text-on-primary">
                     {trackingResult.progress}%
@@ -174,7 +218,7 @@ export default function ConsultProjectPage() {
                     : error === 'not-found'
                       ? 'Código de acceso inválido. Verifica el código e inténtalo de nuevo.'
                       : error === 'rate-limited'
-                        ? 'Demasiadas consultas seguidas. Espera un minuto e inténtalo de nuevo.'
+                        ? 'Demasiadas consultas seguidas. Espera antes de intentarlo de nuevo.'
                         : error === 'invalid-code'
                           ? 'El código debe tener entre 6 y 40 caracteres y solo puede incluir letras, números y guiones.'
                           : error === 'request-failed'
@@ -188,29 +232,14 @@ export default function ConsultProjectPage() {
           </div>
         </div>
 
-        {trackingResult && trackingResult.photos && trackingResult.photos.length > 0 && (
-          <div className="mt-lg rounded-2xl border border-surface-variant bg-surface p-md shadow-sm">
-            <div className="mb-md">
-              <p className="font-label-caps text-label-caps uppercase text-secondary">Galería de Fotos</p>
+        {trackingResult && (
+          <div className="mt-lg grid gap-md">
+            <div className="rounded-2xl border border-surface-variant bg-surface p-md shadow-sm">
+              <h2 className="mb-sm font-label-caps text-label-caps uppercase text-secondary">Hitos de la obra</h2>
+              <ProjectMilestones milestones={trackingResult.milestones} />
             </div>
-
-            <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
-              {trackingResult.photos.map((photo, index) => (
-                <div
-                  key={`${trackingResult.code}-${photo.url}-${index}`}
-                  className="overflow-hidden rounded-xl bg-white shadow-sm"
-                >
-                  <img
-                    src={safeImageUrl(photo.url)}
-                    alt={`${trackingResult.name} foto ${index + 1}`}
-                    className="h-36 w-full object-cover hover:scale-105 transition-transform"
-                  />
-                  <p className="p-xs font-body-sm text-body-sm text-secondary">
-                    {photo.fecha}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <PublicProjectPhotos photos={trackingResult.photos} code={trackingResult.code}
+              blocked={Boolean(blockedUntil)} onRateLimit={onRateLimit} />
           </div>
         )}
       </div>

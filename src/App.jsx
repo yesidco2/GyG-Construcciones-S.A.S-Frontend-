@@ -9,34 +9,34 @@ import LoginPage from './pages/LoginPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookieConsentManager from './components/CookieConsentManager';
 import CookiePolicyPage from './pages/CookiePolicyPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import getAppRouteKey from './utils/appRoute';
 
-const routes = {
-  '': AppShell,
-  hero: AppShell,
-  indicadores: AppShell,
-  contacto: AppShell,
-  compromiso: AppShell,
-  nosotros: AppShell,
-  'gestion-sst': GestionSSTPage,
-  'risk-explorer': GestionSSTPage,
-  'vision-prevencion': GestionSSTPage,
-  'servicios-sst': GestionSSTPage,
-  'jerarquia-controles': GestionSSTPage,
-  'contacto-sst': GestionSSTPage,
-  portfolio: AppShell,
-  'proyectos': AppShell,
-  'consultar-proyecto': ConsultProjectPage,
-  'admin-faq': AdminFaqPage,
-  'login': LoginPage,
-  'politica-datos': PrivacyPolicyPage,
-  'politica-cookies': CookiePolicyPage,
-};
-
-function initializeRoute() {
-  if (window.location.hash) {
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+function renderPage(routeKey) {
+  switch (routeKey) {
+    case 'gestion-sst':
+    case 'risk-explorer':
+    case 'vision-prevencion':
+    case 'servicios-sst':
+    case 'jerarquia-controles':
+    case 'contacto-sst':
+      return <GestionSSTPage />;
+    case 'consultar-proyecto':
+      return <ConsultProjectPage />;
+    case 'admin-faq':
+      return <AdminFaqPage />;
+    case 'login':
+      return <LoginPage />;
+    case 'politica-cookies':
+      return <CookiePolicyPage />;
+    case 'politica-datos':
+    case 'policy-content':
+      return <PrivacyPolicyPage />;
+    case 'verify-email':
+      return <VerifyEmailPage />;
+    default:
+      return /^section-[0-9]+$/.test(routeKey) ? <PrivacyPolicyPage /> : <AppShell />;
   }
-  return '';
 }
 
 function Layout({ children, showFooter = true }) {
@@ -51,13 +51,17 @@ function Layout({ children, showFooter = true }) {
 }
 
 export default function App() {
-  const [routeKey, setRouteKey] = useState(initializeRoute);
+  const [routeKey, setRouteKey] = useState(getAppRouteKey);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const onHashChange = () => setRouteKey(window.location.hash.replace('#', ''));
+    const onHashChange = () => setRouteKey(getAppRouteKey());
     window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    window.addEventListener('popstate', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('popstate', onHashChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -89,28 +93,24 @@ export default function App() {
   }, [routeKey]);
 
   useEffect(() => {
-    if (!routeKey) {
-      return undefined;
-    }
-
     const frame = window.requestAnimationFrame(() => {
       const targetId = routeKey === 'proyectos' ? 'portfolio' : routeKey;
       const target = document.getElementById(targetId);
       if (target) {
         const top = window.scrollY + target.getBoundingClientRect().top - 72;
-        window.scrollTo({ top, behavior: 'smooth' });
+        const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' });
       }
     });
 
     return () => window.cancelAnimationFrame(frame);
   }, [routeKey]);
 
-  const PageComponent = routes[routeKey] || AppShell;
   const showFooter = !['consultar-proyecto', 'login'].includes(routeKey);
 
   return (
     <Layout showFooter={showFooter}>
-      <PageComponent />
+      {renderPage(routeKey)}
     </Layout>
   );
 }

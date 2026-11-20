@@ -1,29 +1,29 @@
 # Inventario de cookies y almacenamiento del navegador
 
-Este inventario refleja integraciones encontradas en el código del frontend. La presencia y duración exactas de cookies instaladas por terceros deben confirmarse en sus documentaciones o mediante una inspección de red en el sitio desplegado. No se declaran cookies de analítica ni de marketing activas en el código revisado.
+Este inventario describe las tecnologías de almacenamiento propias identificadas en el sitio y los servicios externos que pueden intervenir durante su uso. Las cookies instaladas por terceros pueden variar según la configuración del servicio y del navegador.
 
-| Nombre | Proveedor | Finalidad | Duración | Categoría | Dónde se usa en el código |
-|---|---|---|---|---|---|
-| `gg_cookie_consent` | G&G Construcciones | Recordar la versión y decisión de consentimiento de analítica del sitio. | 365 días | necesaria | `src/utils/consentState.js` |
-| Firebase Auth (almacenamiento de sesión; nombre exacto de claves [VERIFICAR]) | Google Firebase | Mantener la sesión y autenticar usuarios administradores e ingenieros. | [VERIFICAR] | necesaria | `src/services/firebase.js`, `src/services/authService.js` |
-| Historial de chat `gg-chat-history` (sessionStorage; no es cookie) | G&G Construcciones | Mantener el historial del chat durante la sesión de la pestaña. | Hasta cerrar la pestaña | necesaria | `src/components/FloatingIA.jsx` |
-| [VERIFICAR: cookies y almacenamiento del widget] | Cloudflare Turnstile | Mostrar y validar el desafío anti-bot para login, contacto y newsletter. | [VERIFICAR] | necesaria | `src/components/auth/CaptchaWidget.jsx` |
-| [VERIFICAR: cookies y almacenamiento de reCAPTCHA, si se configura] | Google reCAPTCHA | Proveedor alternativo anti-bot; no es el proveedor activo por defecto. | [VERIFICAR] | necesaria | `src/components/auth/CaptchaWidget.jsx` |
-| [VERIFICAR: cookies que pudieran establecerse al cargar la imagen] | Googleusercontent (imágenes externas) | Entregar imágenes ilustrativas de páginas y secciones. | [VERIFICAR] | necesaria | `src/components/Hero.jsx`, `src/components/Commitment.jsx`, `src/pages/GestionSSTPage.jsx` |
-| [VERIFICAR: cookies que pudieran establecerse al cargar la imagen] | Unsplash (imagen externa) | Entregar una imagen ilustrativa de Gestión SST. | [VERIFICAR] | necesaria | `src/pages/GestionSSTPage.jsx` |
-| No aplica (enlace externo; no se inserta un iframe) | WhatsApp | Permitir que el usuario inicie una conversación mediante un enlace externo. | No aplica al sitio; cookies del proveedor [VERIFICAR] | necesaria | `src/components/FloatingWhatsApp.jsx` |
-| No aplica (fuentes autoalojadas) | G&G Construcciones / Fontsource | Mostrar las familias tipográficas locales del sitio sin solicitar fuentes a Google Fonts. | No aplica | necesaria | `src/main.jsx`, `src/index.css` |
+| Tecnología o almacenamiento | Proveedor | Finalidad | Duración | Categoría |
+|---|---|---|---|---|
+| gg_cookie_consent | G&G Construcciones | Recordar la versión de la política y las preferencias de cookies del usuario. | 365 días | Necesaria |
+| Persistencia de sesión de Firebase Authentication (IndexedDB, almacenamiento del navegador o sesión) | Google Firebase | Autenticar a usuarios autorizados y mantener su sesión según la opción de acceso seleccionada. | Mientras dure la sesión o según la persistencia configurada por el usuario | Necesaria para autenticación |
+| `gg-chat-history` (sessionStorage; no es una cookie) | G&G Construcciones | Mantener el historial reciente del chat durante la sesión de la pestaña. | Hasta cerrar la pestaña | Funcional |
+| Widget Cloudflare Turnstile (cookies o almacenamiento del proveedor, si se utilizan) | Cloudflare | Presentar y validar la verificación anti-bot en los formularios y accesos que la requieren. | Según la configuración y las reglas del proveedor | Seguridad |
+| Imágenes solicitadas a Googleusercontent o Unsplash | Google / Unsplash | Mostrar recursos gráficos remotos en algunas páginas. La solicitud puede comunicar datos técnicos, como la dirección IP y el navegador. | No aplica al almacenamiento propio; las prácticas del proveedor dependen de sus políticas | Funcional |
+| Enlace a WhatsApp (no se inserta en un marco dentro del sitio) | WhatsApp | Permitir que el usuario inicie una conversación fuera del sitio. | No aplica al sitio; las prácticas del proveedor dependen de sus políticas | Funcional |
+| Fuentes autoalojadas | G&G Construcciones / Fontsource | Mostrar las familias tipográficas del sitio sin solicitar fuentes a Google Fonts. | No aplica | Funcional |
 
-## Almacenamientos auditados
+## Almacenamiento y servicios externos
 
-- `localStorage`: no se encontró acceso directo en el código de aplicación revisado.
-- `sessionStorage`: el chat usa `gg-chat-history`; Firebase Auth puede usar persistencia de navegador como alternativa configurada.
-- IndexedDB: Firebase Auth configura persistencia local en IndexedDB, con persistencias de navegador como alternativas.
-- `document.cookie`: no se encontró uso previo directo; el sitio añadirá únicamente `gg_cookie_consent`.
-- Scripts de terceros: Turnstile se carga desde el widget CAPTCHA solo cuando su vista entra en pantalla; el código también contiene soporte alternativo para reCAPTCHA.
-- Google Fonts: Inter, Montserrat y Material Symbols se sirven desde archivos autoalojados con Fontsource; no se solicitan desde Google Fonts.
-- Iframes: no hay iframes escritos directamente en la aplicación; el proveedor CAPTCHA puede crear su propio contenido/iframe.
-- Imágenes externas: las imágenes de Googleusercontent y Unsplash anteriores permanecen como recursos remotos; el nombre y la duración de posibles cookies requieren verificación.
-- Analítica y marketing: no se encontraron scripts de analítica ni de marketing. No se debe incorporar ni cargar contenido de esas categorías antes de obtener consentimiento.
+- El sitio utiliza una cookie propia para recordar las preferencias de cookies. No se encontró uso directo de `localStorage` en el código de la aplicación.
+- Firebase Authentication puede utilizar IndexedDB, almacenamiento del navegador o almacenamiento de sesión, según la persistencia configurada y la opción elegida al iniciar sesión.
+- El chat guarda un historial limitado en `sessionStorage`, que se elimina al cerrar la pestaña.
+- Cloudflare Turnstile se carga cuando se muestra un formulario que requiere verificación anti-bot. El proveedor puede utilizar mecanismos propios para prestar este servicio.
+- Las imágenes remotas y los enlaces externos pueden comunicar datos al proveedor correspondiente. Si el usuario continúa en un servicio externo, su uso queda sujeto a las políticas de ese proveedor.
+- No hay herramientas de analítica ni de publicidad configuradas actualmente. Por tanto, el sitio no carga cookies de esas categorías.
+- Las fuentes tipográficas se sirven desde archivos incluidos en el sitio y no desde Google Fonts.
 
-Este inventario es informativo y no sustituye la verificación de cookies y solicitudes reales en cada entorno de despliegue.
+## Administración de preferencias
+
+Las cookies necesarias para el funcionamiento y la seguridad del sitio permanecen activas. El usuario puede aceptar, rechazar o configurar las categorías opcionales desde el aviso inicial y volver a modificar su decisión mediante el enlace «Preferencias de cookies» del pie de página. La decisión se almacena durante un máximo de 365 días.
+
+También es posible eliminar o bloquear cookies desde la configuración del navegador. La desactivación de tecnologías necesarias puede afectar el acceso a algunas funciones del sitio.

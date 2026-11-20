@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { apiFetch } from '../services/api';
 import CaptchaWidget from './auth/CaptchaWidget';
+import { CAPTCHA_ACTIONS, CAPTCHA_SITE_KEY } from '../config/captcha';
 import PrivacyConsent from './PrivacyConsent';
 import { POLICY_URL, POLICY_VERSION } from '../config/privacy';
 
@@ -149,11 +150,6 @@ export default function Footer() {
                 Preferencias de cookies
               </button>
             </li>
-            <li>
-              <a className="hover:text-on-primary hover:underline transition-all" href="#">
-                Términos de Servicio
-              </a>
-            </li>
           </ul>
         </div>
         <div>
@@ -179,7 +175,8 @@ export default function Footer() {
               </button>
             </div>
             <CaptchaWidget
-              siteKey={import.meta.env.VITE_CAPTCHA_SITE_KEY}
+              siteKey={CAPTCHA_SITE_KEY}
+              action={CAPTCHA_ACTIONS.newsletter}
               resetKey={captchaResetKey}
               onToken={(token) => {
                 setCaptchaToken(token);

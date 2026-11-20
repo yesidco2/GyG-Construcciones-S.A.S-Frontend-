@@ -39,20 +39,20 @@ describe('apiFetch', () => {
   it('does not attach Firebase tokens to public API calls', async () => {
     fetch.mockResolvedValueOnce(response(200, []));
 
-    await apiFetch('/api/proyectos');
+    await apiFetch('/api/institucional');
 
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBeNull();
     expect(getIdToken).not.toHaveBeenCalled();
   });
 
-  it('sends password-reset requests publicly with the CAPTCHA token', async () => {
+  it('sends password-reset requests publicly without a CAPTCHA token', async () => {
     fetch.mockResolvedValueOnce(response(202, null));
     const { resetPassword } = await import('../services/authService');
 
-    await resetPassword(' user@example.com ', 'captcha-response');
+    await resetPassword(' user@example.com ');
 
     expect(fetch.mock.calls[0][0]).toBe('https://api.example.test/api/auth/password-reset');
-    expect(fetch.mock.calls[0][1].headers.get('X-Captcha-Token')).toBe('captcha-response');
+    expect(fetch.mock.calls[0][1].headers.get('X-Captcha-Token')).toBeNull();
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBeNull();
     expect(fetch.mock.calls[0][1].body).toBe(JSON.stringify({ email: 'user@example.com' }));
     expect(fetch.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
@@ -85,7 +85,7 @@ describe('apiFetch', () => {
     const body = new FormData();
     body.append('archivo', new Blob(['image']));
 
-    await apiFetch('/api/panel/obras/1/fotos', { method: 'POST', body });
+    await apiFetch('/api/panel/obras', { method: 'POST', body });
 
     expect(fetch.mock.calls[0][1].headers.has('Content-Type')).toBe(false);
   });
@@ -95,9 +95,26 @@ describe('apiFetch', () => {
       options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
     }));
 
-    await expect(apiFetch('/api/proyectos', { timeoutMs: 1 })).rejects.toMatchObject({
+    await expect(apiFetch('/api/institucional', { timeoutMs: 1 })).rejects.toMatchObject({
       name: 'TimeoutError',
     });
+  });
+
+  it('keeps the timeout active while reading the response body', async () => {
+    fetch.mockImplementationOnce(async (_url, options) => ({
+      ...response(200, []),
+      text: () => new Promise((_resolve, reject) => {
+        options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+      }),
+    }));
+    await expect(apiFetch('/api/institucional', { timeoutMs: 1 })).rejects.toMatchObject({ name: 'TimeoutError' });
+  });
+
+  it('preserves an explicitly refreshed Firebase token', async () => {
+    fetch.mockResolvedValueOnce(response(202, null));
+    await apiFetch('/api/auth/email-verification', { headers: { Authorization: 'Bearer refreshed' } });
+    expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBe('Bearer refreshed');
+    expect(getIdToken).not.toHaveBeenCalled();
   });
 
   it('exposes 429 status and Retry-After to callers', async () => {
@@ -106,6 +123,20 @@ describe('apiFetch', () => {
     await expect(apiFetch('/api/contacto')).rejects.toMatchObject({
       status: 429,
       retryAfter: 30,
+    });
+  });
+
+  it('preserves the JSON response body for field-level validation errors', async () => {
+    const body = {
+      code: 'VALIDATION_ERROR',
+      message: 'Solicitud inválida',
+      camposInvalidos: [{ campo: 'telefono', motivo: 'formato inválido' }],
+    };
+    fetch.mockResolvedValueOnce(response(400, body));
+
+    await expect(apiFetch('/api/contacto')).rejects.toMatchObject({
+      status: 400,
+      responseBody: body,
     });
   });
 
