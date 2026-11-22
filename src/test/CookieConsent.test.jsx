@@ -190,7 +190,7 @@ describe('cookie policy page', () => {
     expect(screen.getByText('9 de noviembre de 2026')).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Duración' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'proyectos@gng.co' }))
-      .toHaveAttribute('href', 'mailto:proyectos@gng.co');
+    expect(screen.getByRole('link', { name: 'gygconstrucciones@gmail.com' }))
+      .toHaveAttribute('href', 'mailto:gygconstrucciones@gmail.com');
   });
 });

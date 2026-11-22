@@ -2,13 +2,13 @@
 
 ## 1. Responsable del tratamiento
 
-G&G CONSTRUCCIONES SST S.A.S., con domicilio principal en Medellin, Colombia, es responsable del tratamiento de los datos personales descritos en esta política.
+G&G CONSTRUCCIONES SST S.A.S., con domicilio principal en Medellín, Colombia, es responsable del tratamiento de los datos personales descritos en esta política.
 
 | Dato | Información |
 |---|---|
 | Razón social | G&G CONSTRUCCIONES SST S.A.S. |
-| Domicilio | Medellin, Colombia |
-| Correo para consultas y reclamos | [proyectos@gng.co](mailto:proyectos@gng.co) |
+| Domicilio | Medellín, Colombia |
+| Correo para consultas y reclamos | [gygconstrucciones@gmail.com](mailto:gygconstrucciones@gmail.com) |
 
 ## 2. Marco normativo
 
@@ -80,7 +80,7 @@ G&G se compromete, entre otros deberes del artículo 17 de la Ley 1581 de 2012, 
 
 ## 9. Procedimiento para consultas y reclamos
 
-**Cómo presentarlos.** El titular, sus causahabientes o su representante pueden escribir a [proyectos@gng.co](mailto:proyectos@gng.co), indicando su nombre e identificación, el motivo de la solicitud, los datos de contacto para recibir respuesta y los documentos que considere pertinentes. G&G podrá solicitar información adicional para verificar la identidad y la legitimación de quien presenta la solicitud.
+**Cómo presentarlos.** El titular, sus causahabientes o su representante pueden escribir a [gygconstrucciones@gmail.com](mailto:gygconstrucciones@gmail.com), indicando su nombre e identificación, el motivo de la solicitud, los datos de contacto para recibir respuesta y los documentos que considere pertinentes. G&G podrá solicitar información adicional para verificar la identidad y la legitimación de quien presenta la solicitud.
 
 **Consultas.** Se atienden en un máximo de diez (10) días hábiles contados desde la fecha de recibo. Si no es posible hacerlo en ese plazo, se informará al interesado los motivos de la demora y la fecha de respuesta, que no podrá superar cinco (5) días hábiles adicionales al vencimiento del primer plazo.
 

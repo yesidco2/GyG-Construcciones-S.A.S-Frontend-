@@ -11,4 +11,4 @@ export const EFFECTIVE_DATE_LABEL = /^\d{4}-\d{2}-\d{2}$/.test(EFFECTIVE_DATE)
     timeZone: 'UTC',
   }).format(new Date(`${EFFECTIVE_DATE}T00:00:00Z`))
   : EFFECTIVE_DATE;
-export const CONTACT_EMAIL = 'proyectos@gng.co';
+export const CONTACT_EMAIL = 'gygconstrucciones@gmail.com';
