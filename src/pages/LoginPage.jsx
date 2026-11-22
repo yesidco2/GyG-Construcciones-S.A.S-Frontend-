@@ -286,7 +286,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background px-4 pb-16 pt-20 selection:bg-industrial-orange selection:text-white sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="mx-auto w-full max-w-container-max">
         {authenticatedContent || (
           <div className="grid min-h-[640px] grid-cols-1 overflow-hidden rounded-3xl border border-surface-variant/80 bg-white shadow-xl lg:grid-cols-12">
             <section className="relative hidden flex-col justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-container to-[#00142e] p-8 text-white lg:col-span-5 lg:flex lg:p-10">
