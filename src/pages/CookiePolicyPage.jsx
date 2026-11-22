@@ -13,8 +13,8 @@ const inventoryRows = [
 
 export default function CookiePolicyPage() {
   return (
-    <main className="min-h-screen bg-surface px-md py-xl pt-24">
-      <article className="mx-auto max-w-4xl rounded-2xl border border-surface-variant bg-white p-6 shadow-sm md:p-10">
+    <main className="min-h-screen bg-surface px-4 py-xl pt-24 sm:px-6 lg:px-8">
+      <article className="mx-auto max-w-7xl rounded-2xl border border-surface-variant bg-white p-6 shadow-sm md:p-10">
         <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
           Privacidad y almacenamiento
         </p>
@@ -44,7 +44,7 @@ export default function CookiePolicyPage() {
               Este inventario describe el almacenamiento propio identificado en el sitio y los servicios externos que pueden intervenir. Actualmente no hay herramientas de analítica ni publicidad configuradas. La información que un proveedor externo almacene puede variar según la configuración y el navegador.
             </p>
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[900px] border-collapse text-left text-sm">
                 <thead className="bg-surface-container-low text-primary">
                   <tr>
                     {inventoryRows[0]?.map((header) => (

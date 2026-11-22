@@ -39,9 +39,9 @@ export default function PrivacyPolicyPage() {
       <main
         id="policy-content"
         tabIndex="-1"
-        className="min-h-screen bg-surface px-md py-xl pt-24 focus:outline-none"
+        className="min-h-screen bg-surface px-4 py-xl pt-24 focus:outline-none sm:px-6 lg:px-8"
       >
-        <article className="mx-auto max-w-[75ch] rounded-2xl border border-surface-variant bg-white p-6 shadow-sm print:max-w-none print:border-0 print:p-0 print:shadow-none md:p-10">
+        <article className="mx-auto max-w-6xl rounded-2xl border border-surface-variant bg-white p-6 shadow-sm print:max-w-none print:border-0 print:p-0 print:shadow-none md:p-10">
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
             Protección de datos personales
           </p>
