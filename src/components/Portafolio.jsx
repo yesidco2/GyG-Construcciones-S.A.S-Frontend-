@@ -193,30 +193,31 @@ export default function Portfolio() {
 
   return (
     <section className="bg-surface py-xl" id="portfolio">
-      <div className="mx-auto max-w-container-max px-md">
-        <div className="mb-xl text-center">
-          <h2 className="mb-xs font-headline-lg text-headline-lg text-primary">Proyectos Emblemáticos</h2>
-          <p className="mx-auto max-w-2xl font-body-md text-body-md text-secondary">
-            Nuestra trayectoria se mide en estructuras firmes y vidas protegidas.
-          </p>
-        </div>
-
-        <div className="mb-md flex flex-wrap justify-center gap-sm">
-          {filters.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => setFilter(item)}
-              aria-pressed={filter.label === item.label}
-              className={`rounded-full px-md py-xs font-label-caps text-label-caps transition-colors ${
-                filter.label === item.label
-                  ? 'bg-primary text-on-primary'
-                  : 'border border-surface-variant bg-white text-secondary hover:border-primary'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+      <div className="mx-auto max-w-container-max px-4 sm:px-6 lg:px-8 2xl:px-12">
+        <div className="mb-xl flex flex-col gap-md border-b border-surface-variant pb-lg md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="mb-xs font-headline-lg text-headline-lg text-primary">Proyectos Emblemáticos</h2>
+            <p className="max-w-2xl font-body-md text-body-md text-secondary">
+              Nuestra trayectoria se mide en estructuras firmes y vidas protegidas.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-start gap-sm md:justify-end">
+            {filters.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => setFilter(item)}
+                aria-pressed={filter.label === item.label}
+                className={`rounded-full px-md py-xs font-label-caps text-label-caps transition-colors ${
+                  filter.label === item.label
+                    ? 'bg-primary text-on-primary'
+                    : 'border border-surface-variant bg-white text-secondary hover:border-primary'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="relative">

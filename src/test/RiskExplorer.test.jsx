@@ -7,7 +7,7 @@ describe('RiskExplorer local catalog', () => {
     render(<RiskExplorer />);
 
     const activityList = document.querySelector('.risk-activity-list');
-    expect(activityList).toHaveClass('lg:max-h-[320px]', 'lg:overflow-y-auto');
+    expect(activityList).toHaveClass('lg:max-h-[60vh]', 'lg:overflow-y-auto');
     expect(activityList.querySelectorAll('.risk-activity-option')).toHaveLength(15);
     expect(screen.getByRole('button', { name: 'Trabajo en Alturas' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Demolición' })).toBeInTheDocument();

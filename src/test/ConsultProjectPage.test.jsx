@@ -15,6 +15,15 @@ describe('ConsultProjectPage API states', () => {
     apiFetch.mockReset();
   });
 
+  it('shows the project tracking overview before a code is submitted', () => {
+    render(<ConsultProjectPage />);
+
+    expect(screen.getByText('Tu proyecto, en un solo lugar')).toBeInTheDocument();
+    expect(screen.getByText('Avance del proyecto')).toBeInTheDocument();
+    expect(screen.getByText('Hitos de la obra')).toBeInTheDocument();
+    expect(screen.getByText('Fotografías disponibles')).toBeInTheDocument();
+  });
+
   it('rejects invalid codes before making a request', async () => {
     const user = userEvent.setup();
     render(<ConsultProjectPage />);

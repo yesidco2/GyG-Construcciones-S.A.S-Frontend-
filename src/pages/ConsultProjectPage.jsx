@@ -135,10 +135,10 @@ export default function ConsultProjectPage() {
   };
 
   return (
-    <section className="min-h-screen bg-[#eef2ff] px-md py-xl pt-24">
-      <div className="mx-auto max-w-5xl rounded-[2rem] bg-white shadow-xl border border-surface-variant p-6 md:p-14">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-start">
-          <div className="space-y-6">
+    <section className="min-h-screen bg-[#eef2ff] px-4 py-xl pt-24 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-container-max rounded-[2rem] border border-surface-variant bg-white p-6 shadow-xl sm:p-8 lg:p-12">
+        <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] xl:gap-12">
+          <div className="min-w-0 space-y-6">
             <div className="space-y-4">
               <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">Seguimiento</p>
               <h1 className="font-headline-xl text-headline-xl text-primary">Consulta el avance de tu proyecto</h1>
@@ -182,7 +182,7 @@ export default function ConsultProjectPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-surface-variant bg-surface p-5 shadow-sm">
+          <div className="min-w-0 rounded-2xl border border-surface-variant bg-surface p-5 shadow-sm">
             {trackingResult ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
@@ -210,10 +210,45 @@ export default function ConsultProjectPage() {
                   </div>
                 </div>
               </div>
+            ) : !searched && !isLoading ? (
+              <div className="flex min-h-[320px] flex-col justify-between rounded-xl bg-primary p-6 text-white sm:p-8">
+                <div>
+                  <div className="mb-lg flex h-14 w-14 items-center justify-center rounded-2xl bg-industrial-orange text-white">
+                    <span className="material-symbols-outlined text-3xl" aria-hidden="true">monitoring</span>
+                  </div>
+                  <p className="mb-xs font-label-caps text-label-caps uppercase tracking-widest text-industrial-orange">
+                    Seguimiento de obra
+                  </p>
+                  <h2 className="font-headline-md text-headline-md text-white">
+                    Tu proyecto, en un solo lugar
+                  </h2>
+                  <p className="mt-sm font-body-sm text-body-sm text-white/70">
+                    Consulta con tu código de acceso la información disponible de tu obra.
+                  </p>
+                </div>
+                <ul className="mt-lg grid gap-sm border-t border-white/15 pt-md font-body-sm text-body-sm text-white/85">
+                  <li className="flex items-center gap-sm">
+                    <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">trending_up</span>
+                    Avance del proyecto
+                  </li>
+                  <li className="flex items-center gap-sm">
+                    <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">checklist</span>
+                    Hitos de la obra
+                  </li>
+                  <li className="flex items-center gap-sm">
+                    <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">photo_library</span>
+                    Fotografías disponibles
+                  </li>
+                </ul>
+              </div>
             ) : (
               <div className="flex min-h-[280px] items-center justify-center rounded-xl border border-dashed border-surface-variant bg-white p-6 text-center text-secondary">
-                <p>
-                  {isLoading
+                <div className="max-w-sm">
+                  <span className="material-symbols-outlined mb-sm text-4xl text-industrial-orange" aria-hidden="true">
+                    {isLoading ? 'progress_activity' : 'search_off'}
+                  </span>
+                  <p>
+                    {isLoading
                     ? 'Consultando el proyecto...'
                     : error === 'not-found'
                       ? 'Código de acceso inválido. Verifica el código e inténtalo de nuevo.'
@@ -225,8 +260,9 @@ export default function ConsultProjectPage() {
                             ? 'Error de red o del servidor. Usa el botón Reintentar para volver a consultar.'
                         : error === 'empty'
                           ? 'Ingresa un código para iniciar la consulta.'
-                          : 'Sin resultados para este código.'}
-                </p>
+                            : 'Sin resultados para este código.'}
+                  </p>
+                </div>
               </div>
             )}
           </div>

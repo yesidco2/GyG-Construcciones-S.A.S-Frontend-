@@ -198,24 +198,28 @@ export default function RiskExplorer() {
         : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3';
 
   return (
-    <div id="risk-explorer" className="mx-auto max-w-6xl px-md py-xl">
-      <div className="mb-lg text-center">
-        <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
-          Gestión de riesgos
-        </p>
-        <h2 className="mt-sm font-headline-xl text-headline-xl text-primary">Explorador interactivo de peligros en obra</h2>
-        <p className="mx-auto mt-sm max-w-3xl font-body-md text-body-md text-secondary">
-          Consulta los peligros por labor y pulsa cada EPP para ver una recomendación breve.
-        </p>
-        <p className="mx-auto mt-xs max-w-3xl text-xs text-secondary">
-          Contenido orientativo: no reemplaza la identificación de peligros, evaluación de riesgos ni los procedimientos aprobados para cada obra.
-        </p>
+    <div id="risk-explorer" className="mx-auto max-w-container-max px-4 py-xl sm:px-6 lg:px-8 2xl:px-12">
+      <div className="mb-lg grid gap-md lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)] lg:items-end">
+        <div>
+          <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
+            Gestión de riesgos
+          </p>
+          <h2 className="mt-sm font-headline-xl text-headline-xl text-primary">Explorador interactivo de peligros en obra</h2>
+        </div>
+        <div>
+          <p className="font-body-md text-body-md text-secondary">
+            Consulta los peligros por labor y pulsa cada EPP para ver una recomendación breve.
+          </p>
+          <p className="mt-xs text-xs text-secondary">
+            Contenido orientativo: no reemplaza la identificación de peligros, evaluación de riesgos ni los procedimientos aprobados para cada obra.
+          </p>
+        </div>
       </div>
 
-      <div className="grid items-start gap-lg lg:grid-cols-12">
-        <aside className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:col-span-4">
+      <div className="grid items-start gap-lg lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,2fr)]">
+        <aside className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:sticky lg:top-20">
           <h2 className="mb-md font-headline-sm text-headline-sm text-primary">Selecciona una labor</h2>
-          <div className="risk-activity-list space-y-sm lg:max-h-[320px] lg:overflow-y-auto lg:pr-1">
+          <div className="risk-activity-list space-y-sm lg:max-h-[60vh] lg:overflow-y-auto lg:pr-1">
             {activities.map((activity) => {
               const isActive = activity === selectedActivity;
 
@@ -243,7 +247,7 @@ export default function RiskExplorer() {
 
         <div
           key={selectedActivity}
-          className="risk-results rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm lg:col-span-8"
+          className="risk-results rounded-2xl border border-surface-variant bg-surface-container-lowest p-md shadow-sm"
         >
           <div className="mb-md flex items-start justify-between gap-md border-b border-surface-variant pb-md">
             <div>

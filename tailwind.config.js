@@ -68,7 +68,7 @@ export default {
         gutter: '24px',
         base: '4px',
         xl: '80px',
-        'container-max': '1280px',
+        'container-max': '1600px',
       },
       fontFamily: {
         'label-caps': ['Inter', 'sans-serif'],

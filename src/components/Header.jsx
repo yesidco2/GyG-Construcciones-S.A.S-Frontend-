@@ -120,7 +120,7 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 w-full z-50 bg-primary shadow-md shadow-primary/10 select-none">
-      <div className="flex items-center justify-between px-md h-16 max-w-container-max mx-auto text-on-primary">
+      <div className="mx-auto flex h-16 max-w-container-max items-center justify-between px-4 text-on-primary sm:px-6 lg:px-8 2xl:px-12">
         
         {/* COLUMNA IZQUIERDA: LOGO (Ancho proporcional para balancear el centro) */}
         <div className="flex items-center gap-xs shrink-0 min-w-[180px]">
@@ -133,7 +133,7 @@ export default function Header() {
         </div>
 
         {/* COLUMNA CENTRAL: NAVEGACIÓN TOTALMENTE CENTRADA */}
-        <div className="hidden md:flex items-center justify-center gap-6 lg:gap-8 flex-1">
+        <div className="hidden flex-1 items-center justify-center gap-6 lg:gap-8 xl:flex">
           
           {/* 1. BOTÓN INICIO (Con Mega Menú desplegable estilo MongoDB) */}
           <div className="relative" ref={dropdownRef}>
@@ -274,7 +274,7 @@ export default function Header() {
         </div>
 
         {/* COLUMNA DERECHA: BOTÓN DE ACCIÓN (Equilibra perfectamente el ancho del Logo) */}
-        <div className="hidden md:flex items-center justify-end shrink-0 min-w-[180px]">
+        <div className="hidden min-w-[180px] shrink-0 items-center justify-end xl:flex">
           {/* 5. SOLICITAR COTIZACIÓN */}
           <a
             className="bg-industrial-orange text-white px-md py-xs rounded-lg hover:scale-95 transition-transform font-label-caps text-label-caps"
@@ -289,7 +289,7 @@ export default function Header() {
           aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
           aria-expanded={menuOpen}
           aria-controls="mobile-menu"
-          className="md:hidden p-xs active:scale-95 transition-transform"
+          className="p-xs transition-transform active:scale-95 xl:hidden"
           type="button"
           onClick={() => setMenuOpen((value) => !value)}
         >
@@ -299,7 +299,7 @@ export default function Header() {
 
       {/* MENÚ MÓVIL DESPLEGABLE */}
       {menuOpen && (
-        <nav id="mobile-menu" aria-label="Menú móvil" className="md:hidden border-t border-white/10 bg-primary animate-in fade-in duration-150">
+        <nav id="mobile-menu" aria-label="Menú móvil" className="border-t border-white/10 bg-primary animate-in fade-in duration-150 xl:hidden">
           <div className="px-md py-sm space-y-sm">
             
             {/* 1. INICIO CON ACORDEÓN DESPLEGABLE EN MÓVIL */}

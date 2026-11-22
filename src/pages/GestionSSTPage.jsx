@@ -177,11 +177,11 @@ export default function GestionSSTPage() {
             </p>
           </div>
 
-          <div className="mx-auto max-w-3xl space-y-xs">
+          <div className="grid gap-md md:grid-cols-3">
             {hierarchy.map((item) => (
-              <div
+              <article
                 key={item.number}
-                className="overflow-hidden rounded border border-surface-variant bg-surface-container-lowest shadow-sm"
+                className="bento-card h-full overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest shadow-sm"
               >
                 <div
                   className={`flex cursor-pointer items-center justify-between px-md py-sm ${
@@ -199,7 +199,7 @@ export default function GestionSSTPage() {
                 <div className="border-t border-surface-variant bg-surface-container-lowest px-md py-sm">
                   <p className="font-body-sm text-body-sm text-on-surface-variant">{item.description}</p>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
