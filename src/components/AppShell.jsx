@@ -7,6 +7,23 @@ import About from './About';
 import Contact from './Contact';
 import FloatingIA from './FloatingIA';
 import FloatingWhatsapp from './FloatingWhatsApp';
+import FaqSection from './FaqSection';
+import ServicePromotion from './ServicePromotion';
+
+const homeFaqs = [
+  {
+    question: '¿Qué servicios ofrece G&G?',
+    answer: 'Ofrecemos servicios de ingeniería y construcción, consultoría técnica y acompañamiento en Seguridad y Salud en el Trabajo. El alcance se define según las necesidades de cada proyecto.',
+  },
+  {
+    question: '¿Cómo solicito una cotización?',
+    answer: 'Escríbenos desde el formulario de contacto e indica el tipo de proyecto o servicio que necesitas. El equipo podrá revisar la información y orientarte sobre los siguientes pasos.',
+  },
+  {
+    question: '¿Puedo consultar el avance de una obra?',
+    answer: 'Sí. Si ya tienes un proyecto con nosotros, utiliza la opción «Consultar Proyecto» y los datos de acceso que te fueron proporcionados.',
+  },
+];
 
 export default function AppShell() {
   return (
@@ -14,10 +31,12 @@ export default function AppShell() {
       <main>
         <Hero />
         <TrustBar />
+        <ServicePromotion />
         <Services />
         <Commitment />
         <Portfolio />
         <About />
+        <FaqSection id="preguntas-frecuentes" title="Preguntas frecuentes" items={homeFaqs} />
         <Contact />
       </main>
       <FloatingIA />

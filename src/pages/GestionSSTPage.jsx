@@ -1,4 +1,6 @@
 import RiskExplorer from '../components/RiskExplorer';
+import FaqSection from '../components/FaqSection';
+import ServicePromotion from '../components/ServicePromotion';
 
 export default function GestionSSTPage() {
   const overviewCards = [
@@ -15,7 +17,7 @@ export default function GestionSSTPage() {
     {
       icon: 'gavel',
       title: 'Cumplimiento Legal',
-      description: 'Garantizamos adhesión estricta a normativas vigentes.',
+      description: 'Acompañamos la gestión conforme a los requisitos aplicables.',
     },
     {
       icon: 'trending_up',
@@ -57,6 +59,37 @@ export default function GestionSSTPage() {
       title: 'Controles de Ingeniería',
       description: 'Usar barreras físicas y soluciones técnicas para aislar o reducir el riesgo.',
       active: false,
+    },
+    {
+      number: '4',
+      title: 'Controles administrativos',
+      description: 'Definir procedimientos, permisos, capacitación, señalización y organización del trabajo para reducir la exposición.',
+      active: false,
+    },
+    {
+      number: '5',
+      title: 'Elementos de protección personal',
+      description: 'Seleccionar, entregar y mantener EPP adecuado al riesgo residual; es la última barrera y no sustituye los controles anteriores.',
+      active: false,
+    },
+  ];
+
+  const sstFaqs = [
+    {
+      question: '¿Qué es el SG-SST?',
+      answer: 'Es el proceso organizado, por etapas y de mejora continua mediante el cual se anticipan, reconocen, evalúan y controlan los riesgos que pueden afectar la seguridad y salud en el trabajo.',
+    },
+    {
+      question: '¿Qué normas colombianas sirven de referencia?',
+      answer: 'Entre las referencias generales están la Ley 1562 de 2012, el Decreto 1072 de 2015 (Libro 2, Parte 2, Título 4, Capítulo 6) y la Resolución 0312 de 2019 sobre estándares mínimos. La aplicación concreta depende de la actividad, el tamaño y la clase de riesgo de cada empleador.',
+    },
+    {
+      question: '¿Los elementos de protección personal son suficientes para controlar un riesgo?',
+      answer: 'No por sí solos. La jerarquía prioriza eliminar el peligro, sustituirlo y aplicar controles de ingeniería y administrativos; el EPP protege frente al riesgo residual y debe elegirse a partir de la evaluación del trabajo.',
+    },
+    {
+      question: '¿El contenido de esta página reemplaza la evaluación de mi obra?',
+      answer: 'No. La información es orientativa. Cada empleador debe identificar los peligros y evaluar los riesgos de sus actividades y lugares de trabajo, con apoyo de personal competente y de acuerdo con los requisitos aplicables.',
     },
   ];
 
@@ -126,6 +159,41 @@ export default function GestionSSTPage() {
       </section>
 
       <RiskExplorer />
+
+      <section id="marco-legal-sst" className="bg-surface-container-low py-xl">
+        <div className="mx-auto max-w-4xl px-margin-mobile md:px-md">
+          <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
+            Referencias oficiales de Colombia
+          </p>
+          <h2 className="mt-xs font-headline-lg text-headline-lg text-primary">Marco normativo del SG-SST</h2>
+          <p className="mt-sm text-secondary">
+            Estas normas ofrecen un marco general de consulta; la obligación específica debe verificarse según cada organización y actividad económica.
+          </p>
+          <ul className="mt-md space-y-sm">
+            <li className="rounded-xl border border-surface-variant bg-white p-md">
+              <a className="font-semibold text-on-primary-fixed-variant underline" href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=48365" target="_blank" rel="noreferrer">
+                Ley 1562 de 2012
+              </a>
+              <span className="text-secondary"> — modifica el Sistema de Riesgos Laborales y disposiciones de salud ocupacional.</span>
+            </li>
+            <li className="rounded-xl border border-surface-variant bg-white p-md">
+              <a className="font-semibold text-on-primary-fixed-variant underline" href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=72173" target="_blank" rel="noreferrer">
+                Decreto 1072 de 2015, capítulo 6 del título 4
+              </a>
+              <span className="text-secondary"> — compila las disposiciones reglamentarias del sector Trabajo relacionadas con el SG-SST.</span>
+            </li>
+            <li className="rounded-xl border border-surface-variant bg-white p-md">
+              <a className="font-semibold text-on-primary-fixed-variant underline" href="https://www.mintrabajo.gov.co/documents/20147/59995826/Resolucion+0312-2019-+Estandares+minimos+del+Sistema+de+la+Seguridad+y+Salud.pdf" target="_blank" rel="noreferrer">
+                Resolución 0312 de 2019
+              </a>
+              <span className="text-secondary"> — establece estándares mínimos del SG-SST según las condiciones previstas en la norma.</span>
+            </li>
+          </ul>
+          <p className="mt-md text-xs text-secondary">
+            Consulta las versiones y modificaciones vigentes en las fuentes oficiales antes de adoptar decisiones de cumplimiento.
+          </p>
+        </div>
+      </section>
 
       <section id="servicios-sst" className="bg-surface-container-low py-xl">
         <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
@@ -204,6 +272,8 @@ export default function GestionSSTPage() {
           </div>
         </div>
       </section>
+      <ServicePromotion compact />
+      <FaqSection id="faq-sst" eyebrow="Seguridad y salud en el trabajo" title="Preguntas frecuentes sobre SST" items={sstFaqs} />
     </div>
   );
 }

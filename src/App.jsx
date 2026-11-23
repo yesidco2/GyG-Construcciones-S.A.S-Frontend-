@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AppShell from './components/AppShell';
@@ -11,6 +11,13 @@ import CookieConsentManager from './components/CookieConsentManager';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import getAppRouteKey from './utils/appRoute';
+import PolicyDialog from './components/PolicyDialog';
+
+const policyRoutes = ['politica-cookies', 'politica-datos', 'policy-content'];
+
+function isPolicyRoute(routeKey) {
+  return policyRoutes.includes(routeKey) || /^section-[0-9]+$/.test(routeKey);
+}
 
 function renderPage(routeKey) {
   switch (routeKey) {
@@ -19,7 +26,9 @@ function renderPage(routeKey) {
     case 'vision-prevencion':
     case 'servicios-sst':
     case 'jerarquia-controles':
+    case 'marco-legal-sst':
     case 'contacto-sst':
+    case 'faq-sst':
       return <GestionSSTPage />;
     case 'consultar-proyecto':
       return <ConsultProjectPage />;
@@ -52,6 +61,7 @@ function Layout({ children, showFooter = true }) {
 
 export default function App() {
   const [routeKey, setRouteKey] = useState(getAppRouteKey);
+  const previousRouteRef = useRef('');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -63,6 +73,10 @@ export default function App() {
       window.removeEventListener('popstate', onHashChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isPolicyRoute(routeKey)) previousRouteRef.current = routeKey || 'hero';
+  }, [routeKey]);
 
   useEffect(() => {
     const sections = document.querySelectorAll('main section');
@@ -107,10 +121,20 @@ export default function App() {
   }, [routeKey]);
 
   const showFooter = !['consultar-proyecto', 'login'].includes(routeKey);
+  const closePolicy = () => {
+    window.location.hash = previousRouteRef.current || 'hero';
+  };
+  const policyTitle = routeKey === 'politica-cookies'
+    ? 'Política de cookies'
+    : 'Política de tratamiento de datos personales';
 
   return (
     <Layout showFooter={showFooter}>
-      {renderPage(routeKey)}
+      {isPolicyRoute(routeKey) ? (
+        <PolicyDialog title={policyTitle} onClose={closePolicy}>
+          {renderPage(routeKey)}
+        </PolicyDialog>
+      ) : renderPage(routeKey)}
     </Layout>
   );
 }
