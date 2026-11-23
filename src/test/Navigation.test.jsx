@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import useAuth from '../utils/useAuth';
@@ -44,5 +44,30 @@ describe('navegación por fragmentos', () => {
     render(<App />);
     expect(screen.getByRole('heading', { name: 'Acceso restringido' })).toBeInTheDocument();
     expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it('muestra la política en un diálogo y lo cierra al volver a la página anterior', async () => {
+    window.history.replaceState(null, '', '/#politica-datos');
+    render(<App />);
+
+    expect(await screen.findByRole('dialog', { name: 'Política de tratamiento de datos personales' }))
+      .toHaveAttribute('aria-modal', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(window.location.hash).toBe('#hero');
+  });
+
+  it('muestra preguntas frecuentes y marco normativo en Gestión SST', async () => {
+    window.history.replaceState(null, '', '/#faq-sst');
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: 'Preguntas frecuentes sobre SST' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ley 1562 de 2012' })).toHaveAttribute(
+      'href',
+      'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=48365',
+    );
+    fireEvent.click(screen.getByRole('button', { name: '¿Qué es el SG-SST?' }));
+    expect(screen.getByText(/proceso organizado, por etapas y de mejora continua/)).toBeVisible();
   });
 });

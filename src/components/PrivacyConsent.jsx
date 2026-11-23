@@ -26,8 +26,6 @@ export default function PrivacyConsent({ id, label, required, checked, onChange,
         Consulta la{' '}
         <a
           href={POLICY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
           className="font-semibold text-industrial-orange underline"
         >
           Política de Tratamiento de Datos Personales

@@ -2,12 +2,11 @@
 
 ## 1. Responsable del tratamiento
 
-G&G CONSTRUCCIONES SST S.A.S., con domicilio principal en Medellin, Colombia, es responsable del tratamiento de los datos personales descritos en esta política.
+G&G CONSTRUCCIONES SST S.A.S. es responsable del tratamiento de los datos personales descritos en esta política.
 
 | Dato | Información |
 |---|---|
 | Razón social | G&G CONSTRUCCIONES SST S.A.S. |
-| Domicilio | Medellin, Colombia |
 | Correo para consultas y reclamos | [proyectos@gng.co](mailto:proyectos@gng.co) |
 
 ## 2. Marco normativo
@@ -16,10 +15,10 @@ Esta política se expide en cumplimiento de:
 
 - Constitución Política de Colombia, artículo 15 (derecho a conocer, actualizar y rectificar la información recogida en bases de datos) y artículo 20 (derecho a la información).
 - Ley Estatutaria 1581 de 2012, por la cual se dictan disposiciones generales para la protección de datos personales.
-- Decreto 1377 de 2013, compilado en el Decreto Único Reglamentario 1074 de 2015 (Sector Comercio, Industria y Turismo), que reglamenta la autorización, las políticas de tratamiento y el aviso de privacidad.
+- Decreto 1377 de 2013, cuyas disposiciones fueron compiladas en el Decreto Único Reglamentario 1074 de 2015 (Sector Comercio, Industria y Turismo), que reglamenta la autorización, las políticas de tratamiento y el aviso de privacidad.
 - Circular Única de la Superintendencia de Industria y Comercio (SIC) y demás normas que modifiquen o complementen las anteriores.
 
-La autoridad de protección de datos en Colombia es la Superintendencia de Industria y Comercio (SIC), a través de su Delegatura para la Protección de Datos Personales (www.sic.gov.co).
+Consulta los textos oficiales de la [Ley 1581 de 2012](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981) y el [Decreto 1074 de 2015](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=76608). La autoridad de protección de datos en Colombia es la Superintendencia de Industria y Comercio (SIC), a través de su Delegatura para la Protección de Datos Personales ([sic.gov.co](https://www.sic.gov.co/tema/proteccion-de-datos-personales)).
 
 ## 3. Definiciones
 

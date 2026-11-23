@@ -9,6 +9,7 @@ const homeSections = [
   { id: 'compromiso', label: 'Compromiso SST', icon: 'health_and_safety', description: 'Nuestro enfoque de prevención y seguridad en obra.' },
   { id: 'portfolio', label: 'Proyectos', icon: 'apartment', description: 'Obras civiles, infraestructura y casos de éxito.' },
   { id: 'nosotros', label: 'Nosotros', icon: 'groups', description: 'Nuestra misión, visión, valores y políticas.' },
+  { id: 'preguntas-frecuentes', label: 'Preguntas frecuentes', icon: 'quiz', description: 'Respuestas sobre servicios y proyectos.' },
   { id: 'contacto', label: 'Contacto', icon: 'contact_support', description: 'Canales de atención y solicitudes.' },
 ];
 
@@ -18,6 +19,8 @@ const sstSections = [
   { id: 'risk-explorer', label: 'Explorador de riesgos', icon: 'warning', description: 'Consulta riesgos y EPP asociados a cada labor.' },
   { id: 'servicios-sst', label: 'Servicios especializados', icon: 'engineering', description: 'Soluciones especializadas para la seguridad de tus proyectos.' },
   { id: 'jerarquia-controles', label: 'Jerarquía de controles', icon: 'account_tree', description: 'Metodología para mitigar riesgos en obra.' },
+  { id: 'marco-legal-sst', label: 'Marco normativo colombiano', icon: 'gavel', description: 'Normas de referencia para el SG-SST.' },
+  { id: 'faq-sst', label: 'Preguntas frecuentes SST', icon: 'quiz', description: 'Dudas frecuentes sobre seguridad y salud laboral.' },
 ];
 
 export default function Header() {
