@@ -43,6 +43,8 @@ function renderPage(routeKey) {
       return <PrivacyPolicyPage />;
     case 'verify-email':
       return <VerifyEmailPage />;
+    case 'reset-password':
+      return <VerifyEmailPage recovery />;
     default:
       return /^section-[0-9]+$/.test(routeKey) ? <PrivacyPolicyPage /> : <AppShell />;
   }

@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchProfile, subscribeAuth } from '../services/authService';
-import { isFirebaseConfigured } from '../services/firebase';
+import { isAuthConfigured } from '../services/supabase';
 
 export default function useAuth() {
   const requestIdRef = useRef(0);
   const [state, setState] = useState({
     loading: true,
-    firebaseUser: null,
+    authUser: null,
     profile: null,
     error: '',
   });
 
-  const refreshProfile = useCallback(async (firebaseUser) => {
-    if (!firebaseUser) {
+  const refreshProfile = useCallback(async (authUser) => {
+    if (!authUser) {
       throw new Error('No hay una sesión autenticada para consultar el perfil.');
     }
 
@@ -20,21 +20,21 @@ export default function useAuth() {
     setState((previous) => ({
       ...previous,
       loading: true,
-      firebaseUser,
+      authUser,
       error: '',
     }));
 
     try {
-      const profile = await fetchProfile(firebaseUser);
+      const profile = await fetchProfile();
       if (requestIdRef.current === requestId) {
-        setState({ loading: false, firebaseUser, profile, error: '' });
+        setState({ loading: false, authUser, profile, error: '' });
       }
       return profile;
     } catch (error) {
       if (requestIdRef.current === requestId) {
         setState({
           loading: false,
-          firebaseUser,
+          authUser,
           profile: null,
           error: error?.message || 'No se pudo consultar el perfil en el servidor.',
         });
@@ -46,34 +46,34 @@ export default function useAuth() {
   useEffect(() => {
     let active = true;
 
-    const unsubscribe = subscribeAuth(async (firebaseUser) => {
+    const unsubscribe = subscribeAuth(async (authUser) => {
       const currentRequestId = ++requestIdRef.current;
-      if (!firebaseUser) {
+      if (!authUser) {
         if (active) {
           setState({
             loading: false,
-            firebaseUser: null,
+            authUser: null,
             profile: null,
-            error: isFirebaseConfigured ? '' : 'Firebase no está configurado.',
+            error: isAuthConfigured ? '' : 'Supabase Auth no está configurado.',
           });
         }
         return;
       }
 
       if (active) {
-        setState({ loading: true, firebaseUser, profile: null, error: '' });
+        setState({ loading: true, authUser, profile: null, error: '' });
       }
 
       try {
-        const profile = await fetchProfile(firebaseUser);
+        const profile = await fetchProfile();
         if (active && requestIdRef.current === currentRequestId) {
-          setState({ loading: false, firebaseUser, profile, error: '' });
+          setState({ loading: false, authUser, profile, error: '' });
         }
       } catch (error) {
         if (active && requestIdRef.current === currentRequestId) {
           setState({
             loading: false,
-            firebaseUser,
+            authUser,
             profile: null,
             error: error?.message || 'No se pudo consultar el perfil en el servidor.',
           });
