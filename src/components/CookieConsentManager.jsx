@@ -155,20 +155,22 @@ export default function CookieConsentManager() {
       const target = triggerRef.current?.isConnected
         ? triggerRef.current
         : document.querySelector('[data-cookie-preferences-trigger]');
-      target?.focus?.();
+      target?.focus?.({ preventScroll: true });
     });
   }, []);
 
-  const savePreferences = (analytics) => {
+  const savePreferences = (analytics, restoreFocus = false) => {
     save(analytics);
     setPreferencesOpen(false);
     setConfirmation('Tus preferencias de cookies se guardaron.');
-    requestAnimationFrame(() => {
-      const target = triggerRef.current?.isConnected
-        ? triggerRef.current
-        : document.querySelector('[data-cookie-preferences-trigger]');
-      target?.focus?.();
-    });
+    if (restoreFocus) {
+      requestAnimationFrame(() => {
+        const target = triggerRef.current?.isConnected
+          ? triggerRef.current
+          : document.querySelector('[data-cookie-preferences-trigger]');
+        target?.focus?.({ preventScroll: true });
+      });
+    }
   };
 
   return (
@@ -213,7 +215,7 @@ export default function CookieConsentManager() {
         <PreferenceDialog
           categories={categories}
           onClose={closePreferences}
-          onSave={savePreferences}
+          onSave={(analytics) => savePreferences(analytics, true)}
         />
       )}
       <p className="sr-only" role="status" aria-live="polite">{confirmation}</p>

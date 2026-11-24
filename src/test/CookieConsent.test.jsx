@@ -91,6 +91,23 @@ describe('cookie consent decision and gated loading', () => {
     expect(analyticsLoader).toHaveBeenCalledOnce();
   });
 
+  it('keeps focus at the current position when accepting the banner', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Footer />
+        <CookieConsentManager />
+      </>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Aceptar todas' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('region', { name: 'Aviso de cookies' })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: 'Preferencias de cookies' })).not.toHaveFocus();
+  });
+
   it('requests a new decision when the policy version changes or consent is older than twelve months', () => {
     setConsentCookie(makeConsent({ version: '0.9', analytics: true }));
     expect(readCookieConsent()).toBeNull();
