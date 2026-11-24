@@ -272,7 +272,7 @@ export default function LoginPage() {
     <div className={`bg-background px-4 selection:bg-industrial-orange selection:text-white sm:px-6 lg:px-8 ${
       authenticatedContent ? 'min-h-screen pb-16 pt-20' : 'h-screen overflow-hidden pb-4 pt-16'
     }`}>
-      <div className={`mx-auto w-full max-w-container-max ${authenticatedContent ? '' : 'h-full'}`}>
+      <div className={`mx-auto w-full ${authUser && canAccessPanel ? '' : 'max-w-container-max'} ${authenticatedContent ? '' : 'h-full'}`}>
         {authenticatedContent || (
           <div className="grid h-full min-h-0 grid-cols-1 overflow-hidden rounded-3xl border border-surface-variant/80 bg-white shadow-xl lg:grid-cols-12">
             <section className="relative hidden flex-col justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-container to-[#00142e] p-8 text-white lg:col-span-5 lg:flex lg:p-10">
