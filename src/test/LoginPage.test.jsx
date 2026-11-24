@@ -8,7 +8,7 @@ import { friendlyAuthError, loginWithEmail } from '../services/authService';
 vi.mock('../utils/useAuth', () => ({ default: vi.fn() }));
 vi.mock('../services/supabase', () => ({ isAuthConfigured: true }));
 vi.mock('../services/authService', () => ({
-  friendlyAuthError: vi.fn(() => 'No se pudo completar la autenticaciÃ³n.'),
+  friendlyAuthError: vi.fn(() => 'No se pudo completar la autenticación.'),
   loginWithEmail: vi.fn(),
   logout: vi.fn(),
   sendVerificationEmail: vi.fn(),
@@ -65,12 +65,12 @@ describe('LoginPage CAPTCHA flow', () => {
     loginWithEmail.mockResolvedValue({ user: { email: 'admin@example.com' } });
 
     render(<LoginPage />);
-    const submit = screen.getByRole('button', { name: 'Iniciar sesiÃ³n' });
+    const submit = screen.getByRole('button', { name: 'Iniciar sesión' });
     expect(submit).toBeDisabled();
 
     await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
-    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
-    await user.type(screen.getByLabelText('ContraseÃ±a'), 'correct-password');
+    await user.type(screen.getByLabelText('Correo electrónico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('Contraseña'), 'correct-password');
     await user.click(submit);
 
     await waitFor(() => expect(loginWithEmail).toHaveBeenCalledWith(
@@ -88,11 +88,11 @@ describe('LoginPage CAPTCHA flow', () => {
     render(<LoginPage />);
 
     await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
-    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
-    await user.type(screen.getByLabelText('ContraseÃ±a'), 'password');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' }));
+    await user.type(screen.getByLabelText('Correo electrónico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('Contraseña'), 'password');
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
-    expect(await screen.findByText('No se pudo completar la autenticaciÃ³n.')).toBeInTheDocument();
+    expect(await screen.findByText('No se pudo completar la autenticación.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Completar CAPTCHA 1/ })).toBeInTheDocument();
     expect(friendlyAuthError).toHaveBeenCalled();
   });
@@ -102,12 +102,12 @@ describe('LoginPage CAPTCHA flow', () => {
     loginWithEmail.mockRejectedValue(new Error('invalid credentials'));
     render(<LoginPage />);
 
-    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
-    await user.type(screen.getByLabelText('ContraseÃ±a'), 'wrong-password');
+    await user.type(screen.getByLabelText('Correo electrónico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('Contraseña'), 'wrong-password');
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
-      await user.click(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' }));
+      await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
       if (attempt < 2) await waitFor(() => expect(loginWithEmail).toHaveBeenCalledTimes(attempt + 1));
     }
 
