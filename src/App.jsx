@@ -1,3 +1,4 @@
+import './components/portal.css';
 import { useEffect, useRef, useState } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -53,7 +54,7 @@ function renderPage(routeKey) {
 
 function Layout({ children, showFooter = true }) {
   return (
-    <div className="bg-background text-on-background selection:bg-industrial-orange selection:text-white">
+    <div className="portal-layout bg-background text-on-background selection:bg-industrial-orange selection:text-white">
       <Header />
       {children}
       {showFooter && <Footer />}
@@ -82,7 +83,7 @@ export default function App() {
   }, [routeKey]);
 
   useEffect(() => {
-    const sections = document.querySelectorAll('main section');
+    const sections = document.querySelectorAll('.portal-home > main > section:not(.portal-hero), .portal-sst-page > section:not(.portal-hero)');
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
     if (prefersReducedMotion || !('IntersectionObserver' in window)) return undefined;

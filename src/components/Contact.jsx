@@ -241,7 +241,7 @@ export default function Contact({ sectionId = 'contacto' }) {
   return (
     <section className="px-md py-xl" id={sectionId}>
       <div className="mx-auto max-w-container-max">
-        <div className="flex flex-col overflow-hidden rounded-2xl border border-surface-variant bg-white shadow-xl md:flex-row">
+        <div className="portal-contact-card flex flex-col overflow-hidden bg-white md:flex-row">
           <div className="bg-primary p-lg text-white md:w-1/3">
             <h2 className="mb-md font-headline-lg text-headline-lg">Inicie su proyecto con expertos</h2>
             <p className="mb-lg font-body-md text-body-md text-white/70">
@@ -259,14 +259,6 @@ export default function Contact({ sectionId = 'contacto' }) {
               <div className="flex items-center gap-sm">
                 <span className="material-symbols-outlined text-industrial-orange">location_on</span>
                 <span className="font-body-sm text-body-sm">Medellín, Colombia</span>
-              </div>
-            </div>
-            <div className="mt-xl">
-              <span className="font-label-caps text-label-caps uppercase text-industrial-orange">SST Compliance Certified</span>
-              <div className="mt-sm flex gap-xs opacity-50" aria-hidden="true">
-                <div className="h-8 w-8 rounded bg-white" />
-                <div className="h-8 w-8 rounded bg-white" />
-                <div className="h-8 w-8 rounded bg-white" />
               </div>
             </div>
           </div>

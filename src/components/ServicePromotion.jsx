@@ -6,9 +6,6 @@ export default function ServicePromotion({ compact = false }) {
     >
       <div className="flex flex-col items-start justify-between gap-md rounded-2xl bg-primary p-lg text-on-primary shadow-ambient md:flex-row md:items-center md:p-xl">
         <div className="max-w-2xl">
-          <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-tertiary-fixed-dim">
-            Promoción de servicios propios
-          </p>
           <h2 className="mt-xs font-headline-md text-headline-md text-white">
             Prepara tu proyecto para trabajar con seguridad
           </h2>

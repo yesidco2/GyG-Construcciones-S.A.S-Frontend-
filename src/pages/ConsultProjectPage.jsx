@@ -137,8 +137,8 @@ export default function ConsultProjectPage() {
   };
 
   return (
-    <section className="min-h-screen bg-[#eef2ff] px-4 py-xl pt-24 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-container-max rounded-[2rem] border border-surface-variant bg-white p-6 shadow-xl sm:p-8 lg:p-12">
+    <section className="portal-consult portal-form-surface min-h-screen px-4 py-xl pt-24 sm:px-6 lg:px-8">
+      <div className="portal-consult-content">
         <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] xl:gap-12">
           <div className="min-w-0 space-y-6">
             <div className="space-y-4">
@@ -165,14 +165,14 @@ export default function ConsultProjectPage() {
                 minLength={6}
                 maxLength={40}
                 placeholder="Pega el código asignado"
-                className="w-full rounded-full border border-surface-variant bg-white px-6 py-4 text-body-md text-on-background shadow-sm focus:border-primary-container focus:outline-none disabled:opacity-50"
+                className="w-full rounded-lg border border-surface-variant bg-white px-6 py-4 text-body-md text-on-background shadow-sm focus:border-primary-container focus:outline-none disabled:opacity-50"
                 aria-label="Código del proyecto"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || Boolean(blockedUntil)}
-                className="inline-flex items-center justify-center rounded-full bg-industrial-orange px-lg py-sm text-white font-headline-sm hover:bg-industrial-orange/90 transition-all gap-xs disabled:opacity-70"
+                className="inline-flex items-center justify-center rounded-lg bg-industrial-orange px-lg py-sm text-white font-headline-sm hover:bg-industrial-orange/90 transition-all gap-xs disabled:opacity-70"
               >
                 {isLoading ? 'Buscando...' : error === 'request-failed' ? 'Reintentar' : 'Consultar Proyecto'}
                 <span className="material-symbols-outlined">arrow_forward</span>
@@ -184,8 +184,8 @@ export default function ConsultProjectPage() {
             </p>
           </div>
 
-          <div className="min-w-0 rounded-2xl border border-surface-variant bg-surface p-5 shadow-sm">
-            <div className="flex min-h-[320px] flex-col justify-between rounded-xl bg-primary p-6 text-white sm:p-8">
+          <div className="portal-consult-aside min-w-0">
+            <div className="flex flex-col justify-between text-white">
               <div>
                 <div className="mb-lg flex h-14 w-14 items-center justify-center rounded-2xl bg-industrial-orange text-white">
                   <span className="material-symbols-outlined text-3xl" aria-hidden="true">monitoring</span>
@@ -235,8 +235,8 @@ export default function ConsultProjectPage() {
                   <span className="font-bold text-primary">{trackingResult.progress}%</span>
                 </div>
                 <div role="progressbar" aria-label="Avance del proyecto" aria-valuenow={trackingResult.progress}
-                  aria-valuemin={0} aria-valuemax={100} className="h-2.5 overflow-hidden rounded-full bg-surface-variant">
-                  <div className="h-full rounded-full bg-industrial-orange" style={{ width: `${trackingResult.progress}%` }} />
+                  aria-valuemin={0} aria-valuemax={100} className="h-2.5 overflow-hidden rounded-lg bg-surface-variant">
+                  <div className="h-full rounded-lg bg-industrial-orange" style={{ width: `${trackingResult.progress}%` }} />
                 </div>
               </div>
             </div>

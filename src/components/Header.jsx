@@ -122,7 +122,7 @@ export default function Header() {
   const isConsultProjectActive = currentRoute === 'consultar-proyecto';
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-primary shadow-md shadow-primary/10 select-none print:hidden">
+    <header className="portal-header fixed top-0 w-full z-50 bg-primary select-none print:hidden">
       <div className="mx-auto flex h-16 max-w-container-max items-center justify-between px-4 text-on-primary sm:px-6 lg:px-8 2xl:px-12">
         
         {/* COLUMNA IZQUIERDA: LOGO (Ancho proporcional para balancear el centro) */}

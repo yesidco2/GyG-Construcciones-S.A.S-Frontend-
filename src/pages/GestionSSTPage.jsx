@@ -1,3 +1,5 @@
+import portadaSst from '../assets/portada-sst.webp';
+import { PortalHero } from '../components/Hero';
 import RiskExplorer from '../components/RiskExplorer';
 import FaqSection from '../components/FaqSection';
 import ServicePromotion from '../components/ServicePromotion';
@@ -94,43 +96,21 @@ export default function GestionSSTPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-on-background pt-16">
-      <section id="gestion-sst" className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            alt="Sitio de construcción con seguridad industrial"
-            className="w-full h-full object-cover"
-            src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&auto=format&fit=crop&q=85"
-            fetchPriority="high"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#000a1e]/40 via-[#000a1e]/70 to-[#000a1e]/80" />
-        </div>
-
-        <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-md w-full text-center md:text-left mt-xl">
-          <div className="max-w-3xl">
-            <span className="inline-block mb-xs rounded-full bg-on-tertiary-container/20 px-3 py-1 font-label-caps text-label-caps text-tertiary-fixed-dim">
-              G&G Construcción y SST S.A.S.
-            </span>
-            <h1 className="mt-sm mb-md font-headline-xl-mobile text-headline-xl-mobile text-on-primary md:font-headline-xl md:text-headline-xl">
-              Liderazgo en Seguridad y Salud para la Construcción
-            </h1>
-            <p className="mb-lg max-w-2xl font-body-lg text-body-lg text-on-primary/90">
-              Protegemos vidas y garantizamos el cumplimiento normativo en sus proyectos. Especialistas en entornos de alto riesgo.
-            </p>
-            <div className="flex flex-col justify-center gap-sm md:flex-row md:justify-start md:gap-md">
-              <a className="rounded bg-on-tertiary-container px-lg py-sm text-center font-label-caps text-label-caps text-on-primary transition-colors hover:bg-tertiary-container" href="#servicios-sst">
-                Nuestros Servicios
-              </a>
-              <a className="rounded border-2 border-primary bg-primary px-lg py-sm text-center font-label-caps text-label-caps text-on-primary transition-colors hover:bg-primary/90" href="#risk-explorer">
-                Consultoría Experta
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="portal-sst-page min-h-screen bg-background text-on-background pt-16">
+      <PortalHero
+        id="gestion-sst"
+        title="Seguridad y salud en la construcción"
+        description="Identifica peligros, explora controles y conoce nuestros servicios de acompañamiento en seguridad y salud en el trabajo."
+        image={portadaSst}
+        alt=""
+        actions={[
+          { href: '#risk-explorer', label: 'Explorar riesgos' },
+          { href: '#servicios-sst', label: 'Ver servicios SST' },
+        ]}
+      />
 
       <section id="vision-prevencion" className="bg-surface py-xl">
-        <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
+        <div className="portal-wide">
           <div className="mb-lg flex flex-col gap-sm text-center md:flex-row md:items-end md:justify-between md:text-left">
             <div>
               <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">Gestión de riesgos</p>
@@ -145,9 +125,9 @@ export default function GestionSSTPage() {
             {overviewCards.map((card) => (
               <div
                 key={card.title}
-                className="flex flex-col items-center border border-surface-variant bg-surface-container-lowest p-md text-center shadow-ambient transition-standard card-hover rounded-lg"
+                className="portal-prevention-item"
               >
-                <div className="mb-sm flex h-16 w-16 items-center justify-center rounded-full bg-primary-container/10">
+                <div className="portal-prevention-icon">
                   <span className="material-symbols-outlined text-3xl text-primary">{card.icon}</span>
                 </div>
                 <h3 className="mb-xs font-headline-sm text-headline-sm text-primary">{card.title}</h3>
@@ -161,7 +141,7 @@ export default function GestionSSTPage() {
       <RiskExplorer />
 
       <section id="marco-legal-sst" className="bg-surface-container-low py-xl">
-        <div className="mx-auto max-w-4xl px-margin-mobile md:px-md">
+        <div className="portal-wide portal-legal">
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
             Referencias oficiales de Colombia
           </p>
@@ -169,20 +149,20 @@ export default function GestionSSTPage() {
           <p className="mt-sm text-secondary">
             Estas normas ofrecen un marco general de consulta; la obligación específica debe verificarse según cada organización y actividad económica.
           </p>
-          <ul className="mt-md space-y-sm">
-            <li className="rounded-xl border border-surface-variant bg-white p-md">
+          <ul className="portal-legal-links">
+            <li className="portal-legal-item">
               <a className="font-semibold text-on-primary-fixed-variant underline" href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=48365" target="_blank" rel="noreferrer">
                 Ley 1562 de 2012
               </a>
               <span className="text-secondary"> — modifica el Sistema de Riesgos Laborales y disposiciones de salud ocupacional.</span>
             </li>
-            <li className="rounded-xl border border-surface-variant bg-white p-md">
+            <li className="portal-legal-item">
               <a className="font-semibold text-on-primary-fixed-variant underline" href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=72173" target="_blank" rel="noreferrer">
                 Decreto 1072 de 2015, capítulo 6 del título 4
               </a>
               <span className="text-secondary"> — compila las disposiciones reglamentarias del sector Trabajo relacionadas con el SG-SST.</span>
             </li>
-            <li className="rounded-xl border border-surface-variant bg-white p-md">
+            <li className="portal-legal-item">
               <a className="font-semibold text-on-primary-fixed-variant underline" href="https://www.mintrabajo.gov.co/documents/20147/59995826/Resolucion+0312-2019-+Estandares+minimos+del+Sistema+de+la+Seguridad+y+Salud.pdf" target="_blank" rel="noreferrer">
                 Resolución 0312 de 2019
               </a>
@@ -196,7 +176,7 @@ export default function GestionSSTPage() {
       </section>
 
       <section id="servicios-sst" className="bg-surface-container-low py-xl">
-        <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
+        <div className="portal-wide">
           <div className="mb-lg">
             <h2 className="font-headline-lg text-headline-lg text-primary">Servicios Especializados</h2>
           </div>
@@ -237,7 +217,7 @@ export default function GestionSSTPage() {
       </section>
 
       <section id="jerarquia-controles" className="bg-surface py-xl">
-        <div className="mx-auto max-w-container-max px-margin-mobile md:px-md">
+        <div className="portal-wide">
           <div className="mb-lg text-center">
             <h2 className="font-headline-lg text-headline-lg text-primary">Jerarquía de Controles</h2>
             <p className="mx-auto mt-sm max-w-2xl font-body-md text-body-md text-on-surface-variant">
