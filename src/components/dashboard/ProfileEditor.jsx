@@ -3,7 +3,7 @@ import { apiFetch } from '../../services/api';
 import { prepareProfilePhoto } from '../../utils/preparePhoto';
 import { describeProjectError, PROJECT_PHOTO_TYPES } from '../../services/projectService';
 
-export default function ProfileEditor({ name, onSaved }) {
+export default function ProfileEditor({ name, avatar, onSaved }) {
   const [draft, setDraft] = useState(name);
   const [photo, setPhoto] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -31,17 +31,27 @@ export default function ProfileEditor({ name, onSaved }) {
     } finally { setBusy(false); }
   }
 
-  return <form onSubmit={save} className="space-y-3">
-    <h3 className="text-xl font-bold text-primary">Mi perfil</h3>
+  return <form onSubmit={save} className="portal-profile-form">
+    <header className="portal-profile-header">
+      {avatar ? (
+        <img src={avatar} alt="" className="portal-profile-avatar" />
+      ) : (
+        <span className="portal-profile-avatar material-symbols-outlined" aria-hidden="true">person</span>
+      )}
+      <div className="portal-workspace-heading">
+        <h3>Mi perfil</h3>
+        <p>Actualiza tu nombre y tu foto.</p>
+      </div>
+    </header>
     <label className="block">Nombre
-      <input className="block w-full rounded-lg border p-2" value={draft} maxLength={100} disabled={busy}
+      <input className="portal-profile-name" autoComplete="name" value={draft} maxLength={100} disabled={busy}
         onChange={(event) => setDraft(event.target.value)} />
     </label>
     <label className="block">Foto de perfil
-      <input name="foto" type="file" accept={PROJECT_PHOTO_TYPES} disabled={busy} className="block"
+      <input name="foto" type="file" accept={PROJECT_PHOTO_TYPES} disabled={busy} className="portal-profile-file"
         onChange={(event) => { setPhoto(event.target.files[0]); setMessage(''); }} />
     </label>
-    <button className="rounded-lg bg-primary px-4 py-2 text-white" disabled={busy || (!photo && draft.trim() === name)}>
+    <button type="submit" className="portal-profile-save" disabled={busy || (!photo && draft.trim() === name)}>
       {busy ? 'Guardando…' : 'Guardar perfil'}
     </button>
     {message && <p role="status">{message}</p>}
