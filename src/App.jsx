@@ -14,6 +14,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import getAppRouteKey from './utils/appRoute';
 import PolicyDialog from './components/PolicyDialog';
 import InduccionTrabajadorPage from './pages/InduccionTrabajadorPage';
+import QuotePage from './pages/QuotePage';
 
 const policyRoutes = ['politica-cookies', 'politica-datos', 'policy-content'];
 
@@ -34,6 +35,8 @@ function renderPage(routeKey) {
       return <GestionSSTPage />;
     case 'consultar-proyecto':
       return <ConsultProjectPage />;
+    case 'cotizador':
+      return <QuotePage />;
     case 'admin-faq':
       return <AdminFaqPage />;
     case 'login':
@@ -83,6 +86,7 @@ export default function App() {
   }, [routeKey]);
 
   useEffect(() => {
+    if (routeKey === 'cotizador') return undefined;
     const sections = document.querySelectorAll('.portal-home > main > section:not(.portal-hero), .portal-sst-page > section:not(.portal-hero)');
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
@@ -127,7 +131,7 @@ export default function App() {
   const induction = /^induccion\/([0-9a-f-]{36})$/i.exec(routeKey);
   if (induction) return <InduccionTrabajadorPage key={induction[1]} asignacion={induction[1]} />;
 
-  const showFooter = !['consultar-proyecto', 'login'].includes(routeKey);
+  const showFooter = !['consultar-proyecto', 'cotizador', 'login'].includes(routeKey);
   const closePolicy = () => {
     window.location.hash = previousRouteRef.current || 'hero';
   };

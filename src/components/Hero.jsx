@@ -33,7 +33,7 @@ export default function Hero() {
       image={portadaConstruccion}
       alt=""
       actions={[
-        { href: '#contacto', label: 'Solicitar cotización' },
+        { href: '#cotizador', label: 'Solicitar cotización' },
         { href: '#consultar-proyecto', label: 'Consultar mi obra' },
       ]}
     />

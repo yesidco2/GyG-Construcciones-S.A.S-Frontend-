@@ -280,8 +280,9 @@ export default function Header() {
         <div className="hidden min-w-[180px] shrink-0 items-center justify-end xl:flex">
           {/* 5. SOLICITAR COTIZACIÓN */}
           <a
-            className="bg-industrial-orange text-white px-md py-xs rounded-lg hover:scale-95 transition-transform font-label-caps text-label-caps"
-            href="#contacto"
+            className="inline-flex min-h-11 items-center rounded-lg bg-industrial-orange px-5 font-semibold text-white transition-colors hover:bg-[#963e00]"
+            href="#cotizador"
+            aria-current={currentRoute === 'cotizador' ? 'page' : undefined}
           >
             Solicitar Cotización
           </a>
@@ -403,8 +404,9 @@ export default function Header() {
 
             {/* 5. SOLICITAR COTIZACIÓN */}
             <a
-              href="#contacto"
+              href="#cotizador"
               onClick={closeMenu}
+              aria-current={currentRoute === 'cotizador' ? 'page' : undefined}
               className="block bg-industrial-orange text-white px-md py-xs rounded-lg font-label-caps text-label-caps text-center"
             >
               Solicitar Cotización

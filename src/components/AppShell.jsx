@@ -17,7 +17,7 @@ const homeFaqs = [
   },
   {
     question: '¿Cómo solicito una cotización?',
-    answer: 'Escríbenos desde el formulario de contacto e indica el tipo de proyecto o servicio que necesitas. El equipo podrá revisar la información y orientarte sobre los siguientes pasos.',
+    answer: <>Abre el <a className="font-semibold underline" href="#cotizador">cotizador de G&amp;G</a>, describe tu proyecto y selecciona los servicios. Podrás revisar los valores disponibles y descargar el documento en PDF.</>,
   },
   {
     question: '¿Puedo consultar el avance de una obra?',
