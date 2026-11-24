@@ -12,6 +12,7 @@ import CookiePolicyPage from './pages/CookiePolicyPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import getAppRouteKey from './utils/appRoute';
 import PolicyDialog from './components/PolicyDialog';
+import InduccionTrabajadorPage from './pages/InduccionTrabajadorPage';
 
 const policyRoutes = ['politica-cookies', 'politica-datos', 'policy-content'];
 
@@ -121,6 +122,9 @@ export default function App() {
 
     return () => window.cancelAnimationFrame(frame);
   }, [routeKey]);
+
+  const induction = /^induccion\/([0-9a-f-]{36})$/i.exec(routeKey);
+  if (induction) return <InduccionTrabajadorPage key={induction[1]} asignacion={induction[1]} />;
 
   const showFooter = !['consultar-proyecto', 'login'].includes(routeKey);
   const closePolicy = () => {
