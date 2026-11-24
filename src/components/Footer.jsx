@@ -211,7 +211,7 @@ export default function Footer() {
       <div className="border-t border-white/10 py-md">
         <div className="mx-auto max-w-container-max px-md text-center text-on-primary/70">
           <p className="font-body-sm text-body-sm">NIT 900.XXX.XXX-1</p>
-          <p className="font-body-sm text-body-sm">Cra 7 # 123-45, Bogotá D.C., Colombia</p>
+          <p className="font-body-sm text-body-sm">Medellín, Colombia</p>
           <p className="mt-xs font-body-sm text-body-sm text-on-primary/50">
             © 2024 G&G. Commitment to Safety and Life. All rights reserved.
           </p>

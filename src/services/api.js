@@ -1,5 +1,4 @@
-import { signOut } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth } from './supabase';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_TIMEOUT_MS = 15000;
@@ -21,7 +20,7 @@ function retryAfterSeconds(headerValue) {
 
 async function redirectToLogin() {
   window.location.hash = '#login';
-  if (auth?.currentUser) await signOut(auth);
+  await auth?.signOut({ scope: 'local' });
 }
 
 export async function apiFetch(path, options = {}) {
@@ -46,11 +45,11 @@ export async function apiFetch(path, options = {}) {
   }
 
   const protectedRequest = isProtectedPath(path);
-  const requestUser = protectedRequest ? auth?.currentUser : null;
-  if (requestUser && !headers.has('Authorization')) {
-    const idToken = await requestUser.getIdToken();
-    headers.set('Authorization', `Bearer ${idToken}`);
+  if (protectedRequest && auth && !headers.has('Authorization')) {
+    const { data } = await auth.getSession();
+    if (data.session) headers.set('Authorization', `Bearer ${data.session.access_token}`);
   }
+  const bearer = headers.get('Authorization');
 
   const controller = new AbortController();
   const abortFromCaller = () => controller.abort(callerSignal?.reason);
@@ -107,8 +106,10 @@ export async function apiFetch(path, options = {}) {
     const needsLogin = response.status === 401 || (
       response.status === 403 && error.code === 'CAPTCHA_REQUIRED' && panelPathPattern.test(path)
     );
-    if (protectedRequest && needsLogin && requestUser === auth?.currentUser) {
-      await redirectToLogin();
+    if (protectedRequest && needsLogin) {
+      const current = await auth?.getSession();
+      const currentToken = current?.data.session?.access_token;
+      if (bearer === (currentToken ? `Bearer ${currentToken}` : null)) await redirectToLogin();
     }
 
     throw error;

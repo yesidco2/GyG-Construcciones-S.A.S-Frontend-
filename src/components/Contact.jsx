@@ -250,7 +250,7 @@ export default function Contact({ sectionId = 'contacto' }) {
             <div className="space-y-sm">
               <div className="flex items-center gap-sm">
                 <span className="material-symbols-outlined text-industrial-orange">phone</span>
-                <span className="font-body-sm text-body-sm">+57 (1) 234 5678</span>
+                <a className="font-body-sm text-body-sm" href="tel:+573022019694">+57 302 201 9694</a>
               </div>
               <div className="flex items-center gap-sm">
                 <span className="material-symbols-outlined text-industrial-orange">mail</span>
@@ -258,7 +258,7 @@ export default function Contact({ sectionId = 'contacto' }) {
               </div>
               <div className="flex items-center gap-sm">
                 <span className="material-symbols-outlined text-industrial-orange">location_on</span>
-                <span className="font-body-sm text-body-sm">Bogotá D.C., Colombia</span>
+                <span className="font-body-sm text-body-sm">Medellín, Colombia</span>
               </div>
             </div>
             <div className="mt-xl">

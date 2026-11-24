@@ -61,11 +61,11 @@ export default function About() {
   const [expandedPolicy, setExpandedPolicy] = useState(null);
 
   return (
-    <section id="nosotros" className="bg-white py-xl px-md">
+    <section id="nosotros" className="bg-white px-4 py-xl sm:px-6 lg:px-8 2xl:px-12">
       <div className="mx-auto max-w-container-max">
-        <div className="mb-lg text-center">
+        <div className="mb-lg flex flex-col gap-md border-b border-surface-variant pb-lg md:flex-row md:items-end md:justify-between">
           <h2 className="mb-xs font-headline-lg text-headline-lg text-primary">Nosotros</h2>
-          <p className="mx-auto max-w-2xl font-body-md text-body-md text-secondary">
+          <p className="max-w-2xl font-body-md text-body-md text-secondary">
             Conozca nuestra misión, visión y lo que opinan nuestros clientes.
           </p>
         </div>
@@ -99,7 +99,7 @@ export default function About() {
               const detailId = `environmental-policy-${index}`;
 
               return (
-                <article key={policy.title} className="rounded-lg bg-white shadow-sm ring-1 ring-surface-variant transition-shadow hover:shadow-md">
+                <article key={policy.title} className="bento-card rounded-lg bg-white shadow-sm ring-1 ring-surface-variant">
                   <button
                     type="button"
                     aria-expanded={isExpanded}

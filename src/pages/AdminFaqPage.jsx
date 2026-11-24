@@ -92,6 +92,11 @@ export default function AdminFaqPage() {
               <div key={`${item.id || item.text || 'consulta'}-${index}`} className="rounded-xl border border-surface-variant bg-surface p-md">
                 <p className="mb-xs font-label-caps text-label-caps uppercase text-secondary">Pregunta {result.page * result.size + index + 1}</p>
                 <p className="font-body-md text-body-md text-on-surface">{item.pregunta || item.text || 'Consulta sin texto'}</p>
+                <p className="mt-xs text-xs text-secondary">
+                  {item.fechaConsentimiento
+                    ? `Autorizó envío al proveedor de IA: sí (política ${item.versionPolitica})`
+                    : 'No consta autorización de envío a un proveedor externo.'}
+                </p>
               </div>
             ))}
           </div>

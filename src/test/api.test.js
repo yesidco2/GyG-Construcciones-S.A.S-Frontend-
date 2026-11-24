@@ -1,14 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getIdToken, signOut } = vi.hoisted(() => ({
-  getIdToken: vi.fn().mockResolvedValue('firebase-id-token'),
-  signOut: vi.fn().mockResolvedValue(undefined),
+const { getSession, signOut } = vi.hoisted(() => ({
+  getSession: vi.fn().mockResolvedValue({ data: { session: { access_token: 'supabase-access-token' } } }),
+  signOut: vi.fn().mockResolvedValue({ error: null }),
 }));
 
-vi.mock('../services/firebase', () => ({
-  auth: { currentUser: { getIdToken } },
-}));
-vi.mock('firebase/auth', () => ({ signOut }));
+vi.mock('../services/supabase', () => ({ auth: { getSession, signOut } }));
 
 let apiFetch;
 
@@ -36,13 +33,13 @@ describe('apiFetch', () => {
     vi.unstubAllEnvs();
   });
 
-  it('does not attach Firebase tokens to public API calls', async () => {
+  it('does not attach Supabase tokens to public API calls', async () => {
     fetch.mockResolvedValueOnce(response(200, []));
 
     await apiFetch('/api/institucional');
 
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBeNull();
-    expect(getIdToken).not.toHaveBeenCalled();
+    expect(getSession).not.toHaveBeenCalled();
   });
 
   it('sends password-reset requests publicly without a CAPTCHA token', async () => {
@@ -56,10 +53,10 @@ describe('apiFetch', () => {
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBeNull();
     expect(fetch.mock.calls[0][1].body).toBe(JSON.stringify({ email: 'user@example.com' }));
     expect(fetch.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
-    expect(getIdToken).not.toHaveBeenCalled();
+    expect(getSession).not.toHaveBeenCalled();
   });
 
-  it('does not attach Firebase tokens to public CAPTCHA verification', async () => {
+  it('does not attach Supabase tokens to public CAPTCHA verification', async () => {
     fetch.mockResolvedValueOnce(response(200, { ticket: 'captcha-ticket' }));
 
     await apiFetch('/api/auth/captcha/verify', {
@@ -68,16 +65,16 @@ describe('apiFetch', () => {
     });
 
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBeNull();
-    expect(getIdToken).not.toHaveBeenCalled();
+    expect(getSession).not.toHaveBeenCalled();
   });
 
-  it('attaches the Firebase token only to protected paths', async () => {
+  it('attaches the Supabase token only to protected paths', async () => {
     fetch.mockResolvedValueOnce(response(200, []));
 
     await apiFetch('/api/panel/obras');
 
-    expect(getIdToken).toHaveBeenCalledOnce();
-    expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBe('Bearer firebase-id-token');
+    expect(getSession).toHaveBeenCalledOnce();
+    expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBe('Bearer supabase-access-token');
   });
 
   it('lets the browser set the multipart boundary for FormData', async () => {
@@ -110,11 +107,11 @@ describe('apiFetch', () => {
     await expect(apiFetch('/api/institucional', { timeoutMs: 1 })).rejects.toMatchObject({ name: 'TimeoutError' });
   });
 
-  it('preserves an explicitly refreshed Firebase token', async () => {
+  it('preserves an explicitly refreshed Supabase token', async () => {
     fetch.mockResolvedValueOnce(response(202, null));
-    await apiFetch('/api/auth/email-verification', { headers: { Authorization: 'Bearer refreshed' } });
+    await apiFetch('/api/auth/session', { headers: { Authorization: 'Bearer refreshed' } });
     expect(fetch.mock.calls[0][1].headers.get('Authorization')).toBe('Bearer refreshed');
-    expect(getIdToken).not.toHaveBeenCalled();
+    expect(getSession).not.toHaveBeenCalled();
   });
 
   it('exposes 429 status and Retry-After to callers', async () => {

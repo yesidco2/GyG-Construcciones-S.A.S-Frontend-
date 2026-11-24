@@ -1,14 +1,14 @@
-import { render, screen, waitFor } from '@testing-library/react';
+﻿import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoginPage from '../pages/LoginPage';
 import useAuth from '../utils/useAuth';
-import { friendlyAuthError, loginWithEmail, logout } from '../services/authService';
+import { friendlyAuthError, loginWithEmail } from '../services/authService';
 
 vi.mock('../utils/useAuth', () => ({ default: vi.fn() }));
-vi.mock('../services/firebase', () => ({ isFirebaseConfigured: true }));
+vi.mock('../services/supabase', () => ({ isAuthConfigured: true }));
 vi.mock('../services/authService', () => ({
-  friendlyAuthError: vi.fn(() => 'No se pudo completar la autenticación.'),
+  friendlyAuthError: vi.fn(() => 'No se pudo completar la autenticaciÃ³n.'),
   loginWithEmail: vi.fn(),
   logout: vi.fn(),
   sendVerificationEmail: vi.fn(),
@@ -28,7 +28,7 @@ describe('LoginPage CAPTCHA flow', () => {
     vi.clearAllMocks();
     useAuth.mockReturnValue({
       loading: false,
-      firebaseUser: null,
+      authUser: null,
       profile: null,
       role: '',
       canAccessPanel: false,
@@ -37,28 +37,17 @@ describe('LoginPage CAPTCHA flow', () => {
     });
   });
 
-  it('lets an unverified user return to the login form', async () => {
+  it('shows confirmation instructions for an unconfirmed account', async () => {
     const user = userEvent.setup();
-    useAuth.mockReturnValue({
-      loading: false,
-      firebaseUser: {
-        email: 'admin@example.com',
-        emailVerified: false,
-      },
-      profile: null,
-      role: '',
-      canAccessPanel: false,
-      error: '',
-      refreshProfile: vi.fn(),
-    });
-    logout.mockResolvedValue(undefined);
-
+    loginWithEmail.mockRejectedValueOnce({ code: 'email_not_confirmed' });
     render(<LoginPage />);
-    expect(screen.getByRole('heading', { name: 'Verifica tu correo' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Volver al inicio de sesión' }));
-
-    expect(logout).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
+    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('ContraseÃ±a'), 'password');
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' }));
+    expect(await screen.findByRole('heading', { name: 'Verifica tu correo' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Volver al inicio de sesiÃ³n' }));
+    expect(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' })).toBeInTheDocument();
   });
 
   it('keeps login disabled until CAPTCHA is completed and continues after success', async () => {
@@ -66,7 +55,7 @@ describe('LoginPage CAPTCHA flow', () => {
     const refreshProfile = vi.fn();
     useAuth.mockReturnValue({
       loading: false,
-      firebaseUser: null,
+      authUser: null,
       profile: null,
       role: '',
       canAccessPanel: false,
@@ -76,12 +65,12 @@ describe('LoginPage CAPTCHA flow', () => {
     loginWithEmail.mockResolvedValue({ user: { email: 'admin@example.com' } });
 
     render(<LoginPage />);
-    const submit = screen.getByRole('button', { name: 'Iniciar sesión' });
+    const submit = screen.getByRole('button', { name: 'Iniciar sesiÃ³n' });
     expect(submit).toBeDisabled();
 
     await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
-    await user.type(screen.getByLabelText('Correo electrónico'), 'admin@example.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'correct-password');
+    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('ContraseÃ±a'), 'correct-password');
     await user.click(submit);
 
     await waitFor(() => expect(loginWithEmail).toHaveBeenCalledWith(
@@ -99,11 +88,11 @@ describe('LoginPage CAPTCHA flow', () => {
     render(<LoginPage />);
 
     await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
-    await user.type(screen.getByLabelText('Correo electrónico'), 'admin@example.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'password');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('ContraseÃ±a'), 'password');
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' }));
 
-    expect(await screen.findByText('No se pudo completar la autenticación.')).toBeInTheDocument();
+    expect(await screen.findByText('No se pudo completar la autenticaciÃ³n.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Completar CAPTCHA 1/ })).toBeInTheDocument();
     expect(friendlyAuthError).toHaveBeenCalled();
   });
@@ -113,12 +102,12 @@ describe('LoginPage CAPTCHA flow', () => {
     loginWithEmail.mockRejectedValue(new Error('invalid credentials'));
     render(<LoginPage />);
 
-    await user.type(screen.getByLabelText('Correo electrónico'), 'admin@example.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'wrong-password');
+    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('ContraseÃ±a'), 'wrong-password');
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
-      await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+      await user.click(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' }));
       if (attempt < 2) await waitFor(() => expect(loginWithEmail).toHaveBeenCalledTimes(attempt + 1));
     }
 
@@ -126,3 +115,4 @@ describe('LoginPage CAPTCHA flow', () => {
     expect(screen.getByRole('button', { name: 'Espera para intentar' })).toBeDisabled();
   });
 });
+

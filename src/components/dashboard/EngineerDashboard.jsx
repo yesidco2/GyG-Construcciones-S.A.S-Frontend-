@@ -904,10 +904,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               Seguridad de la sesión
             </span>
             <h3 className="font-headline-sm text-xl font-bold text-primary mt-1">
-              Sesión autenticada con Firebase
+              Sesión autenticada con Supabase
             </h3>
             <p className="text-xs text-secondary mt-1">
-              Tu identidad se valida con Firebase y tus permisos se consultan en el servidor corporativo.
+              Tu identidad se valida con Supabase y tus permisos se consultan en el servidor corporativo.
             </p>
           </div>
 

@@ -24,19 +24,17 @@ export default function TrustBar() {
 
   return (
     <section id="indicadores" className="bg-primary-container py-lg md:py-xl border-y border-surface-variant">
-      <div className="max-w-container-max mx-auto px-md">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-md">
+      <div className="max-w-container-max mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+        <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-4">
           {metrics.map((metric, index) => (
-            <div key={index} className="flex flex-col items-center text-center">
+            <div key={index} className="flex items-center gap-md text-left">
               <span className="material-symbols-outlined text-industrial-orange" style={{ fontSize: 32 }}>
                 {metric.icon}
               </span>
-              <p className="mt-sm font-headline-sm md:font-headline-md text-headline-sm md:text-headline-md text-white">
-                {metric.value}
-              </p>
-              <p className="mt-xs font-body-sm text-body-sm text-on-primary/70">
-                {metric.label}
-              </p>
+              <div>
+                <p className="font-headline-sm text-headline-sm text-white">{metric.value}</p>
+                <p className="mt-xs font-body-sm text-body-sm text-on-primary/70">{metric.label}</p>
+              </div>
             </div>
           ))}
         </div>
