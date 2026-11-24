@@ -9,7 +9,7 @@ import {
   logout,
   sendVerificationEmail,
 } from '../services/authService';
-import { isFirebaseConfigured } from '../services/firebase';
+import { isAuthConfigured } from '../services/supabase';
 import useAuth from '../utils/useAuth';
 
 function LoadingSpinner({ label }) {
@@ -110,7 +110,7 @@ function VerificationMessage({
 export default function LoginPage() {
   const {
     loading,
-    firebaseUser,
+    authUser,
     profile,
     role,
     canAccessPanel,
@@ -123,6 +123,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
   const [verificationError, setVerificationError] = useState('');
   const [verificationAction, setVerificationAction] = useState('');
@@ -163,6 +164,7 @@ export default function LoginPage() {
       setLockoutUntil(0);
       await refreshProfile(credential.user);
     } catch (authError) {
+      if (authError?.code === 'email_not_confirmed') setAwaitingConfirmation(true);
       setError(friendlyAuthError(authError));
       failedAttemptsRef.current += 1;
       if (authError?.status === 429) {
@@ -203,13 +205,7 @@ export default function LoginPage() {
     setVerificationError('');
     setVerificationAction('resend');
     try {
-      const result = await sendVerificationEmail(firebaseUser);
-      if (result?.status === 'already_verified') {
-        await firebaseUser.reload();
-        await firebaseUser.getIdToken(true);
-        await refreshProfile(firebaseUser);
-        return;
-      }
+      await sendVerificationEmail(email.trim());
       setVerificationMessage('Correo de verificación enviado. Revisa también la carpeta de correo no deseado.');
     } catch (verificationSendError) {
       setVerificationError(friendlyAuthError(verificationSendError));
@@ -218,41 +214,23 @@ export default function LoginPage() {
     }
   };
 
-  const handleCheckVerification = async () => {
-    setVerificationMessage('');
-    setVerificationError('');
-    setVerificationAction('check');
-    try {
-      await firebaseUser.reload();
-      await firebaseUser.getIdToken(true);
-      await refreshProfile(firebaseUser);
-    } catch (verificationCheckError) {
-      setVerificationError(
-        verificationCheckError?.message ||
-          'No se pudo volver a comprobar la verificación. Inténtalo de nuevo.',
-      );
-    } finally {
-      setVerificationAction('');
-    }
-  };
-
   let authenticatedContent;
   if (loading) {
     authenticatedContent = <LoadingSpinner label="Verificando tu sesión y consultando el perfil..." />;
-  } else if (firebaseUser && firebaseUser.emailVerified === false) {
+  } else if (awaitingConfirmation && !authUser) {
     authenticatedContent = (
       <VerificationMessage
-        email={firebaseUser.email || 'tu cuenta'}
+        email={email}
         message={verificationMessage}
         error={verificationError}
         isSending={verificationAction === 'resend'}
-        isChecking={verificationAction === 'check'}
+        isChecking={false}
         onResend={handleResendVerification}
-        onCheck={handleCheckVerification}
-        onBackToLogin={handleLogout}
+        onCheck={() => setAwaitingConfirmation(false)}
+        onBackToLogin={() => setAwaitingConfirmation(false)}
       />
     );
-  } else if (firebaseUser && profileError) {
+  } else if (authUser && profileError) {
     authenticatedContent = (
       <AccessMessage
         icon="cloud_off"
@@ -262,7 +240,7 @@ export default function LoginPage() {
         error
       />
     );
-  } else if (firebaseUser && !canAccessPanel) {
+  } else if (authUser && !canAccessPanel) {
     authenticatedContent = (
       <AccessMessage
         icon="admin_panel_settings"
@@ -271,7 +249,7 @@ export default function LoginPage() {
         onLogout={handleLogout}
       />
     );
-  } else if (firebaseUser && canAccessPanel) {
+  } else if (authUser && canAccessPanel) {
     authenticatedContent = (
       <EngineerDashboard
         currentUser={{
@@ -324,10 +302,10 @@ export default function LoginPage() {
                 <p className="mt-1 text-sm text-secondary">Acceso exclusivo para administradores.</p>
               </div>
 
-              {!isFirebaseConfigured && (
+              {!isAuthConfigured && (
                 <div role="alert" className="mb-5 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
                   <span className="material-symbols-outlined text-base">info</span>
-                  <span>Firebase no está configurado. Completa las variables VITE_FIREBASE_* del archivo .env y reinicia Vite.</span>
+                  <span>Supabase Auth no está configurado. Completa las variables VITE_SUPABASE_* del archivo .env y reinicia Vite.</span>
                 </div>
               )}
               {error && (
@@ -348,7 +326,7 @@ export default function LoginPage() {
                       id="login-email"
                       type="email"
                       autoComplete="email"
-                      disabled={!isFirebaseConfigured || isSubmitting}
+                      disabled={!isAuthConfigured || isSubmitting}
                       placeholder="nombre@gygconstrucciones.com"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
@@ -377,7 +355,7 @@ export default function LoginPage() {
                       id="login-password"
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
-                      disabled={!isFirebaseConfigured || isSubmitting}
+                      disabled={!isAuthConfigured || isSubmitting}
                       placeholder="Ingresa tu contraseña"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
@@ -420,7 +398,7 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  disabled={!isFirebaseConfigured || isSubmitting || !captchaToken || cooldownSeconds > 0}
+                  disabled={!isAuthConfigured || isSubmitting || !captchaToken || cooldownSeconds > 0}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-industrial-orange px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-industrial-orange/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-outline/50 disabled:shadow-none"
                 >
                   {isSubmitting ? 'Procesando...' : cooldownSeconds > 0 ? 'Espera para intentar' : 'Iniciar sesión'}

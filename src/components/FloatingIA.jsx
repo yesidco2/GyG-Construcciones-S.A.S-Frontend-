@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../services/api';
-import { POLICY_URL, POLICY_VERSION } from '../config/privacy';
-
-const fallbackResponses = [
-  'Para resolver dudas de SST, revisa primero el tipo de actividad, los riesgos asociados y los EPP mínimos recomendados. Si quieres, puedo orientarte sobre trabajo en alturas, riesgo eléctrico o excavaciones.',
-  'La normativa en obra exige evaluación de riesgos, instrucción previa y uso obligatorio de EPE. Si compartes tu caso específico, te puedo guiar en la mejor práctica.',
-  'Para trabajos en altura, el principal control es la línea de vida y la formación del personal. También es clave revisar el plan de trabajo y la inspección general del área.',
-];
-
-const getFallbackAnswer = () => fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+import { POLICY_URL } from '../config/privacy';
 
 const getSessionHistory = () => {
   try {
@@ -19,22 +11,10 @@ const getSessionHistory = () => {
 };
 
 const FAQ_DATA = [
-  {
-    question: '¿Qué servicios ofrece G&G?',
-    answer: 'Ofrecemos diseño estructural, ejecución de obras, interventoría, estudios de suelos e implementación integral del SG-SST.'
-  },
-  {
-    question: '¿Cómo solicito una cotización?',
-    answer: 'Puedes usar el botón "Solicitar Cotización" del menú superior o contactarnos directamente vía WhatsApp para atención prioritaria.'
-  },
-  {
-    question: '¿Cumplen con la norma NSR-10 y Decreto 1072?',
-    answer: 'Sí, todos nuestros diseños de ingeniería civil y sistemas de SG-SST cumplen estrictamente con la normativa colombiana vigente.'
-  },
-  {
-    question: '¿Dónde prestan sus servicios?',
-    answer: 'Operamos principalmente en Medellín, el Valle de Aburrá y el departamento de Antioquia, con capacidad de cobertura nacional según el proyecto.'
-  }
+  { question: '¿Qué servicios ofrece G&G?' },
+  { question: '¿Cómo solicito una cotización?' },
+  { question: '¿Cumplen con la norma NSR-10 y Decreto 1072?' },
+  { question: '¿Dónde prestan sus servicios?' },
 ];
 
 export default function FloatingIA() {
@@ -46,6 +26,32 @@ export default function FloatingIA() {
   const [isLoading, setIsLoading] = useState(false);
   const [showFAQ, setShowFAQ] = useState(true);
   const [storageError, setStorageError] = useState('');
+  const [chatConfig, setChatConfig] = useState(null);
+  const [chatConfigLoaded, setChatConfigLoaded] = useState(false);
+  const [chatConfigError, setChatConfigError] = useState(false);
+  const [aceptaEnvioProveedor, setAceptaEnvioProveedor] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch('/api/chat/config')
+      .then((data) => {
+        if (!data || typeof data.proveedorExternoActivo !== 'boolean') {
+          throw new Error('La configuración del asistente no tiene el formato esperado.');
+        }
+        if (active) setChatConfig(data);
+      })
+      .catch((error) => {
+        if (active) setChatConfigError(true);
+        console.error('No se pudo consultar la configuración del asistente:', error);
+      })
+      .finally(() => {
+        if (active) setChatConfigLoaded(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -77,6 +83,7 @@ export default function FloatingIA() {
   };
 
   const handleSelectFAQ = async (faq) => {
+    if (!chatConfigLoaded || !chatConfig || (chatConfig.proveedorExternoActivo && !aceptaEnvioProveedor)) return;
     const userMessage = { type: 'user', text: faq.question };
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
@@ -86,17 +93,27 @@ export default function FloatingIA() {
     try {
       const data = await apiFetch('/api/chat', {
         method: 'POST',
+        timeoutMs: 30000,
         body: JSON.stringify({
           pregunta: faq.question,
-          politicaVersion: POLICY_VERSION,
+          aceptaEnvioProveedor,
         }),
       });
-      const botMessage = { type: 'bot', text: data?.respuesta || faq.answer };
+      const botMessage = {
+        type: 'bot',
+        text: data?.respuesta || 'El asistente no devolvió una respuesta. Inténtalo de nuevo más tarde.',
+      };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
-    } catch {
-      const botMessage = { type: 'bot', text: faq.answer };
+    } catch (error) {
+      console.error('No se pudo obtener respuesta para la pregunta frecuente:', error);
+      const botMessage = {
+        type: 'bot',
+        text: error?.status
+          ? error.message
+          : 'No pude conectar con el asistente en este momento. Inténtalo de nuevo más tarde.',
+      };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
@@ -109,7 +126,12 @@ export default function FloatingIA() {
     event.preventDefault();
 
     const trimmed = input.trim();
-    if (!trimmed) return;
+    if (
+      !trimmed ||
+      !chatConfigLoaded ||
+      !chatConfig ||
+      (chatConfig.proveedorExternoActivo && !aceptaEnvioProveedor)
+    ) return;
     const userMessage = { type: 'user', text: trimmed };
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
@@ -119,19 +141,28 @@ export default function FloatingIA() {
     try {
       const data = await apiFetch('/api/chat', {
         method: 'POST',
+        timeoutMs: 30000,
         body: JSON.stringify({
           pregunta: trimmed,
-          politicaVersion: POLICY_VERSION,
+          aceptaEnvioProveedor,
         }),
       });
 
-      const aiText = data?.respuesta || getFallbackAnswer();
-      const botMessage = { type: 'bot', text: aiText };
+      const botMessage = {
+        type: 'bot',
+        text: data?.respuesta || 'El asistente no devolvió una respuesta. Inténtalo de nuevo más tarde.',
+      };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
-    } catch {
-      const botMessage = { type: 'bot', text: getFallbackAnswer() };
+    } catch (error) {
+      console.error('No se pudo obtener respuesta del asistente:', error);
+      const botMessage = {
+        type: 'bot',
+        text: error?.status
+          ? error.message
+          : 'No pude conectar con el asistente en este momento. Inténtalo de nuevo más tarde.',
+      };
       const updated = [...nextMessages, botMessage];
       setMessages(updated);
       saveHistory(updated);
@@ -170,10 +201,16 @@ export default function FloatingIA() {
           </div>
 
           <p className="border-b border-surface-variant bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-primary">
-            Sus mensajes se registran para responderle y mejorar el servicio. No escriba datos sensibles ni documentos de identidad. Consulte nuestra{' '}
+            {chatConfig?.proveedorExternoActivo
+              ? 'Si acepta, enviaremos únicamente su pregunta a Google Gemini para generar la respuesta y registraremos la interacción en los sistemas de G&G. No escriba datos sensibles ni documentos de identidad. '
+              : 'Sus mensajes se registran en los sistemas de G&G para responderle y mantener el servicio. No escriba datos sensibles ni documentos de identidad. '}
+            Consulte nuestra{' '}
             <a href={POLICY_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-on-primary-fixed-variant underline">
               Política de Tratamiento de Datos Personales
             </a>.
+          </p>
+          <p className="border-b border-surface-variant bg-white px-3 py-1.5 text-[10px] leading-relaxed text-secondary">
+            La orientación es general; no sustituye la evaluación de un profesional SST, los procedimientos aprobados ni la atención de emergencias. Verifica los requisitos legales vigentes en fuentes oficiales.
           </p>
 
           {/* Historial de Mensajes */}
@@ -200,6 +237,9 @@ export default function FloatingIA() {
                     key={i}
                     type="button"
                     onClick={() => handleSelectFAQ(faq)}
+                    disabled={!chatConfigLoaded || !chatConfig || isLoading || (
+                      chatConfig.proveedorExternoActivo && !aceptaEnvioProveedor
+                    )}
                     className="text-left bg-white border border-industrial-orange text-primary hover:bg-orange-50 font-medium p-2 rounded-md transition-colors text-xs shadow-xs"
                   >
                     {faq.question}
@@ -214,6 +254,24 @@ export default function FloatingIA() {
           {/* Formulario de Entrada */}
           <form onSubmit={handleSubmit} className="p-3 border-t border-surface-variant bg-white">
             {storageError && <p role="status" className="mb-2 text-[10px] text-error" aria-live="polite">{storageError}</p>}
+            {chatConfigError && (
+              <p role="alert" className="mb-2 text-[10px] text-error">
+                No se pudo cargar la configuración del asistente. Recarga la página para intentarlo de nuevo.
+              </p>
+            )}
+            {chatConfig?.proveedorExternoActivo && (
+              <label className="mb-3 flex items-start gap-2 text-[10px] leading-relaxed text-secondary">
+                <input
+                  type="checkbox"
+                  checked={aceptaEnvioProveedor}
+                  onChange={(event) => setAceptaEnvioProveedor(event.target.checked)}
+                  className="mt-0.5 accent-primary"
+                />
+                <span>
+                  Autorizo que G&G envíe mi pregunta a Google Gemini para generar una respuesta y registre esta interacción según la Política de Tratamiento de Datos Personales.
+                </span>
+              </label>
+            )}
             <label htmlFor="chat-input" className="mb-1 block text-[10px] font-semibold text-secondary">
               Mensaje para el asistente
             </label>
@@ -221,12 +279,19 @@ export default function FloatingIA() {
               id="chat-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              maxLength={500}
               placeholder="Escribe tu pregunta..."
               className="w-full rounded-md border border-surface-variant p-2 text-xs focus:outline-none focus:border-primary"
             />
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={
+                isLoading ||
+                !chatConfigLoaded ||
+                !chatConfig ||
+                !input.trim() ||
+                (chatConfig.proveedorExternoActivo && !aceptaEnvioProveedor)
+              }
               className="mt-2 w-full bg-industrial-orange text-white py-2 rounded-md text-xs font-semibold hover:opacity-95 transition-opacity disabled:opacity-60"
             >
               {isLoading ? 'Enviando...' : 'Enviar'}

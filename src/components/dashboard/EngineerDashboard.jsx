@@ -18,6 +18,7 @@ import safeImageUrl from '../../utils/safeImageUrl';
 
 import ProjectPhotos, { ProjectPhotoInput } from './ProjectPhotos';
 import ClientPicker from './ClientPicker';
+import InduccionesObra from './InduccionesObra';
 import { ProjectDate, ProjectMilestones } from '../ProjectMetadata';
 
 const categoryLabels = new Map(Object.entries(PROJECT_CATEGORIES));
@@ -49,6 +50,7 @@ function ProjectDateFields({ prefix, start, end, onStart, onEnd, disabled }) {
 }
 
 export default function EngineerDashboard({ currentUser, onLogout }) {
+  const [obraInduccion, setObraInduccion] = useState(null);
   const isAdmin = currentUser?.role === 'ADMIN';
   const canCreate = isAdmin || currentUser?.role === 'INGENIERO';
   const [projects, setProjects] = useState([]);
@@ -664,6 +666,13 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   </div>
                 </details>
 
+                <button type="button" className="mb-3 rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary"
+                  aria-expanded={obraInduccion === project.id}
+                  onClick={() => setObraInduccion(obraInduccion === project.id ? null : project.id)}>
+                  {obraInduccion === project.id ? 'Cerrar inducciones SST' : 'Abrir inducciones SST'}
+                </button>
+                {obraInduccion === project.id && <InduccionesObra key={project.id} obra={project} />}
+
                 {/* CONTROL DE AVANCE INTERACTIVO */}
                 <div className="bg-surface-container-low p-4 rounded-xl border border-surface-variant/80 space-y-3">
                   <div className="flex items-center justify-between">
@@ -904,10 +913,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               Seguridad de la sesión
             </span>
             <h3 className="font-headline-sm text-xl font-bold text-primary mt-1">
-              Sesión autenticada con Firebase
+              Sesión autenticada con Supabase
             </h3>
             <p className="text-xs text-secondary mt-1">
-              Tu identidad se valida con Firebase y tus permisos se consultan en el servidor corporativo.
+              Tu identidad se valida con Supabase y tus permisos se consultan en el servidor corporativo.
             </p>
           </div>
 

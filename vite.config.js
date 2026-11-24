@@ -3,13 +3,11 @@ import { resolve } from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
-function contentSecurityPolicy(apiOrigin, development = false) {
+function contentSecurityPolicy(apiOrigin, supabaseOrigin, development = false) {
   const connectSources = [
     "'self'",
     apiOrigin,
-    'https://identitytoolkit.googleapis.com',
-    'https://securetoken.googleapis.com',
-    'https://www.googleapis.com',
+    supabaseOrigin,
     'https://challenges.cloudflare.com',
     'data:',
     ...(development ? ['ws://localhost:*', 'ws://127.0.0.1:*'] : []),
@@ -32,9 +30,8 @@ function contentSecurityPolicy(apiOrigin, development = false) {
   ].join('; ');
 }
 
-function securityMetadataPlugin(apiUrl) {
-  const apiOrigin = apiUrl ? new URL(apiUrl).origin : '';
-  const policy = contentSecurityPolicy(apiOrigin);
+function securityMetadataPlugin(apiOrigin, supabaseOrigin) {
+  const policy = contentSecurityPolicy(apiOrigin, supabaseOrigin);
 
   return {
     name: 'production-security-metadata',
@@ -66,7 +63,7 @@ function securityMetadataPlugin(apiUrl) {
       const headersTemplate = readFileSync(resolve(process.cwd(), 'public', '_headers'), 'utf8');
       writeFileSync(
         resolve(outputDirectory, '_headers'),
-        headersTemplate.replace('__API_ORIGIN__', apiOrigin),
+        headersTemplate.replace('__API_ORIGIN__', apiOrigin).replace('__SUPABASE_ORIGIN__', supabaseOrigin),
       );
     },
   };
@@ -75,6 +72,7 @@ function securityMetadataPlugin(apiUrl) {
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const apiOrigin = env.VITE_API_URL ? new URL(env.VITE_API_URL).origin : '';
+  const supabaseOrigin = env.VITE_SUPABASE_URL ? new URL(env.VITE_SUPABASE_URL).origin : '';
   if (command === 'build' && mode === 'production') {
     if (!env.VITE_API_URL) {
       throw new Error('VITE_API_URL debe configurarse para generar el build de producción.');
@@ -95,11 +93,11 @@ export default defineConfig(({ mode, command }) => {
 
   return {
     base: '/GG-WEB/',
-    plugins: [react(), securityMetadataPlugin(env.VITE_API_URL)],
+    plugins: [react(), securityMetadataPlugin(apiOrigin, supabaseOrigin)],
     server: {
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-        'Content-Security-Policy': contentSecurityPolicy(apiOrigin, true),
+        'Content-Security-Policy': contentSecurityPolicy(apiOrigin, supabaseOrigin, true),
       },
     },
   };

@@ -54,7 +54,7 @@ La página de tratamiento de datos está marcada como borrador y debe ser revisa
 El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 
 - Formulario de contacto: `POST /api/contacto`
-- Asistente IA: `POST /api/chat`
+- Asistente: `GET /api/chat/config` y `POST /api/chat`; si Gemini está activo, exige consentimiento explícito antes de enviar cada pregunta.
 - Consulta de proyecto: `POST /api/obras/seguimiento` con `{ "codigo": "..." }`
 - Panel de obras (requiere autenticación): `/api/panel/obras` para listar, crear, editar, actualizar avances e hitos, eliminar y renovar códigos según el rol
 - Consultas administrativas del chat: `GET /api/admin/consultas-chat`
@@ -70,18 +70,17 @@ El explorador de labores y riesgos también usa su catálogo local en `src/compo
 
 GitHub Pages no permite configurar encabezados HTTP personalizados; en ese alojamiento solo se aplica la política meta. El formulario y la galería administrativa permiten cargar fotos JPEG, PNG o WebP de hasta 5 MB. Requieren la migración V15 y las rutas de fotos en Spring Boot. El seguimiento público carga cada imagen bajo demanda con el código de la consulta. El [informe de auditoría](docs/auditoria-frontend.md) detalla el contrato y sus dependencias.
 
-En Google Cloud Console, restringe la API key pública de Firebase mediante restricciones de aplicación por sitios web (dominios de producción autorizados y los dominios locales necesarios) y restricciones de API a las APIs de Firebase que realmente use la aplicación. La API key de Firebase identifica el proyecto; no la trates como secreto ni publiques claves privadas en variables `VITE_*`.
+Configura `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` para habilitar Supabase Auth. La CSP permite el origen definido en `VITE_SUPABASE_URL`.
 
-La recuperación de contraseña llama a `POST /api/auth/password-reset`; el backend genera el enlace de Firebase y envía el correo. El restablecimiento continúa utilizando la página predeterminada alojada por Firebase. El reenvío de verificación llama a `POST /api/auth/email-verification` con el ID token Firebase actual.
+### Confirmación de correo y recuperación de contraseña
 
-### Verificación de correo personalizada
-
-`src/pages/VerifyEmailPage.jsx` implementa la verificación personalizada, pero solo debe activarse cuando exista una URL pública desplegada y el backend genere enlaces que apunten a ella. Firebase Console aplica **Customize action URL** a las plantillas de acciones; no la configures para este frontend mientras se quiera conservar el restablecimiento predeterminado de Firebase.
+Configura **Site URL** en Supabase con la URL completa del frontend, incluida la ruta `/GG-WEB/`. Las plantillas de confirmación y recuperación deben usar estos destinos:
 
 ```text
-https://<dominio-publicado>/GG-WEB/
+{{ .SiteURL }}?token_hash={{ .TokenHash }}#verify-email
+{{ .SiteURL }}?token_hash={{ .TokenHash }}#reset-password
 ```
 
-Si más adelante se habilita esa página, configura el dominio en **Authentication > Settings > Authorized domains**. `ActionCodeSettings.url` en Firebase Admin SDK es el `continueUrl` y no reemplaza el URL del controlador de acciones. La página personalizada de verificación espera una confirmación explícita antes de consumir el código.
+Spring Boot solicita el correo de recuperación a Supabase Auth mediante `POST /api/auth/password-reset`. El frontend reenvía la confirmación mediante Supabase Auth.
 
 Si Turnstile muestra un error `300*` (por ejemplo, `300010`), Cloudflare lo clasifica como un fallo genérico temporal del desafío; no significa por sí solo que la clave secreta del backend sea incorrecta. Usa **Reintentar CAPTCHA**. Si persiste, prueba sin extensiones o VPN, en otro navegador o red, y confirma que el dominio esté autorizado en el widget de Turnstile.

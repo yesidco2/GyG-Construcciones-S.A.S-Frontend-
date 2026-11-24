@@ -1,51 +1,41 @@
-import {
-  onAuthStateChanged,
-  setPersistence,
-  signInWithEmailAndPassword,
-  browserLocalPersistence,
-  browserSessionPersistence,
-  signOut,
-} from 'firebase/auth';
 import { apiFetch } from './api';
-import { auth, isFirebaseConfigured } from './firebase';
+import { auth, setRememberSession } from './supabase';
 import { verifyCaptcha } from './captchaService';
 
-let pendingSessionSetup = null;
+let pendingSessionSetup;
 
 function requireAuth() {
-  if (!isFirebaseConfigured || !auth) {
-    throw new Error('La autenticación no está configurada. Contacta al administrador.');
-  }
+  if (!auth) throw new Error('La autenticación no está configurada.');
   return auth;
 }
 
-export async function loginWithEmail(email, password, remember = false, captchaToken) {
-  const firebaseAuth = requireAuth();
-  const { ticket } = await verifyCaptcha(captchaToken);
-  let signedInUser = null;
-  const setupPromise = (async () => {
-    await setPersistence(
-      firebaseAuth,
-      remember ? browserLocalPersistence : browserSessionPersistence,
-    );
-    const credential = await signInWithEmailAndPassword(firebaseAuth, email.trim(), password);
-    signedInUser = credential.user;
-    const session = await apiFetch('/api/auth/session', {
-      method: 'POST',
-      body: JSON.stringify({ ticket }),
-    });
-    if (session?.verified !== true) throw new Error('El servidor no confirmó la sesión.');
-    return credential;
-  })();
-
-  pendingSessionSetup = setupPromise;
+export async function loginWithEmail(email, password, remember, captchaToken) {
+  const client = requireAuth();
+  const { ticket } = await verifyCaptcha(captchaToken).catch((error) => {
+    throw Object.assign(error, { authStage: 'captcha' });
+  });
+  setRememberSession(remember);
+  const setup = async () => {
+    const { data, error } = await client.signInWithPassword({ email: email.trim(), password });
+    if (error) throw Object.assign(error, { authStage: 'supabase' });
+    try {
+      const session = await apiFetch('/api/auth/session', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+        body: JSON.stringify({ ticket }),
+      });
+      if (!session?.verified) throw new Error('El servidor no confirmó la sesión.');
+      return data;
+    } catch (failure) {
+      await client.signOut({ scope: 'local' });
+      throw Object.assign(failure, { authStage: 'session' });
+    }
+  };
+  pendingSessionSetup = setup();
   try {
-    return await setupPromise;
-  } catch (error) {
-    if (signedInUser) await signOut(firebaseAuth);
-    throw error;
+    return await pendingSessionSetup;
   } finally {
-    if (pendingSessionSetup === setupPromise) pendingSessionSetup = null;
+    pendingSessionSetup = undefined;
   }
 }
 
@@ -57,83 +47,58 @@ export function resetPassword(email) {
   });
 }
 
-export async function sendVerificationEmail(user = auth?.currentUser) {
-  if (!user) {
-    throw new Error('No hay una sesión autenticada para reenviar la verificación.');
-  }
-  await user.reload();
-  const idToken = await user.getIdToken(true);
-  return apiFetch('/api/auth/email-verification', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${idToken}` },
-  });
+export async function sendVerificationEmail(email) {
+  const { error } = await requireAuth().resend({ type: 'signup', email });
+  if (error) throw error;
 }
 
-export function logout() {
-  return auth ? signOut(auth) : Promise.resolve();
+export async function logout() {
+  const result = await auth?.signOut({ scope: 'local' });
+  if (result?.error) throw result.error;
 }
 
 export function subscribeAuth(callback) {
-  if (!isFirebaseConfigured || !auth) {
+  if (!auth) {
     callback(null);
     return () => {};
   }
-  return onAuthStateChanged(auth, callback);
+  const { data } = auth.onAuthStateChange((event, session) => {
+    if (['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
+      queueMicrotask(() => callback(session?.user ?? null));
+    }
+  });
+  return () => data.subscription.unsubscribe();
 }
 
-export function fetchProfile(firebaseUser = auth?.currentUser) {
-  if (!firebaseUser) {
-    throw new Error('No hay una sesión autenticada para consultar el perfil.');
-  }
-  return (async () => {
-    if (pendingSessionSetup) await pendingSessionSetup;
-    return apiFetch('/api/auth/me');
-  })();
+export async function fetchProfile() {
+  if (pendingSessionSetup) await pendingSessionSetup;
+  return apiFetch('/api/auth/me');
 }
 
-const AUTH_ERROR_MESSAGES = {
-  'auth/invalid-credential': 'El correo o la contraseña no son correctos.',
-  'auth/invalid-login-credentials': 'El correo o la contraseña no son correctos.',
-  'auth/user-not-found': 'El correo o la contraseña no son correctos.',
-  'auth/wrong-password': 'El correo o la contraseña no son correctos.',
-  'auth/invalid-email': 'El formato del correo electrónico no es válido.',
-  'auth/invalid-api-key': 'La configuración de Firebase Auth no es válida. Contacta al administrador.',
-  'auth/api-key-not-valid': 'La clave de Firebase no es válida para este proyecto. Contacta al administrador.',
-  'auth/operation-not-allowed': 'El envío de correos de autenticación no está habilitado en Firebase.',
-  'auth/unauthorized-continue-uri': 'El dominio del enlace no está autorizado en la configuración de Firebase.',
-  'auth/invalid-continue-uri': 'El enlace de verificación no está configurado correctamente en Firebase.',
-  'auth/user-disabled': 'Esta cuenta está deshabilitada. Contacta al administrador.',
-  'auth/missing-password': 'Ingresa tu contraseña.',
-  'auth/too-many-requests': 'Se realizaron demasiados intentos. Espera un momento e inténtalo de nuevo.',
-  'auth/network-request-failed': 'No se pudo conectar con el servicio de autenticación. Verifica tu conexión.',
-  'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
-  'auth/weak-password': 'La contraseña no cumple con los requisitos mínimos de seguridad.',
-  'auth/quota-exceeded': 'Se alcanzó el límite temporal de solicitudes. Inténtalo más tarde.',
-};
+const messages = new Map([
+  ['invalid_credentials', 'El correo o la contraseña no son correctos.'],
+  ['email_not_confirmed', 'Verifica tu correo antes de iniciar sesión.'],
+  ['user_banned', 'Esta cuenta está deshabilitada. Contacta al administrador.'],
+  ['weak_password', 'La contraseña no cumple los requisitos de seguridad.'],
+]);
 
 export function friendlyAuthError(error) {
-  const code = error?.code;
-  const firebaseMessage = new Map(Object.entries(AUTH_ERROR_MESSAGES)).get(code);
-  if (firebaseMessage) return firebaseMessage;
   if (error?.status === 429) return 'Demasiados intentos. Espera antes de volver a intentarlo.';
-  if (code === 'CAPTCHA_REQUIRED' || (error?.status === 400 && code?.startsWith('CAPTCHA_'))) {
-    return 'La verificación CAPTCHA no fue válida. Completa un nuevo desafío.';
+  if (error?.code === 'CAPTCHA_REQUIRED' || error?.code?.startsWith('CAPTCHA_')) {
+    return 'Completa un nuevo desafío CAPTCHA e inténtalo de nuevo.';
   }
-  if (error?.status === 503 && code?.startsWith('CAPTCHA_')) {
-    return 'El servicio CAPTCHA no está disponible temporalmente. Inténtalo más tarde.';
+  const message = messages.get(error?.code);
+  if (message) return message;
+  if (error?.authStage === 'captcha') {
+    return error?.status === 503
+      ? 'El servidor no pudo contactar el servicio CAPTCHA. Inténtalo de nuevo en un momento.'
+      : 'No se pudo verificar el CAPTCHA con la API. Recarga el portal e inténtalo de nuevo.';
   }
-  if (error?.status === 503) {
-    if (error.message === 'No fue posible verificar CAPTCHA. Intenta nuevamente.') {
-      return 'El servidor no pudo verificar el CAPTCHA. Completa la verificación nuevamente.';
-    }
-    if (error.message === 'No fue posible procesar la solicitud. Intenta nuevamente más tarde.') {
-      return 'Firebase no pudo procesar el restablecimiento. Revisa la clave API y la configuración del proyecto.';
-    }
-    return 'El servidor no pudo completar la solicitud con Firebase. Contacta al administrador y vuelve a intentarlo más tarde.';
+  if (error?.authStage === 'supabase') {
+    return 'Supabase no pudo iniciar la sesión. Inténtalo de nuevo en un momento.';
   }
-  if (error?.status >= 500) {
-    return 'El servicio de autenticación no está disponible temporalmente. Inténtalo más tarde.';
+  if (error?.authStage === 'session') {
+    return 'Supabase aceptó el ingreso, pero la API no pudo activar la sesión del portal.';
   }
-  if (error?.message?.startsWith('La autenticación no está configurada')) return error.message;
-  return 'No se pudo completar la autenticación. Inténtalo de nuevo o contacta al administrador.';
+  return 'No se pudo completar la autenticación. Inténtalo de nuevo.';
 }
