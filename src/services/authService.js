@@ -1,4 +1,4 @@
-﻿import { apiFetch } from './api';
+import { apiFetch } from './api';
 import { auth, setRememberSession } from './supabase';
 import { verifyCaptcha } from './captchaService';
 
@@ -11,11 +11,13 @@ function requireAuth() {
 
 export async function loginWithEmail(email, password, remember, captchaToken) {
   const client = requireAuth();
-  const { ticket } = await verifyCaptcha(captchaToken);
+  const { ticket } = await verifyCaptcha(captchaToken).catch((error) => {
+    throw Object.assign(error, { authStage: 'captcha' });
+  });
   setRememberSession(remember);
   const setup = async () => {
     const { data, error } = await client.signInWithPassword({ email: email.trim(), password });
-    if (error) throw error;
+    if (error) throw Object.assign(error, { authStage: 'supabase' });
     try {
       const session = await apiFetch('/api/auth/session', {
         method: 'POST',
@@ -26,7 +28,7 @@ export async function loginWithEmail(email, password, remember, captchaToken) {
       return data;
     } catch (failure) {
       await client.signOut({ scope: 'local' });
-      throw failure;
+      throw Object.assign(failure, { authStage: 'session' });
     }
   };
   pendingSessionSetup = setup();
@@ -85,5 +87,18 @@ export function friendlyAuthError(error) {
   if (error?.code === 'CAPTCHA_REQUIRED' || error?.code?.startsWith('CAPTCHA_')) {
     return 'Completa un nuevo desafío CAPTCHA e inténtalo de nuevo.';
   }
-  return messages.get(error?.code) || 'No se pudo completar la autenticación. Inténtalo de nuevo.';
+  const message = messages.get(error?.code);
+  if (message) return message;
+  if (error?.authStage === 'captcha') {
+    return error?.status === 503
+      ? 'El servidor no pudo contactar el servicio CAPTCHA. Inténtalo de nuevo en un momento.'
+      : 'No se pudo verificar el CAPTCHA con la API. Recarga el portal e inténtalo de nuevo.';
+  }
+  if (error?.authStage === 'supabase') {
+    return 'Supabase no pudo iniciar la sesión. Inténtalo de nuevo en un momento.';
+  }
+  if (error?.authStage === 'session') {
+    return 'Supabase aceptó el ingreso, pero la API no pudo activar la sesión del portal.';
+  }
+  return 'No se pudo completar la autenticación. Inténtalo de nuevo.';
 }

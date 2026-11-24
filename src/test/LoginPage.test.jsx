@@ -42,12 +42,12 @@ describe('LoginPage CAPTCHA flow', () => {
     loginWithEmail.mockRejectedValueOnce({ code: 'email_not_confirmed' });
     render(<LoginPage />);
     await user.click(screen.getByRole('button', { name: /Completar CAPTCHA/ }));
-    await user.type(screen.getByLabelText('Correo electrÃ³nico'), 'admin@example.com');
-    await user.type(screen.getByLabelText('ContraseÃ±a'), 'password');
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' }));
+    await user.type(screen.getByLabelText('Correo electrónico'), 'admin@example.com');
+    await user.type(screen.getByLabelText('Contraseña'), 'password');
+    await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     expect(await screen.findByRole('heading', { name: 'Verifica tu correo' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Volver al inicio de sesiÃ³n' }));
-    expect(screen.getByRole('button', { name: 'Iniciar sesiÃ³n' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Volver al inicio de sesión' }));
+    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 
   it('keeps login disabled until CAPTCHA is completed and continues after success', async () => {
