@@ -27,12 +27,12 @@ const homeFaqs = [
 
 export default function AppShell() {
   return (
-    <div className="bg-background text-on-background selection:bg-industrial-orange selection:text-white">
+    <div className="portal-home text-on-background selection:bg-industrial-orange selection:text-white">
       <main>
         <Hero />
         <TrustBar />
-        <ServicePromotion />
         <Services />
+        <ServicePromotion />
         <Commitment />
         <Portfolio />
         <About />
