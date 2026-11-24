@@ -122,6 +122,9 @@ export default function App() {
     return () => window.cancelAnimationFrame(frame);
   }, [routeKey]);
 
+  const induction = /^induccion\/([0-9a-f-]{36})$/i.exec(routeKey);
+  if (induction) return <InduccionTrabajadorPage key={induction[1]} asignacion={induction[1]} />;
+
   const showFooter = !['consultar-proyecto', 'login'].includes(routeKey);
   const closePolicy = () => {
     window.location.hash = previousRouteRef.current || 'hero';

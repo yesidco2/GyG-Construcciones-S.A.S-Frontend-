@@ -54,7 +54,7 @@ La página de tratamiento de datos está marcada como borrador y debe ser revisa
 El frontend utiliza `src/services/api.js` para las solicitudes al backend:
 
 - Formulario de contacto: `POST /api/contacto`
-- Asistente IA: `POST /api/chat`
+- Asistente: `GET /api/chat/config` y `POST /api/chat`; si Gemini está activo, exige consentimiento explícito antes de enviar cada pregunta.
 - Consulta de proyecto: `POST /api/obras/seguimiento` con `{ "codigo": "..." }`
 - Panel de obras (requiere autenticación): `/api/panel/obras` para listar, crear, editar, actualizar avances e hitos, eliminar y renovar códigos según el rol
 - Consultas administrativas del chat: `GET /api/admin/consultas-chat`
