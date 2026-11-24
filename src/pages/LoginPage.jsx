@@ -269,13 +269,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`bg-background px-4 selection:bg-industrial-orange selection:text-white sm:px-6 lg:px-8 ${
-      authenticatedContent ? 'min-h-screen pb-16 pt-20' : 'h-screen overflow-hidden pb-4 pt-16'
+    <div className={`portal-login-shell portal-form-surface bg-background px-4 selection:bg-industrial-orange selection:text-white sm:px-6 lg:px-8 ${
+      authenticatedContent ? 'portal-workspace min-h-screen pb-16 pt-20' : 'min-h-screen pb-8 pt-20'
     }`}>
-      <div className={`mx-auto w-full ${authUser && canAccessPanel ? '' : 'max-w-container-max'} ${authenticatedContent ? '' : 'h-full'}`}>
+      <div className="portal-wide">
         {authenticatedContent || (
-          <div className="grid h-full min-h-0 grid-cols-1 overflow-hidden rounded-3xl border border-surface-variant/80 bg-white shadow-xl lg:grid-cols-12">
-            <section className="relative hidden flex-col justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-container to-[#00142e] p-8 text-white lg:col-span-5 lg:flex lg:p-10">
+          <div className="portal-login-grid grid grid-cols-1 overflow-hidden bg-white lg:grid-cols-12">
+            <section className="portal-login-intro relative flex flex-col justify-center overflow-hidden p-6 text-white lg:col-span-5">
               <div className="pointer-events-none absolute inset-0 opacity-10">
                 <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
                   <defs>
@@ -290,12 +290,12 @@ export default function LoginPage() {
               <div className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-industrial-orange/15 blur-3xl" />
               <div className="relative z-10">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-industrial-orange shadow-lg shadow-industrial-orange/30">
-                    <span className="material-symbols-outlined text-3xl text-white">foundation</span>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/10">
+                    <span className="material-symbols-outlined portal-logo-icon text-3xl" aria-hidden="true">foundation</span>
                   </div>
                   <span className="font-headline-sm text-2xl font-bold leading-none tracking-tight text-white">G&amp;G</span>
                 </div>
-                <h1 className="mt-8 font-headline-xl text-3xl font-bold leading-tight text-white sm:text-4xl">
+                <h1 className="mt-4 font-headline-xl lg:mt-8 text-3xl font-bold leading-tight text-white sm:text-4xl">
                   Portal de administración
                 </h1>
                 <p className="mt-3 font-body-sm text-sm leading-relaxed text-white/75">
@@ -304,7 +304,7 @@ export default function LoginPage() {
               </div>
             </section>
 
-            <section className="flex flex-col justify-center bg-white p-6 sm:p-10 lg:col-span-7">
+            <section className="portal-login-form flex flex-col justify-center bg-white p-6 sm:p-10 lg:col-span-7">
               <div className="mb-6">
                 <h2 className="font-headline-sm text-2xl font-bold text-primary">Iniciar sesión</h2>
                 <p className="mt-1 text-sm text-secondary">Acceso exclusivo para administradores.</p>
