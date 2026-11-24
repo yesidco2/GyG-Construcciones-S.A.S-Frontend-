@@ -24,6 +24,27 @@ body {
   overflow-x: hidden;
 }
 
+#policy-dialog-content {
+  scrollbar-color: #9ca3af transparent;
+  scrollbar-width: thin;
+}
+
+#policy-dialog-content::-webkit-scrollbar {
+  width: 12px;
+}
+
+#policy-dialog-content::-webkit-scrollbar-track {
+  margin-block: 14px;
+  background: transparent;
+}
+
+#policy-dialog-content::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  background: #9ca3af;
+  background-clip: content-box;
+}
+
 @media print {
   html,
   body,
@@ -38,6 +59,7 @@ body {
   }
 
   #policy-dialog-scroll-container,
+  #policy-dialog-frame,
   #policy-dialog-content {
     position: static !important;
     inset: auto !important;

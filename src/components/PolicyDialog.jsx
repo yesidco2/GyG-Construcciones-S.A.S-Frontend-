@@ -44,31 +44,36 @@ export default function PolicyDialog({ title, onClose, children }) {
   return (
     <div
       id="policy-dialog-scroll-container"
-      className="fixed inset-0 z-[85] flex items-center justify-center overflow-y-auto bg-primary/70 p-2 sm:p-5 print:static print:inset-auto print:z-auto print:block print:overflow-visible print:bg-white print:p-0"
+      className="fixed inset-0 z-[85] flex items-center justify-center overflow-y-auto bg-primary/95 p-2 sm:p-5 print:static print:inset-auto print:z-auto print:block print:overflow-visible print:bg-white print:p-0"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
         ref={dialogRef}
-        id="policy-dialog-content"
+        id="policy-dialog-frame"
         role="dialog"
         aria-modal="true"
         aria-labelledby="policy-dialog-title"
-        className="relative mx-auto max-h-[70vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-surface shadow-2xl print:static print:mx-0 print:max-h-none print:max-w-none print:overflow-visible print:rounded-none print:bg-white print:shadow-none"
+        className="relative mx-auto max-h-[70vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-surface shadow-2xl print:static print:mx-0 print:max-h-none print:max-w-none print:overflow-visible print:rounded-none print:bg-white print:shadow-none"
       >
-        <div className="policy-dialog-header sticky top-0 z-10 flex items-center justify-between border-b border-surface-variant bg-white px-4 py-3 print:hidden">
-          <h2 id="policy-dialog-title" className="font-semibold text-primary">{title}</h2>
-          <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-surface-variant px-3 py-2 font-semibold text-primary hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
-          >
-            Cerrar
-          </button>
+        <div
+          id="policy-dialog-content"
+          className="max-h-[70vh] overflow-y-auto print:static print:max-h-none print:overflow-visible"
+        >
+          <div className="policy-dialog-header sticky top-0 z-10 flex items-center justify-between border-b border-surface-variant bg-white px-4 py-3 print:hidden">
+            <h2 id="policy-dialog-title" className="font-semibold text-primary">{title}</h2>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-surface-variant px-3 py-2 font-semibold text-primary hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
+            >
+              Cerrar
+            </button>
+          </div>
+          {children}
         </div>
-        {children}
       </section>
     </div>
   );
