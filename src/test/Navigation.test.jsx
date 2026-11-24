@@ -58,6 +58,23 @@ describe('navegación por fragmentos', () => {
     expect(window.location.hash).toBe('#hero');
   });
 
+  it('vuelve al inicio del diálogo antes de imprimir la política', () => {
+    window.history.replaceState(null, '', '/#politica-datos');
+    vi.stubGlobal('print', vi.fn());
+    render(<App />);
+
+    const dialog = document.getElementById('policy-dialog-content');
+    const dialogContainer = document.getElementById('policy-dialog-scroll-container');
+    dialog.scrollTop = 500;
+    dialogContainer.scrollTop = 300;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Imprimir / guardar en PDF' }));
+
+    expect(dialog.scrollTop).toBe(0);
+    expect(dialogContainer.scrollTop).toBe(0);
+    expect(window.print).toHaveBeenCalledOnce();
+  });
+
   it('muestra preguntas frecuentes y marco normativo en Gestión SST', async () => {
     window.history.replaceState(null, '', '/#faq-sst');
     render(<App />);
