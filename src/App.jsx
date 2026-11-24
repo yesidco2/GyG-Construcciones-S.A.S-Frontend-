@@ -12,6 +12,7 @@ import CookiePolicyPage from './pages/CookiePolicyPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import getAppRouteKey from './utils/appRoute';
 import PolicyDialog from './components/PolicyDialog';
+import InduccionTrabajadorPage from './pages/InduccionTrabajadorPage';
 
 const policyRoutes = ['politica-cookies', 'politica-datos', 'policy-content'];
 
