@@ -12,7 +12,7 @@ export function ProjectPhotoInput({ id, onChange, disabled }) {
         aria-describedby={id + '-help'}
         className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm"
         onChange={(event) => onChange(Array.from(event.target.files))} />
-      <p id={id + '-help'} className="mt-1 text-xs text-secondary">Opcional. JPEG, PNG o WebP, hasta 5 MB y 4 megapíxeles por foto. Máximo 20 por obra.</p>
+      <p id={id + '-help'} className="mt-1 text-xs text-secondary">Hasta 20 fotos JPEG, PNG o WebP por obra. Las fotos grandes se reducen automáticamente al subirlas.</p>
     </div>
   );
 }

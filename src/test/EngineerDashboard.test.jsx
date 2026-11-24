@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import EngineerDashboard from '../components/dashboard/EngineerDashboard';
 import { apiFetch } from '../services/api';
 
+vi.mock('../utils/preparePhoto', async (importOriginal) => ({
+  ...await importOriginal(),
+  prepareWorkPhoto: async (file) => file,
+}));
+
 vi.mock('../services/api', () => ({ apiFetch: vi.fn() }));
 
 const first = { id: 17, nombre: 'Obra Norte', categoria: 'CIVIL', estado: 'EN_PROGRESO', progreso: 20 };
@@ -14,6 +19,7 @@ describe('compatibilidad del panel de obras', () => {
     apiFetch.mockReset();
     apiFetch.mockImplementation(async (path) => {
       if (path === '/api/panel/obras') return [first, second];
+      if (path === '/api/panel/obras/17/documentos' || path === '/api/panel/obras/17/fotos') return [];
       if (path === '/api/panel/obras/estados') return ['PLANIFICADA', 'EN_PROGRESO', 'PAUSADA', 'FINALIZADA'];
       if (path === '/api/panel/obras/17/progreso') return { ...first, progreso: 80 };
       throw new Error('Solicitud no esperada: ' + path);
@@ -37,6 +43,18 @@ describe('compatibilidad del panel de obras', () => {
       method: 'PATCH', body: JSON.stringify({ progreso: 80 }),
     });
     expect(south).toHaveValue('10');
+  });
+
+  it('cuenta como culminada la obra cuando el avance guardado llega al 100 %', async () => {
+    const user = userEvent.setup();
+    render(<EngineerDashboard currentUser={{ role: 'INGENIERO' }} />);
+    const slider = await screen.findByRole('slider', { name: 'Avance de Obra Norte' });
+    const metric = screen.getByText('Obras Culminadas').parentElement;
+    expect(within(metric).getByText('0')).toBeInTheDocument();
+    fireEvent.change(slider, { target: { value: '100' } });
+    apiFetch.mockResolvedValueOnce({ ...first, progreso: 100 });
+    await user.click(within(slider.closest('.space-y-3')).getByRole('button', { name: 'Guardar avance' }));
+    expect(await within(metric).findByText('1')).toBeInTheDocument();
   });
 
   it('consulta las fotos de la obra seleccionada al abrir la galería', async () => {

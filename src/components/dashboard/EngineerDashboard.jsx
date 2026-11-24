@@ -14,7 +14,9 @@ import {
   regenerateProjectTrackingCode,
   deleteProject,
 } from '../../services/projectService';
-import safeImageUrl from '../../utils/safeImageUrl';
+import ProjectDocuments, { DocumentInput, uploadDocuments } from '../ProjectDocuments';
+import { apiFetch } from '../../services/api';
+import ProfileEditor from './ProfileEditor';
 
 import ProjectPhotos, { ProjectPhotoInput } from './ProjectPhotos';
 import ClientPicker from './ClientPicker';
@@ -82,6 +84,24 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const [editingProject, setEditingProject] = useState(null);
   const [projectEdits, setProjectEdits] = useState(null);
   const [isSavingProject, setIsSavingProject] = useState(false);
+  const [documents, setDocuments] = useState([]);
+  const [documentError, setDocumentError] = useState('');
+  const [profileName, setProfileName] = useState(currentUser?.name || '');
+  const [avatar, setAvatar] = useState('');
+  const [avatarRevision, setAvatarRevision] = useState(0);
+  useEffect(() => {
+    if (!currentUser?.email) return;
+    let active = true;
+    let url;
+    apiFetch('/api/panel/perfil/foto', { responseType: 'blob' }).then((blob) => {
+      if (active && blob.size) {
+        url = URL.createObjectURL(blob);
+        setAvatar(url);
+      }
+    }).catch(() => {});
+    return () => { active = false; if (url) URL.revokeObjectURL(url); };
+  }, [avatarRevision, currentUser?.email]);
+
   const [initialPhotos, setInitialPhotos] = useState([]);
   const [pendingPhotos, setPendingPhotos] = useState([]);
   const [retryingPhotos, setRetryingPhotos] = useState(false);
@@ -247,6 +267,9 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       const { trackingCode } = created;
       setProjects((current) => [created, ...current]);
       if (trackingCode) showTrackingCode(trackingCode);
+      const failures = await uploadDocuments(created.id, documents);
+      setDocumentError(failures.length ? 'La obra se guardó. Vuelve a seleccionar estos documentos en su galería: ' + failures.join(' ') : '');
+      setDocuments([]);
       if (initialPhotos.length) savePhotoFailures(created, await uploadProjectPhotos(created, initialPhotos));
       showNotification('Obra ' + created.name + ' registrada con éxito.');
       
@@ -353,11 +376,12 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const avgProgress = totalProjects > 0
     ? Math.round(projects.reduce((acc, p) => acc + (p.progress || 0), 0) / totalProjects)
     : 0;
-  const completedProjects = projects.filter((p) => p.status === 'FINALIZADA').length;
+  const completedProjects = projects.filter((p) => p.status === 'FINALIZADA' || p.progress === 100).length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       
+      {documentError && <p role="alert">{documentError}</p>}
       {/* BARRA SUPERIOR DEL DASHBOARD */}
       <div className="bg-primary text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-primary/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-industrial-orange/15 rounded-full blur-3xl pointer-events-none" />
@@ -365,9 +389,9 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="relative">
-              {currentUser?.avatar ? (
+              {avatar ? (
                 <img
-                  src={safeImageUrl(currentUser.avatar)}
+                  src={avatar}
                   alt={currentUser.name || 'Foto de perfil'}
                   className="h-16 w-16 rounded-2xl border-2 border-industrial-orange object-cover shadow-md sm:h-20 sm:w-20"
                 />
@@ -383,7 +407,9 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   </svg>
                 </div>
               )}
-              <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-primary rounded-full flex items-center justify-center text-[10px] text-white">
+              <button type="button" aria-label="Personalizar mi perfil" title="Personalizar mi perfil" onClick={() => setActiveTab('session')}
+                className="absolute inset-0 rounded-2xl focus:ring-2 focus:ring-white" />
+              <span className="pointer-events-none absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-primary rounded-full flex items-center justify-center text-[10px] text-white">
                 ✓
               </span>
             </div>
@@ -400,7 +426,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               </div>
 
               <h2 className="font-headline-sm text-2xl font-bold text-white mt-1">
-                {currentUser?.name || 'Ingeniero Residente'}
+                {profileName || 'Ingeniero Residente'}
               </h2>
               <p className="text-xs text-white/70 font-body-sm">
                 {currentUser?.email} • Panel de Control de Proyectos & Auditoría SG-SST
@@ -623,7 +649,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                       className="px-3 py-1.5 rounded-lg border border-outline-variant hover:border-industrial-orange bg-surface hover:bg-white text-xs font-semibold text-primary flex items-center gap-1.5 transition-all"
                     >
                       <span className="material-symbols-outlined text-sm text-industrial-orange">add_a_photo</span>
-                      <span>Fotos</span>
+                      <span>Fotos y documentos</span>
                     </button>
 
                     {canCreate && (
@@ -867,6 +893,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             <ProjectDateFields prefix="new-work" start={newStart} end={newEnd}
               onStart={setNewStart} onEnd={setNewEnd} disabled={isCreatingProject} />
 
+            <DocumentInput onChange={setDocuments} disabled={isCreatingProject} />
             <ProjectPhotoInput id="initial-project-photos" onChange={setInitialPhotos} disabled={isCreatingProject} />
 
             <div>
@@ -908,6 +935,10 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       {/* VISTA 3: AUDITORÍA Y SESIÓN */}
       {activeTab === 'session' && (
         <div className="bg-white rounded-3xl border border-surface-variant p-6 sm:p-8 shadow-sm space-y-6 max-w-3xl mx-auto">
+          <ProfileEditor name={profileName} onSaved={(name, changedPhoto) => {
+            if (name) setProfileName(name);
+            if (changedPhoto) setAvatarRevision((value) => value + 1);
+          }} />
           <div>
             <span className="font-label-caps text-label-caps text-industrial-orange uppercase tracking-wider">
               Seguridad de la sesión
@@ -1081,6 +1112,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             </div>
 
             <ProjectPhotos key={photoModalProject.id} project={photoModalProject} />
+            <ProjectDocuments key={'docs-' + photoModalProject.id} projectId={photoModalProject.id} />
           </div>
         </div>
       )}

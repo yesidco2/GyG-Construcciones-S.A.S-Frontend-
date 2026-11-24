@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
 import { describeProjectError } from '../services/projectService';
+import ProjectDocuments from '../components/ProjectDocuments';
 import PublicProjectPhotos from './PublicProjectPhotos';
 import { ProjectMilestones } from '../components/ProjectMetadata';
 
@@ -111,6 +112,7 @@ export default function ConsultProjectPage() {
         name: data.nombre,
         progress: data.porcentajeAvance,
         milestones: data.hitos,
+        documents: Array.isArray(data.documentos) ? data.documentos : [],
         photos: Array.isArray(data.fotos) ? data.fotos : [],
         code,
       });
@@ -183,100 +185,70 @@ export default function ConsultProjectPage() {
           </div>
 
           <div className="min-w-0 rounded-2xl border border-surface-variant bg-surface p-5 shadow-sm">
-            {trackingResult ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-label-caps text-label-caps uppercase text-secondary">Código</p>
-                    <h2 className="break-all font-headline-sm text-headline-sm text-primary">{trackingResult.code}</h2>
-                  </div>
-                  <span className="rounded-full bg-primary px-sm py-xs font-label-caps text-label-caps text-on-primary">
-                    {trackingResult.progress}%
-                  </span>
+            <div className="flex min-h-[320px] flex-col justify-between rounded-xl bg-primary p-6 text-white sm:p-8">
+              <div>
+                <div className="mb-lg flex h-14 w-14 items-center justify-center rounded-2xl bg-industrial-orange text-white">
+                  <span className="material-symbols-outlined text-3xl" aria-hidden="true">monitoring</span>
                 </div>
-
-                <div>
-                  <p className="font-label-caps text-label-caps uppercase text-secondary">Proyecto</p>
-                  <h3 className="font-headline-md text-headline-md text-primary">{trackingResult.name}</h3>
-                </div>
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="font-label-caps text-label-caps uppercase text-secondary">Avance</span>
-                    <span className="font-bold text-primary">{trackingResult.progress}%</span>
-                  </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-surface-variant">
-                    <div className="h-full rounded-full bg-industrial-orange" style={{ width: `${trackingResult.progress}%` }} />
-                  </div>
-                </div>
+                <p className="mb-xs font-label-caps text-label-caps uppercase tracking-widest text-industrial-orange">
+                  Seguimiento de obra
+                </p>
+                <h2 className="font-headline-md text-headline-md text-white">
+                  Tu proyecto, en un solo lugar
+                </h2>
+                <p className="mt-sm font-body-sm text-body-sm text-white/70">
+                  Consulta con tu código de acceso la información disponible de tu obra.
+                </p>
               </div>
-            ) : !searched && !isLoading ? (
-              <div className="flex min-h-[320px] flex-col justify-between rounded-xl bg-primary p-6 text-white sm:p-8">
-                <div>
-                  <div className="mb-lg flex h-14 w-14 items-center justify-center rounded-2xl bg-industrial-orange text-white">
-                    <span className="material-symbols-outlined text-3xl" aria-hidden="true">monitoring</span>
-                  </div>
-                  <p className="mb-xs font-label-caps text-label-caps uppercase tracking-widest text-industrial-orange">
-                    Seguimiento de obra
-                  </p>
-                  <h2 className="font-headline-md text-headline-md text-white">
-                    Tu proyecto, en un solo lugar
-                  </h2>
-                  <p className="mt-sm font-body-sm text-body-sm text-white/70">
-                    Consulta con tu código de acceso la información disponible de tu obra.
-                  </p>
-                </div>
-                <ul className="mt-lg grid gap-sm border-t border-white/15 pt-md font-body-sm text-body-sm text-white/85">
-                  <li className="flex items-center gap-sm">
-                    <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">trending_up</span>
-                    Avance del proyecto
-                  </li>
-                  <li className="flex items-center gap-sm">
-                    <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">checklist</span>
-                    Hitos de la obra
-                  </li>
-                  <li className="flex items-center gap-sm">
-                    <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">photo_library</span>
-                    Fotografías disponibles
-                  </li>
-                </ul>
-              </div>
-            ) : (
-              <div className="flex min-h-[280px] items-center justify-center rounded-xl border border-dashed border-surface-variant bg-white p-6 text-center text-secondary">
-                <div className="max-w-sm">
-                  <span className="material-symbols-outlined mb-sm text-4xl text-industrial-orange" aria-hidden="true">
-                    {isLoading ? 'progress_activity' : 'search_off'}
-                  </span>
-                  <p>
-                    {isLoading
-                    ? 'Consultando el proyecto...'
-                    : error === 'not-found'
-                      ? 'Código de acceso inválido. Verifica el código e inténtalo de nuevo.'
-                      : error === 'rate-limited'
-                        ? 'Demasiadas consultas seguidas. Espera antes de intentarlo de nuevo.'
-                        : error === 'invalid-code'
-                          ? 'El código debe tener entre 6 y 40 caracteres y solo puede incluir letras, números y guiones.'
-                          : error === 'request-failed'
-                            ? 'Error de red o del servidor. Usa el botón Reintentar para volver a consultar.'
-                        : error === 'empty'
-                          ? 'Ingresa un código para iniciar la consulta.'
-                            : 'Sin resultados para este código.'}
-                  </p>
-                </div>
-              </div>
-            )}
+              <ul className="mt-lg grid gap-sm border-t border-white/15 pt-md font-body-sm text-body-sm text-white/85">
+                <li className="flex items-center gap-sm">
+                  <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">trending_up</span>
+                  Avance del proyecto
+                </li>
+                <li className="flex items-center gap-sm">
+                  <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">checklist</span>
+                  Hitos de la obra
+                </li>
+                <li className="flex items-center gap-sm">
+                  <span className="material-symbols-outlined text-industrial-orange" aria-hidden="true">photo_library</span>
+                  Fotografías disponibles
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
         {trackingResult && (
-          <div className="mt-lg grid gap-md">
+          <section aria-labelledby="project-result-name" className="mt-lg grid gap-md">
+            <div className="min-w-0 space-y-4 rounded-2xl border border-surface-variant bg-surface p-md shadow-sm">
+              <div>
+                <p className="font-label-caps text-label-caps uppercase text-secondary">Proyecto</p>
+                <h2 id="project-result-name" className="break-words font-headline-md text-headline-md text-primary">{trackingResult.name}</h2>
+              </div>
+              <div>
+                <p className="font-label-caps text-label-caps uppercase text-secondary">Código</p>
+                <p className="break-all text-primary">{trackingResult.code}</p>
+              </div>
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-label-caps text-label-caps uppercase text-secondary">Avance</span>
+                  <span className="font-bold text-primary">{trackingResult.progress}%</span>
+                </div>
+                <div role="progressbar" aria-label="Avance del proyecto" aria-valuenow={trackingResult.progress}
+                  aria-valuemin={0} aria-valuemax={100} className="h-2.5 overflow-hidden rounded-full bg-surface-variant">
+                  <div className="h-full rounded-full bg-industrial-orange" style={{ width: `${trackingResult.progress}%` }} />
+                </div>
+              </div>
+            </div>
             <div className="rounded-2xl border border-surface-variant bg-surface p-md shadow-sm">
               <h2 className="mb-sm font-label-caps text-label-caps uppercase text-secondary">Hitos de la obra</h2>
               <ProjectMilestones milestones={trackingResult.milestones} />
             </div>
+            <ProjectDocuments key={trackingResult.code} documents={trackingResult.documents} code={trackingResult.code}
+              blocked={Boolean(blockedUntil)} onRateLimit={onRateLimit} />
             <PublicProjectPhotos photos={trackingResult.photos} code={trackingResult.code}
               blocked={Boolean(blockedUntil)} onRateLimit={onRateLimit} />
-          </div>
+          </section>
         )}
       </div>
     </section>

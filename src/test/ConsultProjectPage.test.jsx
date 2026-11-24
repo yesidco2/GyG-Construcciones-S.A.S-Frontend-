@@ -72,7 +72,10 @@ describe('ConsultProjectPage API states', () => {
     await screen.findByRole('button', { name: /Reintentar/ });
 
     await user.click(screen.getByRole('button', { name: /Reintentar/ }));
-    expect(await screen.findByText('Obra Central')).toBeInTheDocument();
+    const result = await screen.findByRole('region', { name: 'Obra Central' });
+    const overview = screen.getByRole('heading', { name: 'Tu proyecto, en un solo lugar' });
+    expect(overview.compareDocumentPosition(result) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(result).toContainElement(screen.getByRole('progressbar', { name: 'Avance del proyecto' }));
     expect(screen.getByText('Cimentación')).toBeInTheDocument();
     expect(screen.getByText('Completado')).toBeInTheDocument();
     expect(screen.getByText(/todavía no tiene fotografías/)).toBeInTheDocument();

@@ -1,4 +1,5 @@
 import { apiFetch } from './api';
+import { PHOTO_TYPES, prepareWorkPhoto } from '../utils/preparePhoto';
 
 const PROJECTS_ENDPOINT = '/api/panel/obras';
 export const PROJECT_STATUSES = ['PLANIFICADA', 'EN_PROGRESO', 'PAUSADA', 'FINALIZADA'];
@@ -192,7 +193,7 @@ export async function deleteProject(project) {
   });
 }
 
-export const PROJECT_PHOTO_TYPES = 'image/jpeg,image/png,image/webp';
+export const PROJECT_PHOTO_TYPES = PHOTO_TYPES;
 
 export function describeProjectError(error, fallback) {
   if (error.status === 401 || error.code === 'CAPTCHA_REQUIRED') return 'Tu sesión venció. Vuelve a iniciar sesión.';
@@ -207,42 +208,15 @@ export function describeProjectError(error, fallback) {
   return error.status ? fallback : error.message || fallback;
 }
 
-async function validatePhoto(file) {
-  if (!PROJECT_PHOTO_TYPES.split(',').includes(file.type) || file.size === 0 || file.size > 5 * 1024 * 1024) {
-    throw new Error('Usa fotografías JPEG, PNG o WebP de hasta 5 MB por archivo.');
-  }
-  if (typeof createImageBitmap !== 'function') {
-    if (typeof Image.prototype.decode !== 'function') return;
-    const url = URL.createObjectURL(file);
-    try {
-      const image = new Image();
-      image.src = url;
-      await image.decode().catch(() => { throw new Error('No se pudo leer la imagen.'); });
-      if (image.naturalWidth * image.naturalHeight > 4_000_000) throw new Error('La imagen supera los 4 megapíxeles.');
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-    return;
-  }
-  const bitmap = await createImageBitmap(file).catch(() => {
-    throw new Error('No se pudo leer la imagen.');
-  });
-  try {
-    if (bitmap.width * bitmap.height > 4_000_000) throw new Error('La imagen supera los 4 megapíxeles.');
-  } finally {
-    bitmap.close();
-  }
-}
-
 export async function uploadProjectPhotos(project, files) {
   if (files.length > 20) throw new Error('Selecciona hasta 20 fotografías.');
   const failed = [];
   const path = PROJECTS_ENDPOINT + '/' + getProjectIdentifier(project) + '/fotos';
   for (const [index, file] of files.entries()) {
     try {
-      await validatePhoto(file);
+      const prepared = await prepareWorkPhoto(file);
       const body = new FormData();
-      body.append('archivo', file);
+      body.append('archivo', prepared, file.name);
       const result = await apiFetch(path, { method: 'POST', body, timeoutMs: 60000 });
       if (!Number.isSafeInteger(result?.id) || result.id <= 0) throw new Error('Respuesta de carga inválida.');
     } catch (error) {
