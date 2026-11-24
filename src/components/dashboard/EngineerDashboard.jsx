@@ -379,12 +379,11 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
   const completedProjects = projects.filter((p) => p.status === 'FINALIZADA' || p.progress === 100).length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <div className="portal-dashboard space-y-8">
       
       {documentError && <p role="alert">{documentError}</p>}
       {/* BARRA SUPERIOR DEL DASHBOARD */}
-      <div className="bg-primary text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-primary/20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-industrial-orange/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="portal-dashboard-hero text-white relative overflow-hidden">
         
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -420,7 +419,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
                   {currentUser?.role || 'Ingeniero / Administrador'}
                 </span>
                 <span className="inline-flex items-center gap-1 text-[11px] text-green-400 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                   Sesión autenticada
                 </span>
               </div>
@@ -456,20 +455,20 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
         </div>
 
         {/* MÉTRICAS DE RESUMEN (KPIs) */}
-        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/10 text-white">
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+        <div className="portal-dashboard-metrics relative grid grid-cols-2 sm:grid-cols-4 mt-6 border-t border-white/20 text-white">
+          <div className="min-w-0 py-4 pr-3">
             <span className="text-[11px] text-white/70 uppercase font-semibold block">Proyectos Activos</span>
             <span className="font-headline-sm text-2xl font-bold text-white mt-0.5 block">{totalProjects}</span>
           </div>
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+          <div className="min-w-0 py-4 pr-3">
             <span className="text-[11px] text-white/70 uppercase font-semibold block">Avance Promedio</span>
             <span className="font-headline-sm text-2xl font-bold text-industrial-orange mt-0.5 block">{avgProgress}%</span>
           </div>
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+          <div className="min-w-0 py-4 pr-3">
             <span className="text-[11px] text-white/70 uppercase font-semibold block">Obras Culminadas</span>
             <span className="font-headline-sm text-2xl font-bold text-green-400 mt-0.5 block">{completedProjects}</span>
           </div>
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+          <div className="min-w-0 py-4 pr-3">
             <span className="text-[11px] text-white/70 uppercase font-semibold block">Cumplimiento SST</span>
             <span className="font-headline-sm text-2xl font-bold text-white mt-0.5 block">100% ISO</span>
           </div>
@@ -502,48 +501,49 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       )}
 
       {/* PESTAÑAS DEL DASHBOARD */}
-      <div className="flex items-center justify-between border-b border-surface-variant pb-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('list')}
-            className={`py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'list'
-                ? 'bg-primary text-white shadow-sm'
-                : 'bg-surface text-secondary hover:text-primary hover:bg-surface-variant/60'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">apartment</span>
-            <span>Gestión de Proyectos ({totalProjects})</span>
-          </button>
+      <nav aria-label="Secciones del portal SST" className="portal-workspace-nav">
+        <button
+          type="button"
+          onClick={() => setActiveTab('list')}
+          aria-pressed={activeTab === 'list'}
+          className={`portal-workspace-tab ${
+            activeTab === 'list'
+              ? 'bg-primary text-white shadow-sm'
+              : 'bg-surface text-secondary hover:text-primary hover:bg-surface-variant/60'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">apartment</span>
+          <span>Gestión de Proyectos ({totalProjects})</span>
+        </button>
 
-          {canCreate && <button
-            type="button"
-            onClick={() => setActiveTab('create')}
-            className={`py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'create'
-                ? 'bg-industrial-orange text-white shadow-sm'
-                : 'bg-surface text-secondary hover:text-primary hover:bg-surface-variant/60'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">add_circle</span>
-            <span>Crear Proyecto con Código</span>
-          </button>}
+        {canCreate && <button
+          type="button"
+          onClick={() => setActiveTab('create')}
+          aria-pressed={activeTab === 'create'}
+          className={`portal-workspace-tab ${
+            activeTab === 'create'
+              ? 'bg-industrial-orange text-white shadow-sm'
+              : 'bg-surface text-secondary hover:text-primary hover:bg-surface-variant/60'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">add_circle</span>
+          <span>Crear Proyecto con Código</span>
+        </button>}
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('session')}
-            className={`py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              activeTab === 'session'
-                ? 'bg-primary text-white shadow-sm'
-                : 'bg-surface text-secondary hover:text-primary hover:bg-surface-variant/60'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">shield</span>
-            <span>Auditoría y sesión</span>
-          </button>
-        </div>
-      </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab('session')}
+          aria-pressed={activeTab === 'session'}
+          className={`portal-workspace-tab ${
+            activeTab === 'session'
+              ? 'bg-primary text-white shadow-sm'
+              : 'bg-surface text-secondary hover:text-primary hover:bg-surface-variant/60'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          <span>Auditoría y sesión</span>
+        </button>
+      </nav>
 
       {/* VISTA 1: LISTADO Y EDICIÓN DE AVANCES */}
       {pendingPhotos.map(({ project, failed }) => (
@@ -560,7 +560,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
       ))}
 
       {activeTab === 'list' && (
-        <div className="space-y-4">
+        <section className="portal-workspace-view space-y-4" aria-label="Gestión de proyectos">
           {projectsError && (
             <div className="rounded-xl border border-error/20 bg-error-container p-4 text-sm text-error" role="alert">
               <p>{projectsError}</p>
@@ -569,7 +569,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               </button>
             </div>
           )}
-          <div className="flex items-center justify-between text-xs text-secondary px-1">
+          <div className="portal-workspace-heading">
+            <h3>Gestión de proyectos</h3>
             <p>
               Modifica directamente el <strong>porcentaje de avance</strong> para mantener actualizado el seguimiento del cliente.
             </p>
@@ -589,7 +590,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="bg-white rounded-2xl border border-surface-variant p-5 sm:p-6 shadow-sm hover:shadow-md transition-all space-y-4"
+                className="portal-project-row space-y-4"
               >
                 {/* Cabecera de la tarjeta del proyecto */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-variant">
@@ -765,18 +766,18 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* VISTA 2: FORMULARIO PARA CREAR NUEVO PROYECTO CON CÓDIGO */}
       {canCreate && activeTab === 'create' && (
-        <div className="bg-white rounded-3xl border border-surface-variant p-6 sm:p-8 shadow-sm max-w-3xl mx-auto space-y-6">
-          <div className="border-b border-surface-variant pb-4">
+        <div className="portal-workspace-view portal-workspace-split">
+          <div className="portal-workspace-heading">
             <span className="font-label-caps text-label-caps text-industrial-orange uppercase tracking-wider">
               Nueva Obra / Contrato
             </span>
             <h3 className="font-headline-sm text-2xl font-bold text-primary mt-1">
-              Registrar Nuevo Proyecto en Sistema
+              Crear proyecto con código
             </h3>
             <p className="text-xs text-secondary mt-1">
               El servidor genera un código para que los clientes e interventores puedan consultar el estado del proyecto en la sección pública.
@@ -790,8 +791,8 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
             </div>
           )}
 
-          <form onSubmit={handleCreateProjectSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form onSubmit={handleCreateProjectSubmit} className="portal-project-form">
+            <div className="portal-project-span grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Estado inicial */}
               <div>
                 <label htmlFor="new-status" className="block text-xs font-semibold uppercase text-secondary mb-1">
@@ -890,13 +891,15 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               </p>
             </div>
 
-            <ProjectDateFields prefix="new-work" start={newStart} end={newEnd}
-              onStart={setNewStart} onEnd={setNewEnd} disabled={isCreatingProject} />
+            <div className="portal-project-span">
+              <ProjectDateFields prefix="new-work" start={newStart} end={newEnd}
+                onStart={setNewStart} onEnd={setNewEnd} disabled={isCreatingProject} />
+            </div>
 
             <DocumentInput onChange={setDocuments} disabled={isCreatingProject} />
             <ProjectPhotoInput id="initial-project-photos" onChange={setInitialPhotos} disabled={isCreatingProject} />
 
-            <div>
+            <div className="portal-project-span">
               <label htmlFor="new-desc" className="block text-xs font-semibold uppercase text-secondary mb-1">
                 Descripción Técnica & Compromiso SST
               </label>
@@ -911,7 +914,7 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
               />
             </div>
 
-            <div className="pt-2 flex items-center justify-end gap-3">
+            <div className="portal-project-span portal-project-actions pt-4 flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setActiveTab('list')}
@@ -934,39 +937,43 @@ export default function EngineerDashboard({ currentUser, onLogout }) {
 
       {/* VISTA 3: AUDITORÍA Y SESIÓN */}
       {activeTab === 'session' && (
-        <div className="bg-white rounded-3xl border border-surface-variant p-6 sm:p-8 shadow-sm space-y-6 max-w-3xl mx-auto">
-          <ProfileEditor name={profileName} onSaved={(name, changedPhoto) => {
-            if (name) setProfileName(name);
-            if (changedPhoto) setAvatarRevision((value) => value + 1);
-          }} />
-          <div>
-            <span className="font-label-caps text-label-caps text-industrial-orange uppercase tracking-wider">
-              Seguridad de la sesión
-            </span>
-            <h3 className="font-headline-sm text-xl font-bold text-primary mt-1">
-              Sesión autenticada con Supabase
-            </h3>
-            <p className="text-xs text-secondary mt-1">
-              Tu identidad se valida con Supabase y tus permisos se consultan en el servidor corporativo.
-            </p>
+        <div className="portal-workspace-view portal-session-grid">
+          <div className="portal-session-profile">
+            <ProfileEditor name={profileName} avatar={avatar} onSaved={(name, changedPhoto) => {
+              if (name) setProfileName(name);
+              if (changedPhoto) setAvatarRevision((value) => value + 1);
+            }} />
           </div>
-
-          <div className="p-4 rounded-2xl bg-surface border border-surface-variant space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-primary">Estado:</span>
-              <span className="font-mono text-green-700 bg-green-100 px-2 py-0.5 rounded-full font-bold">
-                Sesión autenticada
+          <section className="portal-session-details space-y-5">
+            <div className="portal-workspace-heading">
+              <span className="font-label-caps text-label-caps text-industrial-orange uppercase tracking-wider">
+                Seguridad de la sesión
               </span>
+              <h3 className="font-headline-sm text-xl font-bold text-primary mt-1">
+                Sesión autenticada
+              </h3>
+              <p className="text-xs text-secondary mt-1">
+                Consulta el estado de tu acceso y el rol asociado a tu cuenta.
+              </p>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-primary">Rol de Acceso:</span>
-              <span className="font-semibold text-industrial-orange">{currentUser?.role}</span>
+
+            <div className="portal-session-facts">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-primary">Estado:</span>
+                <span className="font-mono text-green-700 bg-green-100 px-2 py-0.5 rounded-full font-bold">
+                  Sesión autenticada
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-primary">Rol de Acceso:</span>
+                <span className="font-semibold text-industrial-orange">{currentUser?.role}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-primary">Cuenta:</span>
+                <span>{currentUser?.email}</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-primary">Cuenta:</span>
-              <span>{currentUser?.email}</span>
-            </div>
-          </div>
+          </section>
         </div>
       )}
 
