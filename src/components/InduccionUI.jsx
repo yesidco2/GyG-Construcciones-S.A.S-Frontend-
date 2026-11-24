@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import './induccion.css';
 
 export const estados = {
   PENDIENTE: 'Pendiente',
@@ -7,10 +8,10 @@ export const estados = {
   CORRECCION: 'Requiere corrección',
 };
 
-export const campo = 'w-full rounded-lg border border-slate-400 bg-white p-2 text-slate-900';
-export const tarjeta = 'rounded-xl border border-slate-300 bg-white p-4 space-y-3 text-slate-900';
-export const boton = 'rounded-lg bg-primary px-4 py-2 font-semibold text-white disabled:opacity-50';
-export const secundario = 'rounded-lg border border-slate-400 px-3 py-2 font-semibold disabled:opacity-50';
+export const campo = 'sst-field';
+export const tarjeta = 'sst-card space-y-4';
+export const boton = 'sst-primary';
+export const secundario = 'sst-secondary';
 
 export function normalizar(texto) {
   return texto.toLocaleLowerCase('es').normalize('NFD').replace(/\p{M}/gu, '').trim();

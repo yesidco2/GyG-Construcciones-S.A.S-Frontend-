@@ -161,13 +161,24 @@ export default function InduccionesObra({ obra }) {
     && normalizar(p.nombre).includes(normalizar(busqueda)));
 
   return (
-    <section className="mt-5 space-y-4 rounded-xl border border-slate-300 bg-slate-50 p-4 text-slate-900">
-      <h3 className="text-lg font-bold">Inducciones SST · {obra.name}</h3>
-      {error && <p role="alert" className="text-red-900">{error}</p>}
+    <section className="sst-flow sst-panel">
+      <header className="sst-banner">
+        <span className="sst-icon material-symbols-outlined" aria-hidden="true">health_and_safety</span>
+        <div>
+        <h3 className="text-xl font-bold text-primary">Inducciones SST</h3>
+        <p>{obra.name}</p>
+        </div>
+      </header>
+      <div className="sst-panel-content">
+      {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900">{error}</p>}
       {copiado && <p role="status">{copiado}</p>}
       <form className={tarjeta} onSubmit={crear}>
-        <h4 className="font-bold">Crear asignación</h4>
-        <label className="block">Material y versión
+        <div className="flex items-center gap-3">
+        <span className="material-symbols-outlined text-xl text-sky-800" aria-hidden="true">assignment_add</span>
+          <h4 className="text-lg font-bold">Crear asignación</h4>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+        <label className="block text-sm font-semibold">Material y versión
           <select className={campo} required value={material} onChange={(e) => setMaterial(e.target.value)}>
             <option value="">Selecciona una inducción</option>
             {catalogo.map((m) => <option key={m.id + '/' + m.version} value={m.id + '/' + m.version}>
@@ -175,10 +186,13 @@ export default function InduccionesObra({ obra }) {
             </option>)}
           </select>
         </label>
-        <label className="block">Nombres de trabajadores, uno por línea
+        <label className="block text-sm font-semibold">Nombres de trabajadores, uno por línea
           <textarea className={campo} rows={4} required value={nombres} onChange={(e) => setNombres(e.target.value)} />
         </label>
-        <button className={boton} disabled={ocupado}>Crear asignación</button>
+        </div>
+        <div className="flex justify-end border-t border-slate-200 pt-4">
+          <button className={boton} disabled={ocupado || !material || !nombres.trim()}>Crear asignación</button>
+        </div>
       </form>
       <EditorInduccion catalogo={catalogo} ocupado={ocupado} publicar={(contenido) => ejecutar(async () => {
         const registro = await apiFetch(base + '/catalogo', json(contenido));
@@ -270,6 +284,7 @@ export default function InduccionesObra({ obra }) {
           </div>
         </>}
       </div>}
+      </div>
     </section>
   );
 }
