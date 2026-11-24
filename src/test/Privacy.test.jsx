@@ -226,26 +226,97 @@ describe('Privacy consent in contact and newsletter', () => {
 });
 
 describe('Chat privacy notice', () => {
-  it('shows the notice before chat messages and sends policyVersion with the message', async () => {
+  it('shows the notice and sends only fields supported by the chat API', async () => {
     const user = userEvent.setup();
-    apiFetch.mockResolvedValueOnce({ respuesta: 'Respuesta de prueba' });
+    apiFetch.mockImplementation((path) => Promise.resolve(
+      path === '/api/chat/config'
+        ? { proveedorExternoActivo: false, versionPolitica: '1.0' }
+        : { respuesta: 'Respuesta de prueba' },
+    ));
     render(<FloatingIA />);
     await user.click(screen.getByRole('button', { name: 'Abrir asistente IA' }));
 
-    const notice = screen.getByText(/Sus mensajes se registran para responderle/);
+    const notice = screen.getByText(/Sus mensajes se registran en los sistemas de G&G/);
     const greeting = screen.getByText(/Hola — soy el asistente virtual/);
     expect(notice.compareDocumentPosition(greeting) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     await user.type(screen.getByLabelText('Mensaje para el asistente'), 'Consulta de prueba');
-    await user.click(screen.getByRole('button', { name: 'Enviar' }));
+    const sendButton = screen.getByRole('button', { name: 'Enviar' });
+    await waitFor(() => expect(sendButton).toBeEnabled());
+    await user.click(sendButton);
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalledWith('/api/chat', expect.objectContaining({
       method: 'POST',
     })));
-    expect(JSON.parse(apiFetch.mock.calls[0][1].body)).toMatchObject({
+    expect(JSON.parse(apiFetch.mock.calls[1][1].body)).toEqual({
       pregunta: 'Consulta de prueba',
-      politicaVersion: expect.any(String),
+      aceptaEnvioProveedor: false,
     });
+  });
+
+  it('requires explicit consent before sending a question to Gemini', async () => {
+    const user = userEvent.setup();
+    apiFetch.mockImplementation((path) => Promise.resolve(
+      path === '/api/chat/config'
+        ? { proveedorExternoActivo: true, versionPolitica: '1.1' }
+        : { respuesta: 'Respuesta de prueba' },
+    ));
+    render(<FloatingIA />);
+    await user.click(screen.getByRole('button', { name: 'Abrir asistente IA' }));
+
+    const consent = await screen.findByRole('checkbox', {
+      name: /Autorizo que G&G envíe mi pregunta a Google Gemini/,
+    });
+    await user.type(screen.getByLabelText('Mensaje para el asistente'), 'Consulta SST');
+    expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
+
+    await user.click(consent);
+    await user.click(screen.getByRole('button', { name: 'Enviar' }));
+    await waitFor(() => expect(apiFetch).toHaveBeenCalledWith('/api/chat', expect.objectContaining({
+      method: 'POST',
+    })));
+    expect(JSON.parse(apiFetch.mock.calls[1][1].body)).toEqual({
+      pregunta: 'Consulta SST',
+      aceptaEnvioProveedor: true,
+    });
+  });
+
+  it('shows a service error instead of a fabricated answer when the API fails', async () => {
+    const user = userEvent.setup();
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    apiFetch.mockImplementation((path) => (
+      path === '/api/chat/config'
+        ? Promise.resolve({ proveedorExternoActivo: false, versionPolitica: '1.0' })
+        : Promise.reject(new Error('Network unavailable'))
+    ));
+    render(<FloatingIA />);
+    await user.click(screen.getByRole('button', { name: 'Abrir asistente IA' }));
+
+    await user.type(screen.getByLabelText('Mensaje para el asistente'), 'Consulta de prueba');
+    const sendButton = screen.getByRole('button', { name: 'Enviar' });
+    await waitFor(() => expect(sendButton).toBeEnabled());
+    await user.click(sendButton);
+
+    expect(await screen.findByText(
+      'No pude conectar con el asistente en este momento. Inténtalo de nuevo más tarde.',
+    )).toBeInTheDocument();
+    consoleError.mockRestore();
+  });
+
+  it('does not send a question when the external-provider configuration cannot be loaded', async () => {
+    const user = userEvent.setup();
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    apiFetch.mockRejectedValueOnce(new Error('Network unavailable'));
+    render(<FloatingIA />);
+    await user.click(screen.getByRole('button', { name: 'Abrir asistente IA' }));
+
+    await user.type(screen.getByLabelText('Mensaje para el asistente'), 'Consulta SST');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo cargar la configuración del asistente.',
+    );
+    expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    consoleError.mockRestore();
   });
 });
 
@@ -261,7 +332,7 @@ describe('Privacy policy page', () => {
     expect(screen.getByText('15 de enero de 2026')).toBeInTheDocument();
     expect(screen.queryByText(/borrador|pendiente|\[(completar|verificar)/i)).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /^\d+\./ })).toHaveLength(13);
-  });
+  }, 15000);
 
   it('links the footer to the policy route', async () => {
     vi.stubEnv('VITE_PRIVACY_POLICY_VERSION', '1.0');

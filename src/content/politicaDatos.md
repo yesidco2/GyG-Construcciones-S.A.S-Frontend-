@@ -42,7 +42,7 @@ G&G aplica los principios de legalidad, finalidad, libertad, veracidad o calidad
 |---|---|---|---|
 | Formulario de contacto y solicitud de cotización | Nombre, correo electrónico, teléfono, empresa, tipo de servicio y mensaje, según los campos diligenciados | Atender la solicitud, preparar propuestas o cotizaciones y mantener comunicación relacionada | Durante la atención de la solicitud y el tiempo necesario para cumplir obligaciones contractuales y legales |
 | Boletín informativo | Correo electrónico y constancia de autorización | Enviar comunicaciones informativas y comerciales relacionadas con los servicios de G&G | Hasta que el titular retire su autorización o solicite la supresión, salvo que exista una obligación legal de conservación |
-| Asistente virtual | Mensajes enviados, fecha de interacción e identificadores técnicos asociados | Responder consultas, mantener el servicio y atender solicitudes de soporte | Durante el tiempo necesario para responder la consulta, mantener la seguridad y cumplir obligaciones legales |
+| Asistente virtual | Mensaje enviado, respuesta, fecha de interacción e identificadores técnicos asociados; historial limitado temporalmente en el almacenamiento de sesión del navegador | Responder consultas, mantener el servicio y atender solicitudes de soporte. Cuando el proveedor externo esté habilitado y el titular lo autorice, la pregunta se transmite a Google Gemini para generar la respuesta | Los registros del chat en el servidor se conservan hasta 12 meses, conforme a la configuración del servicio, y luego se eliminan, salvo obligación legal. El historial local permanece en la sesión del navegador y puede borrarse desde el chat |
 | Consulta de avance de proyecto | Código de proyecto y datos de la obra asociados, incluidos avances e imágenes disponibles | Permitir a los clientes consultar información de sus proyectos | Durante la relación contractual y los plazos legales aplicables |
 | Acceso de ingenieros y administradores | Nombre, correo electrónico, identificador de cuenta, rol y registros de actividad | Autenticar usuarios, administrar permisos y mantener la seguridad y trazabilidad del sistema | Mientras la cuenta permanezca activa y durante los plazos legales aplicables |
 | Seguridad del sitio | Dirección IP, datos del navegador, señales de verificación anti-bot y registros técnicos | Prevenir abusos y fraudes, proteger las cuentas y mantener la disponibilidad del servicio | Durante el tiempo necesario para investigar incidentes y proteger el servicio |
@@ -59,7 +59,7 @@ Consulta la [Política de cookies](#politica-cookies) para ver el inventario de 
 
 ## 6. Autorización del titular
 
-G&G solicita autorización previa, expresa e informada antes de tratar datos personales. En los formularios del sitio la autorización se otorga marcando una casilla que no viene seleccionada de antemano. G&G conserva la fecha, la versión de esta política y la finalidad aceptada.
+G&G solicita autorización previa, expresa e informada antes de tratar datos personales. En los formularios del sitio la autorización se otorga marcando una casilla que no viene seleccionada de antemano. G&G conserva la fecha, la versión de esta política y la finalidad aceptada. Cuando el proveedor externo del asistente esté habilitado, antes de enviar una pregunta a Google Gemini se solicitará una autorización específica mediante una casilla sin marcar. G&G registra la aceptación, la fecha y la versión de la política asociada; si no se acepta, la pregunta no se envía al proveedor.
 
 No se requiere autorización en los casos del artículo 10 de la Ley 1581 de 2012: información requerida por una entidad pública o administrativa en ejercicio de sus funciones legales o por orden judicial, datos de naturaleza pública, casos de urgencia médica o sanitaria, tratamiento autorizado por la ley con fines históricos, estadísticos o científicos, y datos relacionados con el registro civil de las personas.
 
@@ -95,9 +95,9 @@ G&G se compromete, entre otros deberes del artículo 17 de la Ley 1581 de 2012, 
 
 ## 10. Encargados, proveedores y transferencias
 
-Para operar el sitio, G&G puede utilizar proveedores tecnológicos que prestan servicios de alojamiento, base de datos, autenticación de usuarios y verificación anti-bot. Estos proveedores acceden únicamente a la información necesaria para prestar sus servicios y deben protegerla conforme a las obligaciones contractuales y legales aplicables.
+Para operar el sitio, G&G puede utilizar proveedores tecnológicos que prestan servicios de alojamiento, base de datos, autenticación de usuarios y verificación anti-bot. Cuando la función de IA externa esté habilitada, Google (Gemini API) recibe la pregunta del titular para generar una respuesta. No se envía el historial completo de la conversación. Estos proveedores acceden a la información necesaria para prestar sus servicios conforme a sus condiciones y políticas aplicables; consulta la [Política de privacidad de Google](https://policies.google.com/privacy).
 
-El uso de algunos proveedores puede implicar el tratamiento de datos fuera de Colombia. Cuando se realicen transmisiones o transferencias internacionales, estas se efectuarán conforme a la Ley 1581 de 2012 y sus normas reglamentarias, con las garantías de seguridad y confidencialidad correspondientes.
+El uso de algunos proveedores puede implicar el tratamiento de datos fuera de Colombia. Antes de activar la integración con Google, G&G debe verificar las condiciones del proveedor, la configuración aplicable al uso de datos y las garantías para cualquier transmisión internacional, conforme a la Ley 1581 de 2012 y sus normas reglamentarias.
 
 Si el titular inicia una conversación mediante un enlace a WhatsApp, el tratamiento que realice esa plataforma se regirá por sus propias condiciones y políticas de privacidad.
 
