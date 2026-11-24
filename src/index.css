@@ -11,6 +11,14 @@ html {
   scroll-padding-top: 5rem;
 }
 
+html.login-hide-scrollbar {
+  scrollbar-width: none;
+}
+
+html.login-hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   margin: 0;
   overflow-x: hidden;

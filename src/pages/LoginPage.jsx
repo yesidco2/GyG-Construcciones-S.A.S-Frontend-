@@ -148,6 +148,12 @@ export default function LoginPage() {
     return () => window.clearInterval(intervalId);
   }, [lockoutUntil]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('login-hide-scrollbar');
+    return () => root.classList.remove('login-hide-scrollbar');
+  }, []);
+
   const handleLogin = async (event) => {
     event.preventDefault();
     if (loginInFlight.current || Date.now() < lockoutUntil) return;
@@ -263,10 +269,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 pb-16 pt-20 selection:bg-industrial-orange selection:text-white sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-container-max">
+    <div className={`bg-background px-4 selection:bg-industrial-orange selection:text-white sm:px-6 lg:px-8 ${
+      authenticatedContent ? 'min-h-screen pb-16 pt-20' : 'h-screen overflow-hidden pb-4 pt-16'
+    }`}>
+      <div className={`mx-auto w-full max-w-container-max ${authenticatedContent ? '' : 'h-full'}`}>
         {authenticatedContent || (
-          <div className="grid min-h-[640px] grid-cols-1 overflow-hidden rounded-3xl border border-surface-variant/80 bg-white shadow-xl lg:grid-cols-12">
+          <div className="grid h-full min-h-0 grid-cols-1 overflow-hidden rounded-3xl border border-surface-variant/80 bg-white shadow-xl lg:grid-cols-12">
             <section className="relative hidden flex-col justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-container to-[#00142e] p-8 text-white lg:col-span-5 lg:flex lg:p-10">
               <div className="pointer-events-none absolute inset-0 opacity-10">
                 <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">

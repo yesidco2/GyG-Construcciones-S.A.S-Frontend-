@@ -37,6 +37,14 @@ describe('LoginPage CAPTCHA flow', () => {
     });
   });
 
+  it('hides the page scrollbar only while the login page is mounted', () => {
+    const { unmount } = render(<LoginPage />);
+
+    expect(document.documentElement).toHaveClass('login-hide-scrollbar');
+    unmount();
+    expect(document.documentElement).not.toHaveClass('login-hide-scrollbar');
+  });
+
   it('shows confirmation instructions for an unconfirmed account', async () => {
     const user = userEvent.setup();
     loginWithEmail.mockRejectedValueOnce({ code: 'email_not_confirmed' });
