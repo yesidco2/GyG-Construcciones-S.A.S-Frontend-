@@ -63,9 +63,9 @@ export default function About() {
   return (
     <section id="nosotros" className="bg-white px-4 py-xl sm:px-6 lg:px-8 2xl:px-12">
       <div className="mx-auto max-w-container-max">
-        <div className="mb-lg flex flex-col gap-md border-b border-surface-variant pb-lg md:flex-row md:items-end md:justify-between">
-          <h2 className="mb-xs font-headline-lg text-headline-lg text-primary">Nosotros</h2>
-          <p className="max-w-2xl font-body-md text-body-md text-secondary">
+        <div className="mb-lg border-b border-surface-variant pb-lg">
+          <h2 className="font-headline-lg text-headline-lg text-primary">Nosotros</h2>
+          <p className="mt-2 max-w-2xl font-body-md text-body-md text-secondary">
             Conozca nuestra misión, visión y lo que opinan nuestros clientes.
           </p>
         </div>
