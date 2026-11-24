@@ -27,6 +27,15 @@ function PolicyHeading({ children, ...props }) {
   );
 }
 
+function printPolicy() {
+  const dialog = document.getElementById('policy-dialog-content');
+  const dialogContainer = document.getElementById('policy-dialog-scroll-container');
+  if (dialog) dialog.scrollTop = 0;
+  if (dialogContainer) dialogContainer.scrollTop = 0;
+  window.scrollTo(0, 0);
+  window.print();
+}
+
 export default function PrivacyPolicyPage() {
   return (
     <>
@@ -39,7 +48,7 @@ export default function PrivacyPolicyPage() {
       <main
         id="policy-content"
         tabIndex="-1"
-        className="min-h-screen bg-surface px-4 py-xl pt-24 focus:outline-none sm:px-6 lg:px-8"
+        className="min-h-screen bg-surface px-4 py-xl pt-24 focus:outline-none sm:px-6 lg:px-8 print:min-h-0 print:bg-white print:px-0 print:py-0 print:pt-0"
       >
         <article className="mx-auto max-w-6xl rounded-2xl border border-surface-variant bg-white p-6 shadow-sm print:max-w-none print:border-0 print:p-0 print:shadow-none md:p-10">
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
@@ -78,7 +87,7 @@ export default function PrivacyPolicyPage() {
             </ol>
           </nav>
 
-          <div className="mt-8 max-w-[75ch] text-secondary [&_a]:text-on-primary-fixed-variant [&_a]:underline [&_a]:underline-offset-2 [&_li]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_strong]:font-semibold [&_table]:w-full [&_td]:border [&_td]:border-outline-variant [&_td]:p-2 [&_th]:border [&_th]:border-outline-variant [&_th]:bg-surface-container-low [&_th]:p-2 [&_ul]:list-disc [&_ul]:pl-6">
+          <div className="mt-8 max-w-[75ch] text-secondary print:max-w-none [&_a]:text-on-primary-fixed-variant [&_a]:underline [&_a]:underline-offset-2 [&_li]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_strong]:font-semibold [&_table]:w-full [&_td]:border [&_td]:border-outline-variant [&_td]:p-2 [&_th]:border [&_th]:border-outline-variant [&_th]:bg-surface-container-low [&_th]:p-2 [&_ul]:list-disc [&_ul]:pl-6">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -89,7 +98,7 @@ export default function PrivacyPolicyPage() {
                 ),
                 h2: PolicyHeading,
                 table: ({ children }) => (
-                  <div className="my-6 overflow-x-auto">
+                  <div className="my-6 overflow-x-auto print:overflow-visible">
                     <table>{children}</table>
                   </div>
                 ),
@@ -108,7 +117,7 @@ export default function PrivacyPolicyPage() {
             </a>
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={printPolicy}
               className="rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-primary-container focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
             >
               Imprimir / guardar en PDF

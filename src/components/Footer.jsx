@@ -66,7 +66,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-primary w-full mt-lg border-t-4 border-tertiary">
+    <footer className="bg-primary w-full mt-lg border-t-4 border-tertiary print:hidden">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter px-md py-xl max-w-container-max mx-auto text-on-primary">
         <div className="space-y-md">
           <div className="flex items-center gap-xs">

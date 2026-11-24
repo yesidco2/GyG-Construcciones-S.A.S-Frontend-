@@ -23,23 +23,14 @@ export default function Hero() {
           <p className="font-body-lg text-body-lg text-white/80 mb-lg max-w-2xl">
             Solidez técnica, rigurosidad y compromiso innegociable con la prevención de riesgos y el cumplimiento legal.
           </p>
-          <div className="flex flex-col sm:flex-row gap-sm">
-            <a className="bg-industrial-orange text-white px-lg py-sm rounded-lg font-headline-sm text-headline-sm text-center hover:bg-industrial-orange/90 transition-all flex items-center justify-center gap-xs" href="#contacto">
-              Solicitar Cotización
-              <span className="material-symbols-outlined">arrow_forward</span>
-            </a>
-            <a className="bg-white/10 backdrop-blur-md border-2 border-white/20 text-white px-lg py-sm rounded-lg font-headline-sm text-headline-sm text-center hover:bg-white/20 transition-all" href="#servicios">
-              Conocer Servicios
-            </a>
-          </div>
         </div>
         <aside className="rounded-2xl border border-white/15 bg-white/5 p-md backdrop-blur-md sm:p-lg lg:col-span-5">
           <p className="mb-md font-body-sm text-body-sm text-white/70">
             Selecciona tu perfil para continuar:
           </p>
           <div className="grid gap-sm">
-            <a className="flex items-center justify-between gap-sm rounded-lg bg-on-tertiary-container px-md py-md font-headline-sm text-headline-sm font-semibold text-primary transition-all hover:bg-on-tertiary-container/90" href="#servicios">
-              <span>¿Eres nuevo? Conoce nuestros servicios</span>
+            <a className="flex items-center justify-between gap-sm rounded-lg bg-on-tertiary-container px-md py-md font-headline-sm text-headline-sm font-semibold text-primary transition-all hover:bg-on-tertiary-container/90" href="#contacto">
+              <span>¿Eres nuevo? Solicitar cotización</span>
               <span className="material-symbols-outlined shrink-0" aria-hidden="true">arrow_forward</span>
             </a>
             <a className="flex items-center justify-between gap-sm rounded-lg border-2 border-white/30 px-md py-md font-headline-sm text-headline-sm text-white transition-all hover:bg-white/10" href="#consultar-proyecto">

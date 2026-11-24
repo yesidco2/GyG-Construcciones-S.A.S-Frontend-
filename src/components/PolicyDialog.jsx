@@ -43,19 +43,21 @@ export default function PolicyDialog({ title, onClose, children }) {
 
   return (
     <div
-      className="fixed inset-0 z-[85] overflow-y-auto bg-primary/70 p-2 sm:p-5"
+      id="policy-dialog-scroll-container"
+      className="fixed inset-0 z-[85] overflow-y-auto bg-primary/70 p-2 sm:p-5 print:static print:inset-auto print:z-auto print:overflow-visible print:bg-white print:p-0"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
         ref={dialogRef}
+        id="policy-dialog-content"
         role="dialog"
         aria-modal="true"
         aria-labelledby="policy-dialog-title"
-        className="relative mx-auto max-h-[calc(100vh-1rem)] max-w-6xl overflow-y-auto rounded-2xl bg-surface shadow-2xl sm:max-h-[calc(100vh-2.5rem)]"
+        className="relative mx-auto max-h-[calc(100vh-1rem)] max-w-6xl overflow-y-auto rounded-2xl bg-surface shadow-2xl sm:max-h-[calc(100vh-2.5rem)] print:static print:mx-0 print:max-h-none print:max-w-none print:overflow-visible print:rounded-none print:bg-white print:shadow-none"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-surface-variant bg-white px-4 py-3">
+        <div className="policy-dialog-header sticky top-0 z-10 flex items-center justify-between border-b border-surface-variant bg-white px-4 py-3 print:hidden">
           <h2 id="policy-dialog-title" className="font-semibold text-primary">{title}</h2>
           <button
             ref={closeButtonRef}

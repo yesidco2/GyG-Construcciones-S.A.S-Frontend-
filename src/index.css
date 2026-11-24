@@ -16,6 +16,54 @@ body {
   overflow-x: hidden;
 }
 
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  #policy-dialog-scroll-container,
+  #policy-dialog-content {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  #policy-dialog-content .policy-dialog-header,
+  header,
+  footer,
+  [aria-label="Aviso de cookies"],
+  [aria-label="Preferencias de cookies"] {
+    display: none !important;
+  }
+
+  #policy-dialog-content #policy-content {
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+
+  #policy-dialog-content article {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
 .scroll-reveal {
   opacity: 0;
   transform: translateY(20px);

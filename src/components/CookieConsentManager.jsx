@@ -50,7 +50,7 @@ function PreferenceDialog({ categories, onClose, onSave }) {
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-primary/60 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-primary/60 p-0 sm:items-center sm:p-4 print:hidden"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -176,7 +176,7 @@ export default function CookieConsentManager() {
       {showBanner && (
         <section
           aria-label="Aviso de cookies"
-          className="fixed inset-x-0 bottom-0 z-[70] border-t border-white/20 bg-primary px-4 py-4 text-white shadow-2xl sm:px-6"
+          className="fixed inset-x-0 bottom-0 z-[70] border-t border-white/20 bg-primary px-4 py-4 text-white shadow-2xl sm:px-6 print:hidden"
         >
           <div className="mx-auto max-w-container-max">
             <p className="text-sm leading-relaxed">{COOKIE_NOTICE}</p>
