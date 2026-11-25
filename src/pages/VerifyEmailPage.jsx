@@ -68,7 +68,7 @@ export default function VerifyEmailPage({ recovery = false }) {
                     <span aria-hidden="true" className="material-symbols-outlined text-xl">{visible ? 'visibility_off' : 'visibility'}</span>
                   </button>
                 </div>
-                <p id="password-length" className="mt-2 text-xs text-secondary">Usa al menos 8 caracteres.</p>
+                <p id="password-length" className="mt-2 text-sm text-secondary">Usa al menos 8 caracteres.</p>
               </div>
             )}
             <button type="submit" disabled={busy}

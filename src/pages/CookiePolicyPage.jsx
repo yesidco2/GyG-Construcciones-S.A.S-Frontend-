@@ -18,7 +18,7 @@ export default function CookiePolicyPage() {
         <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
           Privacidad y almacenamiento
         </p>
-        <h1 className="mt-2 font-headline-xl text-headline-xl text-primary">Política de cookies</h1>
+        <h1 className="mt-2 font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary">Política de cookies</h1>
         <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 font-body-md text-body-md text-secondary">
           <div className="flex gap-1">
             <dt className="font-semibold">Versión:</dt>
@@ -32,14 +32,14 @@ export default function CookiePolicyPage() {
 
         <div className="mt-8 space-y-7 text-secondary">
           <section>
-            <h2 className="font-headline-sm text-xl font-bold text-primary">Qué son las cookies</h2>
+            <h2 className="font-headline-sm text-headline-sm text-primary">Qué son las cookies</h2>
             <p className="mt-2">
               Las cookies son pequeños datos que un sitio puede guardar en el navegador. El almacenamiento del navegador también puede incluir mecanismos distintos de las cookies, como sessionStorage o IndexedDB.
             </p>
           </section>
 
           <section>
-            <h2 className="font-headline-sm text-xl font-bold text-primary">Reglas aplicables en Colombia</h2>
+            <h2 className="font-headline-sm text-headline-sm text-primary">Reglas aplicables en Colombia</h2>
             <p className="mt-2">
               En Colombia, el tratamiento de datos que pueda realizarse mediante cookies se rige principalmente por el marco general de protección de datos personales, incluida la Ley 1581 de 2012 y su reglamentación compilada en el Decreto 1074 de 2015. Cuando una cookie u otra tecnología permite identificar o hacer identificable a una persona, aplican las obligaciones correspondientes a esos datos. La Superintendencia de Industria y Comercio (SIC) es la autoridad nacional de protección de datos.
             </p>
@@ -51,7 +51,7 @@ export default function CookiePolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-headline-sm text-xl font-bold text-primary">Cookies y almacenamiento identificados</h2>
+            <h2 className="font-headline-sm text-headline-sm text-primary">Cookies y almacenamiento identificados</h2>
             <p className="mt-2">
               Este inventario describe el almacenamiento propio identificado en el sitio y los servicios externos que pueden intervenir. El sitio puede mostrar promociones de servicios propios, pero actualmente no integra redes publicitarias de terceros ni herramientas de analítica. La información que un proveedor externo almacene puede variar según la configuración y el navegador.
             </p>
@@ -78,7 +78,7 @@ export default function CookiePolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-headline-sm text-xl font-bold text-primary">Cómo gestionar o revocar tu decisión</h2>
+            <h2 className="font-headline-sm text-headline-sm text-primary">Cómo gestionar o revocar tu decisión</h2>
             <p className="mt-2">
               En el sitio, usa el enlace “Preferencias de cookies” del pie de página para administrar las categorías opcionales. Actualmente no hay cookies de analítica ni de publicidad de terceros activas. Si se incorporan tecnologías opcionales, se solicitará autorización antes de activarlas y podrás retirar tu decisión guardando tus preferencias.
             </p>
@@ -88,7 +88,7 @@ export default function CookiePolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-headline-sm text-xl font-bold text-primary">Contacto y otras políticas</h2>
+            <h2 className="font-headline-sm text-headline-sm text-primary">Contacto y otras políticas</h2>
             <p className="mt-2">
               Para consultas relacionadas con privacidad, escribe a{' '}
               <a className="font-semibold text-on-primary-fixed-variant underline" href={`mailto:${CONTACT_EMAIL}`}>

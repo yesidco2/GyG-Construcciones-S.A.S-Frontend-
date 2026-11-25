@@ -61,13 +61,13 @@ export default function RiskExplorer() {
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
             Gestión de riesgos
           </p>
-          <h2 className="mt-sm font-headline-xl text-headline-xl text-primary">Explorador interactivo de peligros en obra</h2>
+          <h2 className="mt-sm font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary">Explorador interactivo de peligros en obra</h2>
         </div>
         <div>
           <p className="font-body-md text-body-md text-secondary">
             Consulta los peligros por labor y pulsa cada EPP para ver una recomendación breve.
           </p>
-          <p className="mt-xs text-xs text-secondary">
+          <p className="mt-xs text-sm text-secondary">
             Contenido orientativo: no reemplaza la identificación de peligros, evaluación de riesgos ni los procedimientos aprobados para cada obra.
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function RiskExplorer() {
           <div className="mb-md flex items-start justify-between gap-md border-b border-surface-variant pb-md">
             <div>
               <p className="font-label-caps text-label-caps uppercase text-secondary">Labor activa</p>
-              <h2 className="font-headline-lg text-headline-lg text-primary">{selectedActivity}</h2>
+              <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">{selectedActivity}</h2>
             </div>
             <span className={`shrink-0 rounded-full border px-sm py-xs font-label-caps text-label-caps ${severityStyles[highestRiskLevel]}`}>
               Riesgo {highestRiskLevel}
@@ -124,7 +124,7 @@ export default function RiskExplorer() {
             {normalizedRisks.map((risk) => (
               <div key={risk.label || risk.description} className="risk-result-card flex h-full flex-col rounded-xl border border-surface-variant bg-surface p-sm">
                 <div className="mb-sm flex items-start justify-between gap-xs">
-                  <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-bold uppercase ${severityStyles[risk.level]}`}>
+                  <span className={`inline-flex rounded-full border px-2 py-1 text-label-caps font-bold uppercase ${severityStyles[risk.level]}`}>
                     {risk.level}
                   </span>
                 </div>
@@ -159,7 +159,7 @@ export default function RiskExplorer() {
                         {isExpanded ? 'expand_less' : 'expand_more'}
                       </span>
                     </button>
-                    <p id={detailsId} hidden={!isExpanded} className="px-sm pb-sm pl-12 text-xs text-white/80">
+                    <p id={detailsId} hidden={!isExpanded} className="px-sm pb-sm pl-12 text-sm text-white/80">
                       {getEppDescription(item)}
                     </p>
                   </li>

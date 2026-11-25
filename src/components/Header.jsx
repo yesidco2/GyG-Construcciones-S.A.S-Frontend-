@@ -167,7 +167,7 @@ export default function Header() {
                 className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[660px] max-w-[calc(100vw-2rem)] bg-white text-on-surface rounded-2xl shadow-2xl border border-surface-variant p-6 z-50 animate-in fade-in zoom-in-95 duration-200"
               >
                 <div>
-                  <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-secondary">
+                  <p className="mb-3 text-label-caps font-bold uppercase tracking-wider text-secondary">
                     Áreas y Ecosistema
                   </p>
                   <nav aria-label="Secciones de Inicio" className="grid gap-2 sm:grid-cols-2">
@@ -188,7 +188,7 @@ export default function Header() {
                               arrow_forward
                             </span>
                           </h4>
-                          <p className="mt-0.5 text-xs leading-snug text-secondary">{section.description}</p>
+                          <p className="mt-0.5 text-sm leading-snug text-secondary">{section.description}</p>
                         </div>
                       </a>
                     ))}
@@ -223,7 +223,7 @@ export default function Header() {
                 className="absolute left-1/2 top-full z-50 mt-3 w-[660px] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-2xl border border-surface-variant bg-white p-6 text-on-surface shadow-2xl animate-in fade-in zoom-in-95 duration-200"
               >
                 <div>
-                  <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-secondary">
+                  <p className="mb-3 text-label-caps font-bold uppercase tracking-wider text-secondary">
                     Áreas y Ecosistema
                   </p>
                   <nav aria-label="Secciones de Gestión SST" className="grid gap-2 sm:grid-cols-2">
@@ -244,7 +244,7 @@ export default function Header() {
                               arrow_forward
                             </span>
                           </h4>
-                          <p className="mt-0.5 text-xs leading-snug text-secondary">{section.description}</p>
+                          <p className="mt-0.5 text-sm leading-snug text-secondary">{section.description}</p>
                         </div>
                       </a>
                     ))}
@@ -332,7 +332,7 @@ export default function Header() {
                       key={section.id}
                       href={`#${section.id}`}
                       onClick={closeMenu}
-                      className="block py-1 text-xs text-white/80 hover:text-white"
+                      className="block py-1 text-sm text-white/80 hover:text-white"
                     >
                       {section.label}
                     </a>
@@ -362,7 +362,7 @@ export default function Header() {
                       key={section.id}
                       href={`#${section.id}`}
                       onClick={closeMenu}
-                      className="block py-1 text-xs text-white/80 hover:text-white"
+                      className="block py-1 text-sm text-white/80 hover:text-white"
                     >
                       {section.label}
                     </a>

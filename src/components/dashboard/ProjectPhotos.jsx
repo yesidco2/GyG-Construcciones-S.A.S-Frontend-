@@ -7,12 +7,12 @@ import { PhotoMetadata } from '../ProjectMetadata';
 export function ProjectPhotoInput({ id, onChange, disabled }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-semibold uppercase text-secondary">Fotografías de la obra</label>
+      <label htmlFor={id} className="block text-sm font-semibold text-secondary">Fotografías de la obra</label>
       <input id={id} type="file" multiple accept={PROJECT_PHOTO_TYPES} disabled={disabled}
         aria-describedby={id + '-help'}
-        className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm"
+        className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-body-md"
         onChange={(event) => onChange(Array.from(event.target.files))} />
-      <p id={id + '-help'} className="mt-1 text-xs text-secondary">Hasta 20 fotos JPEG, PNG o WebP por obra. Las fotos grandes se reducen automáticamente al subirlas.</p>
+      <p id={id + '-help'} className="mt-1 text-sm text-secondary">Hasta 20 fotos JPEG, PNG o WebP por obra. Las fotos grandes se reducen automáticamente al subirlas.</p>
     </div>
   );
 }

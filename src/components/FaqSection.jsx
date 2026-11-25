@@ -10,7 +10,7 @@ export default function FaqSection({ id, eyebrow = 'Resolvemos tus dudas', title
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
             {eyebrow}
           </p>
-          <h2 className="mt-xs font-headline-lg text-headline-lg text-primary">{title}</h2>
+          <h2 className="mt-xs font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">{title}</h2>
         </div>
         <div className="space-y-sm">
           {items.map(({ question, answer }, index) => {

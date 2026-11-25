@@ -64,7 +64,7 @@ export default function About() {
     <section id="nosotros" className="bg-white px-4 py-xl sm:px-6 lg:px-8 2xl:px-12">
       <div className="mx-auto max-w-container-max">
         <div className="mb-lg border-b border-surface-variant pb-lg">
-          <h2 className="font-headline-lg text-headline-lg text-primary">Nosotros</h2>
+          <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Nosotros</h2>
           <p className="mt-2 max-w-2xl font-body-md text-body-md text-secondary">
             Conozca nuestra misión, visión y lo que opinan nuestros clientes.
           </p>
@@ -112,7 +112,7 @@ export default function About() {
                     </span>
                     <span className="block font-headline-sm text-headline-sm text-primary">{policy.title}</span>
                     <span className="mt-xs block font-body-sm text-body-sm text-secondary">{policy.summary}</span>
-                    <span className="mt-sm flex items-center gap-1 text-xs font-semibold text-industrial-orange">
+                    <span className="mt-sm flex items-center gap-1 text-sm font-semibold text-industrial-orange">
                       {isExpanded ? 'Ver menos' : 'Ver detalles'}
                       <span className="material-symbols-outlined text-base" aria-hidden="true">
                         {isExpanded ? 'expand_less' : 'expand_more'}

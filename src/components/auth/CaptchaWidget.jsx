@@ -160,17 +160,17 @@ export default function CaptchaWidget({ siteKey, action, resetKey, onToken, onEr
   }, [resetKey]);
 
   if (!siteKey) {
-    return <p role="alert" className="text-xs text-error">CAPTCHA no está configurado. Contacta al administrador.</p>;
+    return <p role="alert" className="text-sm text-error">CAPTCHA no está configurado. Contacta al administrador.</p>;
   }
 
   return (
     <div>
-      <p className="mb-2 text-xs font-medium text-secondary">Verificación de seguridad</p>
+      <p className="mb-2 text-sm font-medium text-secondary">Verificación de seguridad</p>
       <div ref={containerRef} aria-label="Desafío CAPTCHA" />
       {loadError && (
         <button
           type="button"
-          className="mt-2 text-xs font-semibold text-industrial-orange underline"
+          className="mt-2 text-sm font-semibold text-industrial-orange underline"
           onClick={() => retryRef.current?.()}
         >
           Reintentar CAPTCHA

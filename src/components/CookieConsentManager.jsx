@@ -55,75 +55,77 @@ function PreferenceDialog({ categories, onClose, onSave }) {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cookie-preferences-title"
-        className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 text-on-surface shadow-2xl sm:max-w-xl sm:rounded-2xl sm:p-7"
-      >
-        <h2
-          id="cookie-preferences-title"
-          ref={titleRef}
-          tabIndex="-1"
-          className="font-headline-sm text-2xl font-bold text-primary focus:outline-none"
+      <div className="w-full overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-w-xl sm:rounded-2xl">
+        <section
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cookie-preferences-title"
+          className="max-h-[90dvh] overflow-y-auto p-5 text-on-surface sm:p-7"
         >
-          Preferencias de cookies
-        </h2>
-        <p className="mt-2 text-sm text-secondary">
-          Elige si autorizas el uso de cookies de analítica. Las necesarias permanecen activas para que el sitio funcione.
-        </p>
-
-        <div className="mt-6 space-y-4">
-          <div className="rounded-lg border border-outline-variant p-4">
-            <div className="flex items-center justify-between gap-4">
-              <h3 className="font-semibold text-primary">Necesarias</h3>
-              <input
-                type="checkbox"
-                checked
-                disabled
-                aria-label="Cookies necesarias, siempre activas"
-                className="h-5 w-5 accent-industrial-orange"
-              />
-            </div>
-            <p className="mt-2 text-sm text-secondary">
-              Permiten funciones esenciales del sitio, conservar la decisión de consentimiento y mantener la sesión segura.
-            </p>
-          </div>
-          <div className="rounded-lg border border-outline-variant p-4">
-            <div className="flex items-center justify-between gap-4">
-              <label htmlFor="cookie-analytics" className="font-semibold text-primary">Analítica</label>
-              <input
-                id="cookie-analytics"
-                type="checkbox"
-                checked={analytics}
-                onChange={(event) => setAnalytics(event.target.checked)}
-                className="h-5 w-5 accent-industrial-orange focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
-              />
-            </div>
-            <p className="mt-2 text-sm text-secondary">
-              Esta categoría está reservada para medir el uso del sitio. Actualmente no hay herramientas de analítica configuradas.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => onSave(analytics)}
-            className="rounded-lg border-2 border-primary bg-primary px-4 py-3 text-center font-semibold text-white hover:bg-primary-container focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
+          <h2
+            id="cookie-preferences-title"
+            ref={titleRef}
+            tabIndex="-1"
+            className="font-headline-md text-headline-md text-primary focus:outline-none"
           >
-            Guardar preferencias
-          </button>
-          <button
-            type="button"
-            onClick={() => onSave(false)}
-            className="rounded-lg border-2 border-primary bg-white px-4 py-3 text-center font-semibold text-primary hover:bg-surface-container-low focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
-          >
-            Rechazar no esenciales
-          </button>
-        </div>
-      </section>
+            Preferencias de cookies
+          </h2>
+          <p className="mt-2 text-sm text-secondary">
+            Elige si autorizas el uso de cookies de analítica. Las necesarias permanecen activas para que el sitio funcione.
+          </p>
+
+          <div className="mt-6 space-y-4">
+            <div className="rounded-lg border border-outline-variant p-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="font-semibold text-primary">Necesarias</h3>
+                <input
+                  type="checkbox"
+                  checked
+                  disabled
+                  aria-label="Cookies necesarias, siempre activas"
+                  className="h-5 w-5 accent-industrial-orange"
+                />
+              </div>
+              <p className="mt-2 text-sm text-secondary">
+                Permiten funciones esenciales del sitio, conservar la decisión de consentimiento y mantener la sesión segura.
+              </p>
+            </div>
+            <div className="rounded-lg border border-outline-variant p-4">
+              <div className="flex items-center justify-between gap-4">
+                <label htmlFor="cookie-analytics" className="font-semibold text-primary">Analítica</label>
+                <input
+                  id="cookie-analytics"
+                  type="checkbox"
+                  checked={analytics}
+                  onChange={(event) => setAnalytics(event.target.checked)}
+                  className="h-5 w-5 accent-industrial-orange focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
+                />
+              </div>
+              <p className="mt-2 text-sm text-secondary">
+                Esta categoría está reservada para medir el uso del sitio. Actualmente no hay herramientas de analítica configuradas.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => onSave(analytics)}
+              className="rounded-lg border-2 border-primary bg-primary px-4 py-3 text-center font-semibold text-white hover:bg-primary-container focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
+            >
+              Guardar preferencias
+            </button>
+            <button
+              type="button"
+              onClick={() => onSave(false)}
+              className="rounded-lg border-2 border-primary bg-white px-4 py-3 text-center font-semibold text-primary hover:bg-surface-container-low focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-industrial-orange"
+            >
+              Rechazar no esenciales
+            </button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

@@ -48,7 +48,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
         <div className="flex items-center justify-between pb-3 border-b border-surface-variant">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-industrial-orange">lock_reset</span>
-            <h3 className="font-headline-sm text-lg text-primary font-bold">Recuperar Contraseña</h3>
+            <h3 className="font-headline-sm text-headline-sm text-primary">Recuperar Contraseña</h3>
           </div>
           <button
             type="button"
@@ -84,7 +84,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
         {status.type !== 'success' ? (
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
-              <label htmlFor="recovery-email" className="block text-xs font-semibold uppercase text-secondary mb-1">
+              <label htmlFor="recovery-email" className="block text-sm font-semibold text-secondary mb-1">
                 Correo Electrónico
               </label>
               <div className="relative">
@@ -97,7 +97,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
                   placeholder="ejemplo@gygconstrucciones.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-outline-variant bg-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-industrial-orange/40 focus:border-industrial-orange text-sm transition-all"
+                  className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-outline-variant bg-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-industrial-orange/40 focus:border-industrial-orange text-body-md transition-all"
                   required
                 />
               </div>

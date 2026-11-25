@@ -79,7 +79,7 @@ export default function Footer() {
             Consultoría de ingeniería de alta precisión y gestión integral de seguridad en el trabajo.
           </p>
           <div className="inline-flex border-2 border-industrial-orange px-sm py-xs rounded-full">
-            <span className="font-label-caps text-[10px] text-industrial-orange uppercase tracking-[2px]">
+            <span className="font-label-caps text-label-caps text-industrial-orange uppercase tracking-[2px]">
               Compromiso con la Seguridad y la Vida
             </span>
           </div>
@@ -158,13 +158,13 @@ export default function Footer() {
             Reciba actualizaciones sobre normatividad SST y avances en ingeniería.
           </p>
           <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-xs">
-            <label htmlFor="newsletter-email" className="text-xs font-medium text-on-primary">
+            <label htmlFor="newsletter-email" className="text-sm font-medium text-on-primary">
               Correo electrónico
             </label>
             <div className="flex">
               <input
                 id="newsletter-email"
-                className="bg-white/10 border-none text-white rounded-l-lg w-full font-body-sm text-body-sm p-sm focus:ring-1 focus:ring-industrial-orange placeholder:text-white/50"
+                className="bg-white/10 border-none text-white rounded-l-lg w-full font-body-md text-body-md p-sm focus:ring-1 focus:ring-industrial-orange placeholder:text-white/50"
                 placeholder="Email"
                 type="email"
                 value={email}
@@ -184,7 +184,7 @@ export default function Footer() {
               }}
               onError={setCaptchaError}
             />
-            {captchaError && <p role="status" className="text-xs text-red-200" aria-live="polite">{captchaError}</p>}
+            {captchaError && <p role="status" className="text-sm text-red-200" aria-live="polite">{captchaError}</p>}
             <PrivacyConsent
               id="newsletter-privacy"
               required
@@ -199,7 +199,7 @@ export default function Footer() {
             />
             {status.message && (
               <p
-                className={`text-xs ${status.type === 'error' ? 'text-red-200' : 'text-green-200'}`}
+                className={`text-sm ${status.type === 'error' ? 'text-red-200' : 'text-green-200'}`}
                 aria-live="polite"
               >
                 {status.message}

@@ -1,6 +1,6 @@
 import portadaConstruccion from '../assets/portada-construccion.webp';
 
-export function PortalHero({ id, title, description, image, alt, actions }) {
+export function PortalHero({ id, title, description, image, alt, actions, children }) {
   return (
     <section id={id} className="portal-hero">
       <div className="portal-hero-copy">
@@ -8,6 +8,7 @@ export function PortalHero({ id, title, description, image, alt, actions }) {
           <h1>{title}</h1>
           <p>{description}</p>
           <div className="portal-hero-actions">
+            {children}
             {actions.map(({ href, label }) => (
               <a key={href} href={href}>
                 {label}
@@ -18,7 +19,7 @@ export function PortalHero({ id, title, description, image, alt, actions }) {
         </div>
       </div>
       <div className="portal-hero-image">
-        <img src={image} alt={alt} fetchPriority="high" />
+        <img src={image} alt={alt} fetchpriority="high" />
       </div>
     </section>
   );

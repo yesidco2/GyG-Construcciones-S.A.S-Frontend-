@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Contact from '../components/Contact';
 import FloatingIA from '../components/FloatingIA';
+import Hero from '../components/Hero';
+import GestionSSTPage from '../pages/GestionSSTPage';
 import Footer from '../components/Footer';
 import { apiFetch } from '../services/api';
 
@@ -226,6 +228,22 @@ describe('Privacy consent in contact and newsletter', () => {
 });
 
 describe('Chat privacy notice', () => {
+  it('abre el asistente desde Gestión SST y devuelve el foco al cerrar con Escape', async () => {
+    apiFetch.mockResolvedValue({ proveedorExternoActivo: true });
+    const user = userEvent.setup();
+    const { rerender } = render(<Hero />);
+    expect(screen.queryByRole('button', { name: 'Pregúntale al asistente' })).not.toBeInTheDocument();
+    rerender(<GestionSSTPage />);
+    expect(screen.queryByRole('link', { name: 'Explorar riesgos' })).not.toBeInTheDocument();
+    const trigger = screen.getByRole('button', { name: 'Pregúntale al asistente' });
+    await user.click(trigger);
+    expect(screen.getByRole('dialog', { name: 'Asistente de G&G' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
   it('shows the notice and sends only fields supported by the chat API', async () => {
     const user = userEvent.setup();
     apiFetch.mockImplementation((path) => Promise.resolve(
@@ -270,7 +288,18 @@ describe('Chat privacy notice', () => {
     await user.type(screen.getByLabelText('Mensaje para el asistente'), 'Consulta SST');
     expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
 
+    const notices = screen.getByRole('button', { name: /Privacidad y uso del chat/ });
+    expect(notices).toHaveAttribute('aria-expanded', 'true');
+    await user.click(notices);
+    expect(consent).not.toBeVisible();
+    expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Revisar autorización para enviar mensajes' }));
+    expect(consent).toBeVisible();
+    expect(consent).not.toBeChecked();
     await user.click(consent);
+    await user.click(notices);
+    expect(consent).not.toBeVisible();
+    expect(screen.getByLabelText('Mensaje para el asistente')).toHaveValue('Consulta SST');
     await user.click(screen.getByRole('button', { name: 'Enviar' }));
     await waitFor(() => expect(apiFetch).toHaveBeenCalledWith('/api/chat', expect.objectContaining({
       method: 'POST',
@@ -316,6 +345,10 @@ describe('Chat privacy notice', () => {
     );
     expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
     expect(apiFetch).toHaveBeenCalledTimes(1);
+    apiFetch.mockResolvedValueOnce({ proveedorExternoActivo: false });
+    await user.click(screen.getByRole('button', { name: 'Reintentar conexión' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Enviar' })).toBeEnabled());
+    expect(screen.getByLabelText('Mensaje para el asistente')).toHaveValue('Consulta SST');
     consoleError.mockRestore();
   });
 });

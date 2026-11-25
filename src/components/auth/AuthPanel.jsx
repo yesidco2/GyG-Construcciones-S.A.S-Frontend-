@@ -6,7 +6,7 @@ export default function AuthPanel({ title, icon, children }) {
           <span aria-hidden="true" className="material-symbols-outlined shrink-0 rounded-lg bg-white/10 p-2 text-white">
             {icon}
           </span>
-          <h1 className="min-w-0 font-headline-sm text-xl font-bold leading-tight tracking-tight sm:text-2xl">{title}</h1>
+          <h1 className="min-w-0 font-headline-md text-headline-sm sm:text-headline-md">{title}</h1>
         </div>
       </header>
       <div className="p-5 sm:px-7 sm:py-6">{children}</div>

@@ -290,7 +290,7 @@ export default function Contact({ sectionId = 'contacto' }) {
               </div>
 
               <div>
-                <label htmlFor="contact-name" className="mb-xs block font-label-caps text-label-caps text-primary">
+                <label htmlFor="contact-name" className="mb-xs block text-sm font-semibold text-primary">
                   Nombre
                 </label>
                 <input
@@ -311,7 +311,7 @@ export default function Contact({ sectionId = 'contacto' }) {
               </div>
 
               <div>
-                <label htmlFor="contact-email" className="mb-xs block font-label-caps text-label-caps text-primary">
+                <label htmlFor="contact-email" className="mb-xs block text-sm font-semibold text-primary">
                   Correo (si no indicas teléfono)
                 </label>
                 <input
@@ -333,7 +333,7 @@ export default function Contact({ sectionId = 'contacto' }) {
 
               <div className="grid gap-md sm:grid-cols-2">
                 <div>
-                  <label htmlFor="contact-phone" className="mb-xs block font-label-caps text-label-caps text-primary">
+                  <label htmlFor="contact-phone" className="mb-xs block text-sm font-semibold text-primary">
                     Teléfono (opcional)
                   </label>
                   <input
@@ -355,7 +355,7 @@ export default function Contact({ sectionId = 'contacto' }) {
                 </div>
 
                 <div>
-                  <label htmlFor="contact-company" className="mb-xs block font-label-caps text-label-caps text-primary">
+                  <label htmlFor="contact-company" className="mb-xs block text-sm font-semibold text-primary">
                     Empresa (opcional)
                   </label>
                   <input
@@ -377,7 +377,7 @@ export default function Contact({ sectionId = 'contacto' }) {
               </div>
 
               <div>
-                <label htmlFor="contact-service" className="mb-xs block font-label-caps text-label-caps text-primary">
+                <label htmlFor="contact-service" className="mb-xs block text-sm font-semibold text-primary">
                   Tipo de Servicio
                 </label>
                 <select
@@ -400,7 +400,7 @@ export default function Contact({ sectionId = 'contacto' }) {
               </div>
 
               <div>
-                <label htmlFor="contact-message" className="mb-xs block font-label-caps text-label-caps text-primary">
+                <label htmlFor="contact-message" className="mb-xs block text-sm font-semibold text-primary">
                   Tu consulta
                 </label>
                 <textarea

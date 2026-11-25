@@ -33,7 +33,7 @@ function AccessMessage({ icon, title, message, onLogout, error = false }) {
         <span className={`material-symbols-outlined text-5xl ${error ? 'text-error' : 'text-industrial-orange'}`}>
           {icon}
         </span>
-        <h2 className="mt-4 font-headline-sm text-2xl font-bold text-primary">{title}</h2>
+        <h2 className="mt-4 font-headline-md text-headline-md text-primary">{title}</h2>
         <p className="mt-2 text-sm leading-relaxed text-secondary">{message}</p>
         <button
           type="button"
@@ -61,7 +61,7 @@ function VerificationMessage({
     <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-surface-variant bg-white p-8 shadow-xl">
       <div className="max-w-lg text-center">
         <span className="material-symbols-outlined text-5xl text-industrial-orange">mark_email_unread</span>
-        <h2 className="mt-4 font-headline-sm text-2xl font-bold text-primary">Verifica tu correo</h2>
+        <h2 className="mt-4 font-headline-md text-headline-md text-primary">Verifica tu correo</h2>
         <p className="mt-2 text-sm leading-relaxed text-secondary">
           Enviamos un enlace de verificación a <strong className="text-primary">{email}</strong>. Verifica tu dirección para que podamos comprobar tu acceso.
         </p>
@@ -295,7 +295,7 @@ export default function LoginPage() {
                   </div>
                   <span className="font-headline-sm text-2xl font-bold leading-none tracking-tight text-white">G&amp;G</span>
                 </div>
-                <h1 className="mt-4 font-headline-xl lg:mt-8 text-3xl font-bold leading-tight text-white sm:text-4xl">
+                <h1 className="mt-4 font-headline-lg lg:mt-8 text-headline-lg-mobile text-white sm:text-headline-lg">
                   Portal de administración
                 </h1>
                 <p className="mt-3 font-body-sm text-sm leading-relaxed text-white/75">
@@ -306,18 +306,18 @@ export default function LoginPage() {
 
             <section className="portal-login-form flex flex-col justify-center bg-white p-6 sm:p-10 lg:col-span-7">
               <div className="mb-6">
-                <h2 className="font-headline-sm text-2xl font-bold text-primary">Iniciar sesión</h2>
+                <h2 className="font-headline-md text-headline-md text-primary">Iniciar sesión</h2>
                 <p className="mt-1 text-sm text-secondary">Acceso exclusivo para administradores.</p>
               </div>
 
               {!isAuthConfigured && (
-                <div role="alert" className="mb-5 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                <div role="alert" className="mb-5 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
                   <span className="material-symbols-outlined text-base">info</span>
                   <span>Supabase Auth no está configurado. Completa las variables VITE_SUPABASE_* del archivo .env y reinicia Vite.</span>
                 </div>
               )}
               {error && (
-                <div role="alert" className="mb-5 flex items-center gap-2 rounded-lg border border-error/20 bg-error-container p-3 text-xs text-error">
+                <div role="alert" className="mb-5 flex items-center gap-2 rounded-lg border border-error/20 bg-error-container p-3 text-sm text-error">
                   <span className="material-symbols-outlined text-base">warning</span>
                   <span className="font-medium">{error}</span>
                 </div>
@@ -325,7 +325,7 @@ export default function LoginPage() {
 
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label htmlFor="login-email" className="mb-1 block text-xs font-semibold uppercase text-secondary">
+                  <label htmlFor="login-email" className="mb-1 block text-sm font-semibold text-secondary">
                     Correo electrónico
                   </label>
                   <div className="relative">
@@ -338,7 +338,7 @@ export default function LoginPage() {
                       placeholder="nombre@gygconstrucciones.com"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      className="w-full rounded-lg border border-outline-variant bg-surface py-2.5 pl-10 pr-3 text-sm transition-all focus:border-industrial-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-industrial-orange/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-lg border border-outline-variant bg-surface py-2.5 pl-10 pr-3 text-body-md transition-all focus:border-industrial-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-industrial-orange/40 disabled:cursor-not-allowed disabled:opacity-60"
                       required
                     />
                   </div>
@@ -346,13 +346,13 @@ export default function LoginPage() {
 
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <label htmlFor="login-password" className="block text-xs font-semibold uppercase text-secondary">
+                    <label htmlFor="login-password" className="block text-sm font-semibold text-secondary">
                       Contraseña
                     </label>
                     <button
                       type="button"
                       onClick={() => setIsForgotModalOpen(true)}
-                      className="text-xs font-medium text-industrial-orange hover:underline"
+                      className="text-sm font-medium text-industrial-orange hover:underline"
                     >
                       ¿Olvidaste tu contraseña?
                     </button>
@@ -367,7 +367,7 @@ export default function LoginPage() {
                       placeholder="Ingresa tu contraseña"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
-                      className="w-full rounded-lg border border-outline-variant bg-surface py-2.5 pl-10 pr-11 text-sm transition-all focus:border-industrial-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-industrial-orange/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-lg border border-outline-variant bg-surface py-2.5 pl-10 pr-11 text-body-md transition-all focus:border-industrial-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-industrial-orange/40 disabled:cursor-not-allowed disabled:opacity-60"
                       required
                     />
                     <button
@@ -388,7 +388,7 @@ export default function LoginPage() {
                     onChange={(event) => setRemember(event.target.checked)}
                     className="h-4 w-4 rounded border-outline-variant text-industrial-orange focus:ring-industrial-orange/30"
                   />
-                  <span className="text-xs font-medium text-secondary">Mantener sesión activa</span>
+                  <span className="text-sm font-medium text-secondary">Mantener sesión activa</span>
                 </label>
 
                 <CaptchaWidget
@@ -398,7 +398,7 @@ export default function LoginPage() {
                   onToken={handleCaptchaToken}
                   onError={handleCaptchaError}
                 />
-                <p className="text-xs text-secondary" aria-live="polite">
+                <p className="text-sm text-secondary" aria-live="polite">
                   {cooldownSeconds > 0
                     ? `Demasiados intentos. Espera ${cooldownSeconds} segundos para volver a intentar.`
                     : captchaStatus}

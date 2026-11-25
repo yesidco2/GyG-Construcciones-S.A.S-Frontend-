@@ -2,8 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: 'Inter', sans-serif;
+@layer base {
+  body { @apply font-body-md text-body-md; }
+  h1, h2, h3 { @apply font-headline-sm; text-wrap: balance; }
+  label, legend { @apply text-sm; }
+  :where(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea) {
+    @apply font-body-md text-body-md;
+  }
 }
 
 html {

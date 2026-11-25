@@ -20,7 +20,7 @@ function PolicyHeading({ children, ...props }) {
     <h2
       {...props}
       id={sectionNumber ? `section-${sectionNumber}` : undefined}
-      className="mb-3 mt-8 scroll-mt-24 font-headline-sm text-xl font-bold text-primary"
+      className="mb-3 mt-8 scroll-mt-24 font-headline-sm text-headline-sm text-primary"
     >
       {children}
     </h2>
@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
             Protección de datos personales
           </p>
-          <h1 className="mt-2 font-headline-xl text-headline-xl text-primary">
+          <h1 className="mt-2 font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary">
             Política de tratamiento de datos personales
           </h1>
           <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 font-body-md text-body-md text-secondary">
@@ -72,7 +72,7 @@ export default function PrivacyPolicyPage() {
             aria-label="Índice de la política"
             className="mt-8 rounded-xl border border-surface-variant bg-surface-container-low p-5"
           >
-            <h2 className="font-headline-sm text-lg font-bold text-primary">Índice</h2>
+            <h2 className="font-headline-sm text-headline-sm text-primary">Índice</h2>
             <ol className="mt-3 grid gap-2 sm:grid-cols-2">
               {policySections.map((section) => (
                 <li key={section.id}>
@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
               remarkPlugins={[remarkGfm]}
               components={{
                 h1: ({ children }) => (
-                  <h2 className="mb-3 mt-8 font-headline-sm text-xl font-bold text-primary">
+                  <h2 className="mb-3 mt-8 font-headline-sm text-headline-sm text-primary">
                     {children}
                   </h2>
                 ),

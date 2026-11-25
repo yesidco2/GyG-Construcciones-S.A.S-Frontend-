@@ -143,7 +143,7 @@ export default function ConsultProjectPage() {
           <div className="min-w-0 space-y-6">
             <div className="space-y-4">
               <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">Seguimiento</p>
-              <h1 className="font-headline-xl text-headline-xl text-primary">Consulta el avance de tu proyecto</h1>
+              <h1 className="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary">Consulta el avance de tu proyecto</h1>
               <p className="font-body-lg text-body-lg text-secondary max-w-2xl">
                 Consulta el avance y los hitos de tu obra con el código asignado.
               </p>
@@ -152,7 +152,7 @@ export default function ConsultProjectPage() {
             <a href="#hero" className="inline-block text-sm font-semibold text-primary underline">Volver al inicio</a>
 
             <form noValidate onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-[1fr_auto]">
-              <label htmlFor="project-code" className="font-label-caps text-label-caps text-secondary sm:col-span-2">
+              <label htmlFor="project-code" className="text-sm font-semibold text-secondary sm:col-span-2">
                 Código de acceso del proyecto
               </label>
               <input

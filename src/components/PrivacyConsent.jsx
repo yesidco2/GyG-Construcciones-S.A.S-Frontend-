@@ -22,7 +22,7 @@ export default function PrivacyConsent({ id, label, required, checked, onChange,
           {required && <span className="sr-only"> Obligatorio</span>}
         </span>
       </label>
-      <p id={helpId} className="ml-6 mt-1 text-xs text-current">
+      <p id={helpId} className="ml-6 mt-1 text-sm text-current">
         Consulta la{' '}
         <a
           href={POLICY_URL}

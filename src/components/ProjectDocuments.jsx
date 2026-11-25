@@ -71,7 +71,7 @@ export default function ProjectDocuments({ projectId, documents, code, blocked, 
   }
 
   return <section className="space-y-3 rounded-2xl border border-surface-variant bg-white p-4">
-    <h3 className="font-bold text-primary">Documentos de la obra</h3>
+    <h3 className="font-headline-sm text-headline-sm text-primary">Documentos de la obra</h3>
     {projectId && <>
       <DocumentInput key={revision} onChange={setFiles} disabled={busy} />
       {files.length > 0 && <button type="button" disabled={busy} onClick={upload} className="underline">Guardar documentos</button>}

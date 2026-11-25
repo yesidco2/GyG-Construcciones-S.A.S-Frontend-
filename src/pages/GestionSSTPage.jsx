@@ -1,6 +1,7 @@
 import portadaSst from '../assets/portada-sst.webp';
 import { PortalHero } from '../components/Hero';
 import RiskExplorer from '../components/RiskExplorer';
+import FloatingIA from '../components/FloatingIA';
 import FaqSection from '../components/FaqSection';
 import ServicePromotion from '../components/ServicePromotion';
 
@@ -104,21 +105,24 @@ export default function GestionSSTPage() {
         image={portadaSst}
         alt=""
         actions={[
-          { href: '#risk-explorer', label: 'Explorar riesgos' },
           { href: '#servicios-sst', label: 'Ver servicios SST' },
         ]}
-      />
+      >
+        <button type="button" aria-haspopup="dialog" onClick={event =>
+          window.dispatchEvent(new CustomEvent('gg-chat-open', { detail: event.currentTarget }))
+        }>
+          Pregúntale al asistente
+          <span className="material-symbols-outlined" aria-hidden="true">chat</span>
+        </button>
+      </PortalHero>
 
       <section id="vision-prevencion" className="bg-surface py-xl">
         <div className="portal-wide">
           <div className="mb-lg flex flex-col gap-sm text-center md:flex-row md:items-end md:justify-between md:text-left">
             <div>
               <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">Gestión de riesgos</p>
-              <h2 className="mt-xs font-headline-lg text-headline-lg text-primary">Nuestra Visión de la Prevención</h2>
+              <h2 className="mt-xs font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Nuestra Visión de la Prevención</h2>
             </div>
-            <a className="inline-flex items-center justify-center rounded-full border border-primary bg-primary px-md py-xs font-label-caps text-label-caps text-on-primary hover:bg-primary/90" href="#risk-explorer">
-              Explorar riesgos
-            </a>
           </div>
 
           <div className="grid grid-cols-1 gap-sm md:grid-cols-2 lg:grid-cols-4 md:gap-md">
@@ -145,7 +149,7 @@ export default function GestionSSTPage() {
           <p className="font-label-caps text-label-caps uppercase tracking-[0.2em] text-industrial-orange">
             Referencias oficiales de Colombia
           </p>
-          <h2 className="mt-xs font-headline-lg text-headline-lg text-primary">Marco normativo del SG-SST</h2>
+          <h2 className="mt-xs font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Marco normativo del SG-SST</h2>
           <p className="mt-sm text-secondary">
             Estas normas ofrecen un marco general de consulta; la obligación específica debe verificarse según cada organización y actividad económica.
           </p>
@@ -169,7 +173,7 @@ export default function GestionSSTPage() {
               <span className="text-secondary"> — establece estándares mínimos del SG-SST según las condiciones previstas en la norma.</span>
             </li>
           </ul>
-          <p className="mt-md text-xs text-secondary">
+          <p className="mt-md text-sm text-secondary">
             Consulta las versiones y modificaciones vigentes en las fuentes oficiales antes de adoptar decisiones de cumplimiento.
           </p>
         </div>
@@ -178,7 +182,7 @@ export default function GestionSSTPage() {
       <section id="servicios-sst" className="bg-surface-container-low py-xl">
         <div className="portal-wide">
           <div className="mb-lg">
-            <h2 className="font-headline-lg text-headline-lg text-primary">Servicios Especializados</h2>
+            <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Servicios Especializados</h2>
           </div>
 
           <div className="grid grid-cols-1 gap-md md:grid-cols-2">
@@ -219,7 +223,7 @@ export default function GestionSSTPage() {
       <section id="jerarquia-controles" className="bg-surface py-xl">
         <div className="portal-wide">
           <div className="mb-lg text-center">
-            <h2 className="font-headline-lg text-headline-lg text-primary">Jerarquía de Controles</h2>
+            <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Jerarquía de Controles</h2>
             <p className="mx-auto mt-sm max-w-2xl font-body-md text-body-md text-on-surface-variant">
               Metodología estructurada para la mitigación efectiva de riesgos en obra.
             </p>
@@ -254,6 +258,7 @@ export default function GestionSSTPage() {
       </section>
       <ServicePromotion compact />
       <FaqSection id="faq-sst" eyebrow="Seguridad y salud en el trabajo" title="Preguntas frecuentes sobre SST" items={sstFaqs} />
+      <FloatingIA />
     </div>
   );
 }

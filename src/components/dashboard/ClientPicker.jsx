@@ -24,29 +24,31 @@ export default function ClientPicker({ id, clients, selectedId, onSelect, initia
     <>
       <input id={id} type="search" disabled={disabled} value={selected?.name ?? query}
         placeholder="Busca por nombre o correo" aria-describedby={id + '-help'}
-        className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2.5 text-sm"
+        className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2.5 text-body-md"
         onChange={(event) => {
           setQuery(event.target.value);
           onSelect(null);
         }} />
-      <p id={id + '-help'} className="mt-1 text-xs text-secondary">
+      <p id={id + '-help'} className="mt-1 text-sm text-secondary">
         {selected ? 'Cliente seleccionado: ' + (selected.email || selected.name)
           : selectedId != null ? 'Cliente asignado actualmente.'
           : 'Busca y selecciona un cliente registrado.'}
       </p>
       {selectedId == null && term && (
         matches.length ? (
-          <ul aria-label="Clientes encontrados" className="mt-1 max-h-44 overflow-y-auto rounded-lg border border-outline-variant">
-            {matches.map((client) => (
-              <li key={client.id}>
-                <button type="button" disabled={disabled} className="w-full px-3 py-2 text-left text-sm hover:bg-surface"
-                  onClick={() => { setQuery(client.name); onSelect(client.id); }}>
-                  {client.name}{client.email && ' — ' + client.email}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : <p role="status" className="mt-1 text-xs text-secondary">Sin coincidencias.</p>
+          <div className="mt-1 overflow-hidden rounded-lg border border-outline-variant">
+            <ul aria-label="Clientes encontrados" className="max-h-44 overflow-y-auto">
+              {matches.map((client) => (
+                <li key={client.id}>
+                  <button type="button" disabled={disabled} className="w-full px-3 py-2 text-left text-sm hover:bg-surface"
+                    onClick={() => { setQuery(client.name); onSelect(client.id); }}>
+                    {client.name}{client.email && ' — ' + client.email}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : <p role="status" className="mt-1 text-sm text-secondary">Sin coincidencias.</p>
       )}
     </>
   );

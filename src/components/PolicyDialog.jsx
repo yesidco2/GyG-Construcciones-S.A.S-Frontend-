@@ -62,7 +62,7 @@ export default function PolicyDialog({ title, onClose, children }) {
           className="max-h-[70vh] overflow-y-auto print:static print:max-h-none print:overflow-visible"
         >
           <div className="policy-dialog-header sticky top-0 z-10 flex items-center justify-between border-b border-surface-variant bg-white px-4 py-3 print:hidden">
-            <h2 id="policy-dialog-title" className="font-semibold text-primary">{title}</h2>
+            <h2 id="policy-dialog-title" className="font-headline-sm text-headline-sm text-primary">{title}</h2>
             <button
               ref={closeButtonRef}
               type="button"

@@ -38,7 +38,7 @@ export default function Commitment() {
       <div className="max-w-container-max mx-auto px-md">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
           <div>
-            <h2 className="font-headline-lg text-headline-lg mb-md text-on-primary-container">Nuestro Compromiso SST</h2>
+            <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-md text-on-primary-container">Nuestro Compromiso SST</h2>
             <div className="space-y-md">
               <p className="font-body-lg text-body-lg text-on-primary-container/80">
                 En G&G, la seguridad no es un requisito, es nuestro valor fundamental. Protegemos el capital más valioso de su empresa: las personas.
@@ -69,7 +69,7 @@ export default function Commitment() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-container via-transparent to-transparent" />
               <div className="absolute bottom-md left-md right-md bg-white/10 backdrop-blur-xl p-md rounded-2xl border border-white/20">
-                <div className="text-industrial-orange font-headline-xl text-headline-xl leading-none">0%</div>
+                <div className="text-industrial-orange font-headline-xl text-headline-xl-mobile md:text-headline-xl leading-none">0%</div>
                 <div className="font-label-caps text-label-caps uppercase text-white tracking-widest mt-xs">Índice de Siniestralidad en Proyectos 2023</div>
               </div>
             </div>

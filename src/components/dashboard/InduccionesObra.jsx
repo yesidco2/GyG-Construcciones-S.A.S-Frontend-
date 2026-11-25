@@ -165,7 +165,7 @@ export default function InduccionesObra({ obra }) {
       <header className="sst-banner">
         <span className="sst-icon material-symbols-outlined" aria-hidden="true">health_and_safety</span>
         <div>
-        <h3 className="text-xl font-bold text-primary">Inducciones SST</h3>
+        <h3 className="font-headline-sm text-headline-sm text-primary">Inducciones SST</h3>
         <p>{obra.name}</p>
         </div>
       </header>
@@ -175,7 +175,7 @@ export default function InduccionesObra({ obra }) {
       <form className={tarjeta} onSubmit={crear}>
         <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-xl text-sky-800" aria-hidden="true">assignment_add</span>
-          <h4 className="text-lg font-bold">Crear asignación</h4>
+          <h4 className="font-headline-sm text-headline-sm">Crear asignación</h4>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
         <label className="block text-sm font-semibold">Material y versión
@@ -226,7 +226,7 @@ export default function InduccionesObra({ obra }) {
       </div>}
       {pins.length > 0 && <div className={tarjeta}>
         <div className="flex flex-wrap items-center gap-2">
-          <h4 className="font-bold">PIN emitidos para entregar en privado</h4>
+          <h4 className="font-headline-sm text-headline-sm">PIN emitidos para entregar en privado</h4>
           <button className={secundario} onClick={() => setPins([])}>Ocultar PIN</button>
         </div>
         <ul className="space-y-2">{pins.map((p) => <li key={p.id} className="flex flex-wrap items-center gap-2">
@@ -235,7 +235,7 @@ export default function InduccionesObra({ obra }) {
         </li>)}</ul>
       </div>}
       {seleccion && <div className={tarjeta}>
-        <h4 className="font-bold">Entregas</h4>
+        <h4 className="font-headline-sm text-headline-sm">Entregas</h4>
         <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {Object.entries(estados).map(([key, label]) => <div key={key} className="rounded-lg bg-slate-100 p-2">
             <dt>{label}</dt><dd className="text-xl font-bold">{cuadrilla.filter((p) => p.estado === key).length}</dd>
@@ -260,7 +260,7 @@ export default function InduccionesObra({ obra }) {
         </li>)}</ul>
       </div>}
       {detalle && <div className={tarjeta}>
-        <h4 className="font-bold">{detalle.nombre} · {estados[detalle.estado]}</h4>
+        <h4 className="font-headline-sm text-headline-sm">{detalle.nombre} · {estados[detalle.estado]}</h4>
         <button className={secundario} onClick={() => { setDetalle(null); setFoto(null); }}>Cerrar detalle</button>
         <ol className="list-decimal pl-5">
           {detalle.material.preguntas.map((p, i) => {

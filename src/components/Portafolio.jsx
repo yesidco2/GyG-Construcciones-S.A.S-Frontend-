@@ -155,7 +155,7 @@ function ProjectCard({ project }) {
         <div className="flex items-center justify-between border-t border-surface-variant pt-md">
           <div className="flex flex-col">
             <span className="font-body-md text-body-md font-bold text-industrial-orange">{project.metric}</span>
-            <span className="text-[10px] font-bold uppercase text-secondary">{project.metricLabel}</span>
+            <span className="text-label-caps font-bold uppercase text-secondary">{project.metricLabel}</span>
           </div>
           <span className="material-symbols-outlined text-primary" aria-hidden="true">arrow_outward</span>
         </div>
@@ -196,7 +196,7 @@ export default function Portfolio() {
       <div className="mx-auto max-w-container-max px-4 sm:px-6 lg:px-8 2xl:px-12">
         <div className="mb-xl flex flex-col gap-md border-b border-surface-variant pb-lg md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="mb-xs font-headline-lg text-headline-lg text-primary">Proyectos Emblemáticos</h2>
+            <h2 className="mb-xs font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Proyectos Emblemáticos</h2>
             <p className="max-w-2xl font-body-md text-body-md text-secondary">
               Nuestra trayectoria se mide en estructuras firmes y vidas protegidas.
             </p>

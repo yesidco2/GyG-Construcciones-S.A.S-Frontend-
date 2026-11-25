@@ -12,7 +12,7 @@ describe('navegación por fragmentos', () => {
   beforeEach(() => {
     vi.stubGlobal('scrollTo', vi.fn());
     useAuth.mockReturnValue({ loading: false, role: 'INGENIERO' });
-    apiFetch.mockReset();
+    apiFetch.mockReset().mockResolvedValue({ proveedorExternoActivo: false });
   });
 
   afterEach(() => {
@@ -73,6 +73,21 @@ describe('navegación por fragmentos', () => {
     expect(dialog.scrollTop).toBe(0);
     expect(dialogContainer.scrollTop).toBe(0);
     expect(window.print).toHaveBeenCalledOnce();
+  });
+
+  it('permite consultar la política desde el asistente y volver al borrador', async () => {
+    window.history.replaceState(null, '', '/#gestion-sst');
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pregúntale al asistente' }));
+    const input = screen.getByLabelText('Mensaje para el asistente');
+    fireEvent.change(input, { target: { value: 'Consulta pendiente' } });
+    const link = screen.getByRole('dialog', { name: 'Asistente de G&G' }).querySelector('a[href="#politica-datos"]');
+    expect(link).not.toHaveAttribute('target', '_blank');
+    fireEvent.click(link);
+    expect(await screen.findByRole('dialog', { name: 'Política de tratamiento de datos personales' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar', exact: true }));
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Asistente de G&G' })).toBeVisible());
+    expect(input).toHaveValue('Consulta pendiente');
   });
 
   it('muestra preguntas frecuentes y marco normativo en Gestión SST', async () => {

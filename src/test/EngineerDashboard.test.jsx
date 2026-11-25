@@ -37,6 +37,8 @@ describe('compatibilidad del panel de obras', () => {
     fireEvent.change(north, { target: { value: '80' } });
     expect(south).toHaveValue('10');
     const northCard = north.closest('.space-y-3');
+    expect(within(northCard).getByText('80%')).toBeVisible();
+    expect(north.style.getPropertyValue('--progress')).toBe('80%');
     await user.click(within(northCard).getByRole('button', { name: 'Guardar avance' }));
     expect(await screen.findByText('Avance de Obra Norte actualizado al 80%.')).toBeInTheDocument();
     expect(apiFetch).toHaveBeenCalledWith('/api/panel/obras/17/progreso', {

@@ -141,11 +141,16 @@ export default function App() {
 
   return (
     <Layout showFooter={showFooter}>
-      {isPolicyRoute(routeKey) ? (
+      <div hidden={isPolicyRoute(routeKey)}>
+        {isPolicyRoute(routeKey)
+          ? previousRouteRef.current && renderPage(previousRouteRef.current)
+          : renderPage(routeKey)}
+      </div>
+      {isPolicyRoute(routeKey) && (
         <PolicyDialog title={policyTitle} onClose={closePolicy}>
           {renderPage(routeKey)}
         </PolicyDialog>
-      ) : renderPage(routeKey)}
+      )}
     </Layout>
   );
 }
