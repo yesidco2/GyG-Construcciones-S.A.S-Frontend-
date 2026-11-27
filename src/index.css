@@ -16,11 +16,13 @@ html {
   scroll-padding-top: 5rem;
 }
 
-html.login-hide-scrollbar {
+html.login-hide-scrollbar,
+html:has(:not([hidden]) > .portal-consult[data-awaiting-code]) {
   scrollbar-width: none;
 }
 
-html.login-hide-scrollbar::-webkit-scrollbar {
+html.login-hide-scrollbar::-webkit-scrollbar,
+html:has(:not([hidden]) > .portal-consult[data-awaiting-code])::-webkit-scrollbar {
   display: none;
 }
 

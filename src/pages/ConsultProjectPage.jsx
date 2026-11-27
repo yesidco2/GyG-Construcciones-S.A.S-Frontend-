@@ -137,7 +137,10 @@ export default function ConsultProjectPage() {
   };
 
   return (
-    <section className="portal-consult portal-form-surface min-h-screen px-4 py-xl pt-24 sm:px-6 lg:px-8">
+    <section
+      data-awaiting-code={!searched && !isLoading ? '' : undefined}
+      className="portal-consult portal-form-surface min-h-screen px-4 py-xl pt-24 sm:px-6 lg:px-8"
+    >
       <div className="portal-consult-content">
         <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] xl:gap-12">
           <div className="min-w-0 space-y-6">
