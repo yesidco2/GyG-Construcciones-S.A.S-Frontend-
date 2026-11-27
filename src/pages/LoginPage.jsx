@@ -335,7 +335,7 @@ export default function LoginPage() {
                       type="email"
                       autoComplete="email"
                       disabled={!isAuthConfigured || isSubmitting}
-                      placeholder="nombre@gygconstrucciones.com"
+                      placeholder="tu@example.com"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       className="w-full rounded-lg border border-outline-variant bg-surface py-2.5 pl-10 pr-3 text-body-md transition-all focus:border-industrial-orange focus:bg-white focus:outline-none focus:ring-2 focus:ring-industrial-orange/40 disabled:cursor-not-allowed disabled:opacity-60"
